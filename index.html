@@ -56,6 +56,11 @@
     position:relative;overflow:hidden;display:flex;flex-direction:column;min-height:0}
   .camwrap{flex:1;min-height:0;position:relative;background:#070A0D}
   .camwrap video{width:100%;height:100%;object-fit:cover;display:block}
+  .camwrap video.mirror{transform:scaleX(-1)}
+  .camswitch{position:absolute;top:12px;right:12px;z-index:3;
+    border:1px solid rgba(255,255,255,.4);background:rgba(7,10,13,.6);color:#fff;
+    border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600}
+  .camswitch:active{background:rgba(7,10,13,.9)}
   .reticle{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
   .reticle b{width:min(46%,240px);aspect-ratio:1;border:2px solid rgba(255,184,77,.85);
     border-radius:18px;box-shadow:0 0 0 9999px rgba(7,10,13,.45)}
@@ -332,8 +337,9 @@
       <div class="camwrap">
         <video id="video" playsinline muted></video>
         <div class="reticle" id="reticle" hidden><b></b></div>
+        <button type="button" class="camswitch" id="camSwitch" hidden>카메라 전환</button>
         <div class="camoff" id="camoff">
-          카메라가 꺼져 있습니다.<br>아래 <b>카메라 켜기</b>를 누르거나,<br>바코드 스캐너를 연결하면 바로 입력됩니다.
+          카메라가 꺼져 있습니다.<br>아래 <b>카메라 켜기</b>를 누르거나,<br>바코드 스캐너를 연결하면 바로 입력됩니다.<br><br>앞면 카메라로 켜집니다. 필요하면 화면 위쪽에서 바꿀 수 있습니다.
         </div>
       </div>
       <div class="feedback" id="fb">
@@ -587,6 +593,7 @@ const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
 let db={roster:[],records:{},reserve:{},lock:{},queue:[],mode:null,myCode:null,api:"",seedVer:0};
 let meal=MEALS[new Date().getHours()<10?0:new Date().getHours()<15?1:2];
 let stream=null,scanning=false,detector=null,lastCode="",lastAt=0,saveTimer=null,lastIn=null;
+let facing="user";   // 태블릿을 세워두고 쓰므로 전면 카메라가 기본
 
 const $=id=>document.getElementById(id);
 const dkey=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`};
@@ -612,6 +619,7 @@ async function load(){
     if(SEED.some(p=>p.code===c)){db.mode="user"; db.myCode=c;}
   }
   db.reserve=db.reserve||{}; db.lock=db.lock||{}; db.queue=db.queue||[];
+  if(db.facing) facing=db.facing;
   if(db.seedVer!==SEED_VER){
     db.roster=SEED.map(p=>({code:p.code,name:p.name,dept:p.dept}));
     db.seedVer=SEED_VER; persist();
@@ -893,10 +901,11 @@ $("undoBtn").onclick=()=>{
 const video=$("video"),canvas=document.createElement("canvas"),ctx=canvas.getContext("2d",{willReadFrequently:true});
 async function startCam(){
   try{
-    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment",width:{ideal:1280}}});
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facing,width:{ideal:1280}}});
     video.srcObject=stream; await video.play();
     if("BarcodeDetector" in window){try{detector=new BarcodeDetector({formats:["qr_code"]})}catch(e){detector=null}}
-    scanning=true; $("camoff").hidden=true; $("reticle").hidden=false;
+    video.classList.toggle("mirror",facing==="user");
+    scanning=true; $("camoff").hidden=true; $("reticle").hidden=false; $("camSwitch").hidden=false;
     $("camBtn").textContent="카메라 끄기"; $("camBtn").classList.add("on"); tick();
   }catch(e){
     $("camoff").innerHTML="카메라를 열 수 없습니다.<br>이 페이지가 <b>https 주소</b>에서 열려 있는지 확인하시고,<br>브라우저의 카메라 권한을 허용해 주세요.<br>그동안에는 바코드 스캐너나 코드 직접 입력을 쓰시면 됩니다.";
@@ -905,10 +914,16 @@ async function startCam(){
 function stopCam(){
   scanning=false;
   if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
-  $("reticle").hidden=true;$("camoff").hidden=false;
+  $("reticle").hidden=true;$("camoff").hidden=false;$("camSwitch").hidden=true;
   $("camBtn").textContent="카메라 켜기";$("camBtn").classList.remove("on");
 }
 $("camBtn").onclick=()=>stream?stopCam():startCam();
+$("camSwitch").onclick=async()=>{
+  facing = facing==="user" ? "environment" : "user";
+  db.facing=facing; persist();
+  stopCam(); await startCam();
+  toast(facing==="user"?"앞면 카메라로 바꿨습니다":"뒷면 카메라로 바꿨습니다");
+};
 async function tick(){
   if(!scanning) return;
   if(video.readyState===video.HAVE_ENOUGH_DATA){
