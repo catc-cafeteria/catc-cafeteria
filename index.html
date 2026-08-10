@@ -61,6 +61,9 @@
     border:1px solid rgba(255,255,255,.4);background:rgba(7,10,13,.6);color:#fff;
     border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600}
   .camswitch:active{background:rgba(7,10,13,.9)}
+  .camstat{position:absolute;left:12px;top:12px;z-index:3;font-family:var(--mono);font-size:11.5px;
+    background:rgba(7,10,13,.62);color:var(--dim);border-radius:8px;padding:7px 11px;letter-spacing:.04em}
+  .camstat b{color:var(--green);font-weight:600}
   .reticle{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
   .reticle b{width:min(46%,240px);aspect-ratio:1;border:2px solid rgba(255,184,77,.85);
     border-radius:18px;box-shadow:0 0 0 9999px rgba(7,10,13,.45)}
@@ -338,6 +341,7 @@
         <video id="video" playsinline muted></video>
         <div class="reticle" id="reticle" hidden><b></b></div>
         <button type="button" class="camswitch" id="camSwitch" hidden>카메라 전환</button>
+        <div class="camstat" id="camStat" hidden></div>
         <div class="camoff" id="camoff">
           카메라가 꺼져 있습니다.<br>아래 <b>카메라 켜기</b>를 누르거나,<br>바코드 스캐너를 연결하면 바로 입력됩니다.<br><br>앞면 카메라로 켜집니다. 필요하면 화면 위쪽에서 바꿀 수 있습니다.
         </div>
@@ -901,12 +905,26 @@ $("undoBtn").onclick=()=>{
 const video=$("video"),canvas=document.createElement("canvas"),ctx=canvas.getContext("2d",{willReadFrequently:true});
 async function startCam(){
   try{
-    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facing,width:{ideal:1280}}});
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facing,
+      width:{ideal:1920},height:{ideal:1080}}});
     video.srcObject=stream; await video.play();
-    if("BarcodeDetector" in window){try{detector=new BarcodeDetector({formats:["qr_code"]})}catch(e){detector=null}}
+    detector=null;
+    if("BarcodeDetector" in window){
+      try{
+        const fmts=await BarcodeDetector.getSupportedFormats();
+        if(fmts.includes("qr_code")) detector=new BarcodeDetector({formats:["qr_code"]});
+      }catch(e){ detector=null; }
+    }
+    if(!detector && !window.jsQR){
+      $("camStat").hidden=false;
+      $("camStat").innerHTML="QR 인식 기능을 불러오지 못했습니다";
+      feedback("bad","!","QR 인식 불가",
+        "인터넷에서 인식 모듈을 받지 못했습니다. 사번을 직접 입력해 주세요.");
+    }
     video.classList.toggle("mirror",facing==="user");
     scanning=true; $("camoff").hidden=true; $("reticle").hidden=false; $("camSwitch").hidden=false;
-    $("camBtn").textContent="카메라 끄기"; $("camBtn").classList.add("on"); tick();
+    $("camBtn").textContent="카메라 끄기"; $("camBtn").classList.add("on");
+    $("camStat").hidden=false; scanN=0; hitAt=0; tick();
   }catch(e){
     $("camoff").innerHTML="카메라를 열 수 없습니다.<br>이 페이지가 <b>https 주소</b>에서 열려 있는지 확인하시고,<br>브라우저의 카메라 권한을 허용해 주세요.<br>그동안에는 바코드 스캐너나 코드 직접 입력을 쓰시면 됩니다.";
   }
@@ -914,7 +932,7 @@ async function startCam(){
 function stopCam(){
   scanning=false;
   if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
-  $("reticle").hidden=true;$("camoff").hidden=false;$("camSwitch").hidden=true;
+  $("reticle").hidden=true;$("camoff").hidden=false;$("camSwitch").hidden=true;$("camStat").hidden=true;
   $("camBtn").textContent="카메라 켜기";$("camBtn").classList.remove("on");
 }
 $("camBtn").onclick=()=>stream?stopCam():startCam();
@@ -924,23 +942,52 @@ $("camSwitch").onclick=async()=>{
   stopCam(); await startCam();
   toast(facing==="user"?"앞면 카메라로 바꿨습니다":"뒷면 카메라로 바꿨습니다");
 };
+let scanN=0, hitAt=0, zoomTurn=false;
+function readCanvas(){
+  if(!window.jsQR) return null;
+  const img=ctx.getImageData(0,0,canvas.width,canvas.height);
+  const c=jsQR(img.data,img.width,img.height,{inversionAttempts:"attemptBoth"});
+  return (c&&c.data)?c.data:null;
+}
+function grab(zoom){
+  const vw=video.videoWidth, vh=video.videoHeight;
+  if(!vw||!vh) return false;
+  if(zoom){                       // 가운데 절반만 잘라 확대 — 작게 보이는 QR용
+    const s=Math.min(vw,vh)*0.55;
+    canvas.width=640; canvas.height=640;
+    ctx.drawImage(video,(vw-s)/2,(vh-s)/2,s,s,0,0,640,640);
+  }else{
+    const k=Math.min(1,960/vw);
+    canvas.width=Math.round(vw*k); canvas.height=Math.round(vh*k);
+    ctx.drawImage(video,0,0,canvas.width,canvas.height);
+  }
+  return true;
+}
 async function tick(){
   if(!scanning) return;
-  if(video.readyState===video.HAVE_ENOUGH_DATA){
+  let found=null;
+  if(video.readyState>=2 && video.videoWidth>0){
+    scanN++;
     try{
       if(detector){
         const codes=await detector.detect(video);
-        if(codes.length) checkIn(codes[0].rawValue);
-      }else if(window.jsQR){
-        canvas.width=video.videoWidth;canvas.height=video.videoHeight;
-        ctx.drawImage(video,0,0,canvas.width,canvas.height);
-        const img=ctx.getImageData(0,0,canvas.width,canvas.height);
-        const c=jsQR(img.data,img.width,img.height,{inversionAttempts:"dontInvert"});
-        if(c&&c.data) checkIn(c.data);
+        if(codes.length) found=codes[0].rawValue;
+      }
+      if(!found && window.jsQR){
+        zoomTurn=!zoomTurn;
+        if(grab(zoomTurn)) found=readCanvas();
       }
     }catch(e){}
   }
-  setTimeout(()=>requestAnimationFrame(tick),detector?120:160);
+  if(found){ hitAt=Date.now(); checkIn(found); }
+  const st=$("camStat");
+  if(!st.hidden){
+    const eng = detector ? "고속 인식" : (window.jsQR ? "일반 인식" : "인식 불가");
+    st.innerHTML = (Date.now()-hitAt<1500)
+      ? "<b>QR 읽음</b>"
+      : `${eng} · 확인 ${scanN}회 · QR을 화면에 비춰 주세요`;
+  }
+  setTimeout(()=>requestAnimationFrame(tick),110);
 }
 
 /* ---------- 명단 ---------- */
