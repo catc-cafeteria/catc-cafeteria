@@ -32,7 +32,7 @@
   .brand .bs{font-size:12.5px;color:rgba(255,255,255,.72);margin-left:auto;
     text-align:right;line-height:1.5}
   .brand .rule{width:1px;height:22px;background:rgba(255,255,255,.35)}
-  .brand .modebtn{margin-left:14px;flex:none;border:1px solid rgba(255,255,255,.45);
+  .brand .modebtn{margin-left:10px;flex:none;border:1px solid rgba(255,255,255,.45);
     color:#fff;border-radius:8px;padding:8px 12px;font-size:12.5px;font-weight:600}
   .brand .modebtn:active{background:rgba(255,255,255,.18)}
 
@@ -210,6 +210,17 @@
   .gtag{display:inline-block;font-size:11px;color:var(--amber);border:1px solid rgba(255,184,77,.4);
     border-radius:5px;padding:1px 5px;margin-left:6px;vertical-align:1px}
 
+  .ymbar{margin-bottom:16px}
+  .ymyear{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .ymyear .y{font-family:var(--mono);font-size:19px;font-weight:600;min-width:74px;text-align:center}
+  .ymyear button{border:1px solid var(--line);border-radius:9px;padding:8px 13px;font-size:15px;background:var(--panel2)}
+  .ymyear button:disabled{opacity:.3}
+  .months{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;max-width:520px}
+  .months button{padding:11px 0;border:1px solid var(--line);border-radius:9px;
+    font-size:14px;color:#4E6073;background:var(--panel2)}
+  .months button.has{color:var(--ink);border-color:#43566D}
+  .months button.on{background:var(--amber);color:#0F141A;border-color:var(--amber);font-weight:700}
+
   .mnav{display:flex;align-items:center;gap:12px;margin-bottom:14px}
   .mnav .ym{font-family:var(--mono);font-size:20px;font-weight:600;min-width:118px;text-align:center}
   .mnav button{border:1px solid var(--line);border-radius:9px;padding:9px 14px;font-size:15px;background:var(--panel2)}
@@ -326,6 +337,7 @@
   <div class="rule"></div>
   <div class="bt">식수관리시스템</div>
   <div class="bs">항공기술훈련원</div>
+  <button type="button" class="modebtn" id="fsBtn" hidden>전체화면</button>
   <button type="button" class="modebtn" id="modeBtn" hidden>처음으로</button>
 </div>
 
@@ -444,6 +456,11 @@
         <button class="btn" id="toUser">내 QR 보기 화면으로 바꾸기</button>
         <button class="btn" id="toGate">처음 화면으로</button>
       </div>
+      <label style="display:flex;align-items:center;gap:10px;margin-top:14px;font-size:14px;cursor:pointer">
+        <input type="checkbox" id="soundChk" style="width:19px;height:19px;accent-color:#5BD79A">
+        <span>스캔할 때 소리 내기</span>
+      </label>
+      <button class="btn quiet" id="soundTest" style="margin-top:10px;min-height:42px;font-size:13.5px">소리 들어보기</button>
     </div>
     <div class="card noprint" id="guestBox" hidden>
       <h3>사내강사 직원</h3>
@@ -576,11 +593,11 @@
 
 <div class="page" data-page="month">
   <div class="pane">
+    <div class="ymbar" id="monthPick"></div>
     <div class="mnav">
-      <button type="button" id="mPrev">◀</button>
       <div class="ym" id="mYm">—</div>
-      <button type="button" id="mNext">▶</button>
-      <button type="button" id="mCopy" style="margin-left:auto">엑셀 서식으로 복사</button>
+      <button type="button" id="mXlsx" style="margin-left:auto">엑셀 파일로 받기</button>
+      <button type="button" id="mCopy">표로 복사</button>
     </div>
     <div id="mBody"></div>
   </div>
@@ -612,7 +629,7 @@ function grpOf(code,v){
 const SEED_VER=3;
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원","type":"직원"},{"code":"11374","name":"양찬호","dept":"교육지원부","type":"직원"},{"code":"12194","name":"남우현","dept":"교육지원부","type":"직원"},{"code":"12412","name":"이승범","dept":"교육지원부","type":"직원"},{"code":"11663","name":"박상준","dept":"교육지원부","type":"직원"},{"code":"12837","name":"부윤섭","dept":"교육지원부","type":"직원"},{"code":"12356","name":"이상건","dept":"교육지원부","type":"직원"},{"code":"12193","name":"신동명","dept":"교육지원부","type":"직원"},{"code":"13952","name":"조부경","dept":"교육지원부","type":"직원"},{"code":"14064","name":"이경수","dept":"교육지원부","type":"직원"},{"code":"14318","name":"차규민","dept":"교육지원부","type":"직원"},{"code":"14548","name":"이창우","dept":"교육지원부","type":"직원"},{"code":"14467","name":"이유진","dept":"교육지원부","type":"직원"},{"code":"14748","name":"채유란","dept":"교육지원부","type":"직원"},{"code":"83438","name":"이민경","dept":"교육지원부","type":"직원"},{"code":"13086","name":"박종배","dept":"교육운영부","type":"직원"},{"code":"13258","name":"전은영","dept":"교육운영부","type":"직원"},{"code":"51035","name":"장영근","dept":"교육운영부","type":"직원"},{"code":"12542","name":"주영미","dept":"교육운영부","type":"직원"},{"code":"13812","name":"백유민","dept":"교육운영부","type":"직원"},{"code":"14771","name":"김지은","dept":"교육운영부","type":"직원"},{"code":"14898","name":"박찬미","dept":"교육운영부","type":"직원"},{"code":"14592","name":"박현일","dept":"교육운영부","type":"직원"},{"code":"12848","name":"임채택","dept":"교육운영부","type":"직원"},{"code":"14603","name":"박호원","dept":"교육운영부","type":"직원"},{"code":"14685","name":"최자영","dept":"교육운영부","type":"직원"},{"code":"13281","name":"장두석","dept":"교육운영부","type":"직원"},{"code":"13509","name":"이용철","dept":"교육운영부","type":"직원"},{"code":"13670","name":"이승희","dept":"교육운영부","type":"직원"},{"code":"14265","name":"김정민","dept":"교육운영부","type":"직원"},{"code":"13238","name":"손우람","dept":"교육운영부","type":"직원"}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="2026-08-10c";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="2026-08-10h";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -692,7 +709,7 @@ function checkIn(raw){
   const p=findPerson(code);
   if(!p){
     feedback("bad","✕","등록되지 않은 코드",`${code} · 명단에 없습니다`,true);
-    beep(220,.22);
+    beep("bad");
     const ask=$("ask"); ask.hidden=false;
     ask.querySelector("[data-n]").textContent="무시";
     ask.querySelector("[data-y]").textContent="사내강사 추가";
@@ -709,7 +726,7 @@ function checkIn(raw){
   const isLunch = meal!==MEALS[2], resv = !!(db.reserve[d]||{})[p.code];   // 석식이 아니면 저녁 예약을 묻는다
   if(slot[p.code]){
     feedback("dup","!",p.name,`이미 ${slot[p.code].t}에 체크되었습니다`,isLunch);
-    beep(400,.18);
+    beep("dup");
     if(isLunch) askDinner(p);
     render(); return;
   }
@@ -719,7 +736,7 @@ function checkIn(raw){
   lastIn={d,meal,code:p.code,name:p.name};
   const tail = meal===MEALS[2] ? (resv?"예약 확인 · "+hm():"예약 없이 오심 · "+hm()) : hm();
   feedback("ok","✓",p.name,`${p.dept||""} · ${tail}`,isLunch);
-  beep(880,.1);
+  beep("ok");
   if(isLunch) askDinner(p);
   refreshAll(); persist();
 }
@@ -752,22 +769,45 @@ function setDinner(p,yes){
   if(yes) db.reserve[d][p.code]={t:hm(),name:p.name,dept:p.dept};
   else delete db.reserve[d][p.code];
   apiSet(d,p,yes).catch(()=>toast("서버 반영에 실패했습니다. 잠시 후 다시 확인해 주세요"));
-  hideAsk(); beep(yes?740:330,.09);
+  hideAsk(); beep(yes?"yes":"no");
   feedback(yes?"ok":"", yes?"✓":"—", p.name, yes?"저녁 예약되었습니다":"저녁 예약하지 않음");
   refreshAll(); queueSave();
 }
 let actx=null;
-function beep(freq,dur){
+function audioOn(){
   try{
     actx=actx||new (window.AudioContext||window.webkitAudioContext)();
-    const o=actx.createOscillator(),g=actx.createGain();
-    o.frequency.value=freq;o.type="sine";o.connect(g);g.connect(actx.destination);
-    g.gain.setValueAtTime(.001,actx.currentTime);
-    g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+.01);
-    g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+dur);
-    o.start();o.stop(actx.currentTime+dur+.02);
+    if(actx.state==="suspended") actx.resume();
   }catch(e){}
-  if(navigator.vibrate) navigator.vibrate(12);
+}
+// 브라우저는 화면을 한 번 건드리기 전까지 소리를 막습니다. 어떤 조작이든 있으면 풀어줍니다.
+["pointerdown","keydown","touchstart"].forEach(ev=>
+  document.addEventListener(ev,audioOn,{passive:true}));
+
+function tone(freq,dur,at,vol){
+  if(db.mute) return;
+  audioOn(); if(!actx) return;
+  try{
+    const t0=actx.currentTime+(at||0);
+    const o=actx.createOscillator(), g=actx.createGain();
+    o.type="triangle"; o.frequency.setValueAtTime(freq,t0);
+    o.connect(g); g.connect(actx.destination);
+    g.gain.setValueAtTime(.0001,t0);
+    g.gain.exponentialRampToValueAtTime(vol||.55,t0+.012);
+    g.gain.exponentialRampToValueAtTime(.0001,t0+dur);
+    o.start(t0); o.stop(t0+dur+.03);
+  }catch(e){}
+}
+function beep(kind){
+  switch(kind){
+    case "ok":   tone(1175,.10,0,.6); tone(1760,.16,.09,.5); break;   // 딩동 – 정상
+    case "dup":  tone(740,.13,0,.5);  tone(740,.13,.18,.5);  break;   // 삐-삐 – 이미 체크됨
+    case "bad":  tone(200,.30,0,.55);                         break;  // 부- – 오류
+    case "undo": tone(520,.09,0,.45); tone(360,.13,.08,.45);  break;  // 내려가는 소리 – 취소
+    case "yes":  tone(1046,.09,0,.5);                         break;
+    case "no":   tone(420,.09,0,.4);                          break;
+  }
+  if(navigator.vibrate) navigator.vibrate(kind==="ok"?14:20);
 }
 function render(){
   buildMeals();
@@ -914,7 +954,7 @@ async function cancelIn(code){
   let msg=`${v.name} 님 ${meal} 체크를 취소했습니다`;
   if(hasResv && askChecked){ delete db.reserve[d][code]; msg+=" (저녁 예약도 취소)"; }
   if(lastIn && lastIn.code===code && lastIn.meal===meal) lastIn=null;
-  lastCode=""; beep(330,.12); refreshAll(); persist();
+  lastCode=""; beep("undo"); refreshAll(); persist();
   toast(msg);
 }
 $("undoBtn").onclick=()=>{
@@ -925,7 +965,7 @@ $("undoBtn").onclick=()=>{
   delete slot[lastIn.code];
   logEvent({date:lastIn.d,meal:lastIn.meal,code:lastIn.code,name:gv.name,dept:gv.dept||"",guest:!!gv.g,t:hm(),on:false});
   const nm=lastIn.name; lastIn=null; lastCode="";
-  beep(330,.12); refreshAll(); persist();
+  beep("undo"); refreshAll(); persist();
   feedback("dup","↺",nm,"직전 체크를 취소했습니다");
 };
 
@@ -1111,6 +1151,11 @@ function drawQueue(){
   $("qFlush").onclick=async()=>{ await flushQueue(); drawQueue();
     toast(db.queue.length?`${db.queue.length}건이 아직 남았습니다`:"모두 보냈습니다"); };
 }
+function drawSound(){
+  $("soundChk").checked=!db.mute;
+  $("soundChk").onchange=()=>{db.mute=!$("soundChk").checked; persist(); if(!db.mute) beep("ok")};
+  $("soundTest").onclick=()=>{ if(db.mute){toast("소리가 꺼져 있습니다");return} beep("ok"); };
+}
 function drawKiosk(){
   $("verTag").textContent="· 버전 "+APP_VER;
   $("kioskNote").textContent = db.kiosk
@@ -1169,7 +1214,7 @@ function drawRosterList(){
 }
 
 function drawRoster(){
-  drawGuests(); drawRosterList(); drawApi(); drawKiosk(); drawQueue();
+  drawGuests(); drawRosterList(); drawApi(); drawKiosk(); drawQueue(); drawSound();
   if(db.roster.length&&!$("rosterText").value){
     $("rosterText").value=db.roster.filter(p=>!p.guest).map(p=>[p.name,p.dept,p.code].join(", ")).join("\n");
   }
@@ -1204,21 +1249,74 @@ function drawGuests(){
     db.roster=db.roster.filter(x=>x!==p); persist(); drawRoster();
   });
 }
+let openLog=null;   // 펼쳐 놓은 끼니 (날짜|끼니)
+
+/** 지난 기록에서 한 사람을 지웁니다. 서버에도 취소로 전달됩니다. */
+async function removeRecord(d,m,code){
+  const slot=(db.records[d]||{})[m];
+  if(!slot||!slot[code]) return;
+  const v=slot[code];
+  const hasResv=!!(db.reserve[d]||{})[code];
+  if(!await askOk(`${v.name} 님의 ${d.replace(/-/g,".")} ${m} 기록을 지울까요?`,"기록 삭제",
+      hasResv?"그날 저녁 예약도 함께 삭제":null,false)) return;
+  delete slot[code];
+  logEvent({date:d,meal:m,code,name:v.name,dept:v.dept||"",guest:!!v.g,t:hm(),on:false});
+  if(hasResv&&askChecked){
+    delete db.reserve[d][code];
+    const p=db.roster.find(x=>x.code===code)||{code,name:v.name,dept:v.dept};
+    apiSet(d,p,false).catch(()=>{});
+  }
+  beep("undo"); persist(); refreshAll(); drawLog();
+  toast(`${v.name} 님 기록을 지웠습니다`);
+}
+
 function drawLog(){
-  const days=Object.keys(db.records).sort().reverse();
-  if(!days.length){$("logPane").innerHTML=`<div class="empty">저장된 기록이 없습니다.<br>QR을 스캔하면 날짜와 끼니별로 여기에 쌓입니다.</div>`;return}
-  $("logPane").innerHTML=days.map(d=>{
-    const inner=MEALS.filter(m=>db.records[d][m]).map(m=>{
-      const list=Object.values(db.records[d][m]);
-      const dd={}; Object.entries(db.records[d][m]).forEach(([c,v])=>{const k=grpOf(c,v);dd[k]=(dd[k]||0)+1});
+  const days=Object.keys(db.records).filter(d=>d.startsWith(mCur)&&
+    MEALS.some(m=>db.records[d][m]&&Object.keys(db.records[d][m]).length)).sort().reverse();
+  let total=0;
+  days.forEach(d=>MEALS.forEach(m=>{ if(db.records[d][m]) total+=Object.keys(db.records[d][m]).length }));
+  const head=`<div class="ymbar" id="logPick"></div>`+
+    `<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+       <span style="font-size:15px;font-weight:600">${mCur.replace("-",". ")} 기록</span>
+       <span style="font-family:var(--mono);color:var(--amber);font-size:17px">${total}<span style="font-family:var(--sans);color:var(--dim);font-size:13px"> 명분</span></span>
+     </div>`;
+  if(!days.length){
+    $("logPane").innerHTML=head+`<div class="empty">이 달에는 기록이 없습니다.<br>위에서 다른 달을 골라보세요.</div>`;
+    drawPicker("logPick"); return;
+  }
+  $("logPane").innerHTML=head+days.map(d=>{
+    const inner=MEALS.filter(m=>db.records[d][m]&&Object.keys(db.records[d][m]).length).map(m=>{
+      const entries=Object.entries(db.records[d][m]);
+      const dd={}; entries.forEach(([c,v])=>{const k=grpOf(c,v);dd[k]=(dd[k]||0)+1});
       const detail=Object.keys(dd).map(k=>`${k} ${dd[k]}`).join(" · ");
-      return `<div class="m"><span>${m} <i style="color:var(--dim);font-size:13px;font-style:normal">${detail}</i></span><b>${list.length}</b></div>`;
+      const key=d+"|"+m, open=openLog===key;
+      let rows="";
+      if(open){
+        rows=`<ul class="plist" style="margin:6px 0 14px">`+entries
+          .sort((a,b)=>String(a[1].t).localeCompare(String(b[1].t)))
+          .map(([c,v])=>`<li><span><span class="pn">${esc(v.name)}</span>
+            <span class="pd">${esc(v.dept||"")} · <em>${esc(c)}</em> · ${esc(v.t||"")}</span></span>
+            <button class="cancel" data-d="${d}" data-m="${m}" data-c="${esc(c)}">삭제</button></li>`).join("")+`</ul>`;
+      }
+      return `<div class="m logrow" data-k="${key}" style="cursor:pointer">
+        <span>${open?"▾":"▸"} ${m} <i style="color:var(--dim);font-size:13px;font-style:normal">${detail}</i></span>
+        <b>${entries.length}</b></div>${rows}`;
     }).join("");
     const rv=Object.keys(db.reserve[d]||{}).length;
     const lk=db.lock[d];
     const rline=rv?`<div class="m"><span style="font-size:13px;color:var(--dim)">석식 예약${lk?` (16시 마감 ${lk.count}명)`:""}</span><b style="color:var(--green);font-size:15px">${rv}</b></div>`:"";
     return `<div class="day"><div class="d">${d.replace(/-/g,".")}</div>${inner}${rline}</div>`;
   }).join("");
+
+  drawPicker("logPick");
+  $("logPane").querySelectorAll(".logrow").forEach(el=>el.onclick=()=>{
+    openLog = openLog===el.dataset.k ? null : el.dataset.k;
+    drawLog();
+  });
+  $("logPane").querySelectorAll("button[data-c]").forEach(b=>b.onclick=e=>{
+    e.stopPropagation();
+    removeRecord(b.dataset.d,b.dataset.m,b.dataset.c);
+  });
 }
 $("copyBtn").onclick=async()=>{
   const DP=depts();
@@ -1315,6 +1413,43 @@ $("gOk").onclick=()=>{
 $("gmodal").addEventListener("keydown",e=>{if(e.key==="Enter")$("gOk").click();
   if(e.key==="Escape")closeGuest()});
 
+/* ---------- 연·월 선택기 ---------- */
+let pickYear=Number(dkey().slice(0,4));
+function usedMonths(){
+  const s=new Set();
+  Object.keys(db.records).forEach(d=>s.add(d.slice(0,7)));
+  Object.keys(db.reserve).forEach(d=>s.add(d.slice(0,7)));
+  return s;
+}
+function usedYears(){
+  const ys=new Set([Number(dkey().slice(0,4))]);
+  usedMonths().forEach(m=>ys.add(Number(m.slice(0,4))));
+  return [...ys].sort();
+}
+function drawPicker(id){
+  const box=$(id); if(!box) return;
+  const years=usedYears(), used=usedMonths();
+  const i=years.indexOf(pickYear);
+  box.innerHTML=`<div class="ymyear">
+      <button type="button" data-y="-1" ${i<=0?"disabled":""}>◀</button>
+      <div class="y">${pickYear}년</div>
+      <button type="button" data-y="1" ${i<0||i>=years.length-1?"disabled":""}>▶</button>
+    </div>
+    <div class="months">`+
+    Array.from({length:12},(_,k)=>{
+      const ym=`${pickYear}-${String(k+1).padStart(2,"0")}`;
+      const cls=(ym===mCur?"on ":"")+(used.has(ym)?"has":"");
+      return `<button type="button" class="${cls}" data-m="${ym}">${k+1}월</button>`;
+    }).join("")+`</div>`;
+  box.querySelectorAll("[data-y]").forEach(b=>b.onclick=()=>{
+    const ys=usedYears(); const j=ys.indexOf(pickYear)+Number(b.dataset.y);
+    if(ys[j]!==undefined){ pickYear=ys[j]; drawPicker(id); }
+  });
+  box.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{
+    mCur=b.dataset.m; openLog=null; drawMonth(); drawLog();
+  });
+}
+
 /* ---------- 월별 이용내역 ---------- */
 let mCur=dkey().slice(0,7);
 function daysIn(ym){const [y,m]=ym.split("-").map(Number);return new Date(y,m,0).getDate()}
@@ -1369,7 +1504,9 @@ function headHtml(nd){
   return "<thead>"+r1+r2+"</thead>";
 }
 function drawMonth(){
-  $("mYm").textContent=mCur.replace("-",". ");
+  pickYear=Number(mCur.slice(0,4));
+  drawPicker("monthPick");
+  $("mYm").textContent=mCur.replace("-",". ")+" 이용내역";
   const {g,nd}=monthGrid(mCur);
   const staff=db.roster.filter(p=>!p.guest), guests=db.roster.filter(p=>p.guest);
   let html=`<div class="mwrap"><table class="mtab">${headHtml(nd)}<tbody>`+
@@ -1384,12 +1521,64 @@ function drawMonth(){
   html+=`<div class="blocktitle">${mCur.replace("-",". ")} 총 식수 <b style="color:var(--amber);font-family:var(--mono);font-size:17px">${t}</b> 명분</div>`;
   $("mBody").innerHTML=html;
 }
-function shiftMonth(k){
-  const [y,m]=mCur.split("-").map(Number), d=new Date(y,m-1+k,1);
-  mCur=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`; drawMonth();
-}
-$("mPrev").onclick=()=>shiftMonth(-1);
-$("mNext").onclick=()=>shiftMonth(1);
+
+/* 7월 이용내역과 같은 모양의 엑셀 파일로 저장 */
+$("mXlsx").onclick=()=>{
+  if(!window.XLSX){toast("엑셀 기능을 불러오지 못했습니다. 인터넷 연결을 확인해 주세요");return}
+  const {g,nd}=monthGrid(mCur);
+  const staff=db.roster.filter(p=>!p.guest), guests=db.roster.filter(p=>p.guest);
+  const C0=3, CSUM=3+nd*3, CTOT=CSUM+3;      // 열 위치
+  const aoa=[], merges=[];
+
+  function header(r){
+    const a=new Array(CTOT+3).fill(""), b=new Array(CTOT+3).fill("");
+    a[0]="연번"; a[1]="성명"; a[2]="사번";
+    [0,1,2].forEach(c=>merges.push({s:{r:r,c:c},e:{r:r+1,c:c}}));
+    for(let d=1;d<=nd;d++){
+      const c=C0+(d-1)*3;
+      a[c]=d; merges.push({s:{r:r,c:c},e:{r:r,c:c+2}});
+      MEALS.forEach((m,i)=>b[c+i]=m);
+    }
+    a[CSUM]="합계"; merges.push({s:{r:r,c:CSUM},e:{r:r,c:CSUM+2}});
+    MEALS.forEach((m,i)=>b[CSUM+i]=m);
+    a[CTOT]="총계"; merges.push({s:{r:r,c:CTOT},e:{r:r+1,c:CTOT+2}});
+    aoa.push(a,b);
+  }
+  function body(people){
+    people.forEach((p,i)=>{
+      const row=new Array(CTOT+3).fill("");
+      row[0]=i+1; row[1]=p.name; row[2]=p.code;
+      const s=[0,0,0];
+      for(let d=1;d<=nd;d++) MEALS.forEach((m,mi)=>{
+        if(g[p.code]&&g[p.code][d*3+mi]){ row[C0+(d-1)*3+mi]=1; s[mi]++; }
+      });
+      MEALS.forEach((m,mi)=>{ if(s[mi]) row[CSUM+mi]=s[mi]; });
+      const t=s[0]+s[1]+s[2]; if(t) row[CTOT]=t;
+      aoa.push(row);
+    });
+    const sr=new Array(CTOT+3).fill(""); sr[0]="소계";
+    const s=[0,0,0];
+    for(let d=1;d<=nd;d++) MEALS.forEach((m,mi)=>{
+      const n=people.filter(p=>g[p.code]&&g[p.code][d*3+mi]).length;
+      sr[C0+(d-1)*3+mi]=n; s[mi]+=n;
+    });
+    MEALS.forEach((m,mi)=>sr[CSUM+mi]=s[mi]);
+    sr[CTOT]=s[0]+s[1]+s[2];
+    aoa.push(sr);
+  }
+
+  header(aoa.length); body(staff);
+  if(guests.length){ aoa.push([]); header(aoa.length); body(guests); }
+
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws["!merges"]=merges;
+  ws["!cols"]=[{wch:5},{wch:10},{wch:8}].concat(new Array(CTOT).fill({wch:4}));
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,"이용내역");
+  XLSX.writeFile(wb,`항공기술훈련원_직원_식당_이용_내역_${mCur.replace("-",".")}.xlsx`);
+  toast("엑셀 파일을 저장했습니다");
+};
+
 $("mCopy").onclick=async()=>{
   const {g,nd}=monthGrid(mCur);
   const staff=db.roster.filter(p=>!p.guest), guests=db.roster.filter(p=>p.guest);
@@ -1434,6 +1623,9 @@ function applyMode(){
   document.querySelector(".topbar").hidden = m!=="admin";
   document.querySelectorAll(".page").forEach(el=>{el.hidden = m!=="admin"});
   $("modeBtn").hidden = m!=="admin";
+  $("fsBtn").hidden = m!=="admin" || !fsOK;
+  keepAwake(m==="admin");
+  drawFs();
   if(m!=="admin") stopCam();
   if(m==="user") drawMy();
 }
@@ -1449,7 +1641,7 @@ $("pickAdmin").onclick=()=>{pinOpen=true; applyMode(); $("pinInput").value="";
 $("pinBack").onclick=()=>{pinOpen=false; applyMode()};
 $("pinGo").onclick=()=>{
   if(fnv($("pinInput").value.trim())!==ADMIN_PIN){
-    $("pinInput").value=""; beep(220,.22); toast("비밀번호가 맞지 않습니다"); return;
+    $("pinInput").value=""; beep("bad"); toast("비밀번호가 맞지 않습니다"); return;
   }
   const keep=$("pinKeep").checked;
   db.kiosk=keep; pinOpen=false;
@@ -1538,6 +1730,36 @@ function reloadNew(){ location.replace(baseUrl()+"?v="+Date.now()+location.hash)
 $("updBtn").onclick=reloadNew;
 setTimeout(checkUpdate,4000);
 setInterval(checkUpdate,1800000);
+
+/* ---------- 전체화면 · 화면 꺼짐 방지 ---------- */
+const fsOK = !!(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen);
+function fsOn(){return !!(document.fullscreenElement||document.webkitFullscreenElement)}
+async function toggleFs(){
+  try{
+    if(fsOn()){
+      await (document.exitFullscreen?document.exitFullscreen():document.webkitExitFullscreen());
+    }else{
+      const el=document.documentElement;
+      await (el.requestFullscreen?el.requestFullscreen({navigationUI:"hide"}):el.webkitRequestFullscreen());
+    }
+  }catch(e){ toast("이 브라우저에서는 전체화면을 쓸 수 없습니다"); }
+}
+function drawFs(){ $("fsBtn").textContent = fsOn()?"전체화면 끄기":"전체화면"; }
+$("fsBtn").onclick=toggleFs;
+document.addEventListener("fullscreenchange",drawFs);
+document.addEventListener("webkitfullscreenchange",drawFs);
+
+let wakeLock=null;
+async function keepAwake(on){
+  try{
+    if(on){
+      if(!wakeLock && navigator.wakeLock) wakeLock=await navigator.wakeLock.request("screen");
+    }else if(wakeLock){ await wakeLock.release(); wakeLock=null; }
+  }catch(e){}
+}
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState==="visible" && curMode()==="admin") keepAwake(true);
+});
 
 function toast(m){const t=$("toast");t.textContent=m;t.classList.add("on");setTimeout(()=>t.classList.remove("on"),1900)}
 setInterval(()=>{if(document.querySelector('[data-page="scan"]').dataset.on==="1")$("stamp").textContent=dkey().replace(/-/g,".")+" "+meal+" "+hm()},1000);
