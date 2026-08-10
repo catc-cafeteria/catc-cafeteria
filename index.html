@@ -435,6 +435,7 @@
         <button class="btn quiet" id="apiClear">연결 끊기</button>
       </div>
       <div id="apiState" style="font-size:13px;color:var(--dim);margin-top:11px;line-height:1.7;white-space:pre-line"></div>
+      <div id="queueState" style="font-size:13px;margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"></div>
     </div>
     <div class="card noprint">
       <h3>이 기기 용도 <span id="verTag" style="color:var(--dim);font-weight:400;font-size:12.5px"></span></h3>
@@ -611,7 +612,7 @@ function grpOf(code,v){
 const SEED_VER=3;
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원","type":"직원"},{"code":"11374","name":"양찬호","dept":"교육지원부","type":"직원"},{"code":"12194","name":"남우현","dept":"교육지원부","type":"직원"},{"code":"12412","name":"이승범","dept":"교육지원부","type":"직원"},{"code":"11663","name":"박상준","dept":"교육지원부","type":"직원"},{"code":"12837","name":"부윤섭","dept":"교육지원부","type":"직원"},{"code":"12356","name":"이상건","dept":"교육지원부","type":"직원"},{"code":"12193","name":"신동명","dept":"교육지원부","type":"직원"},{"code":"13952","name":"조부경","dept":"교육지원부","type":"직원"},{"code":"14064","name":"이경수","dept":"교육지원부","type":"직원"},{"code":"14318","name":"차규민","dept":"교육지원부","type":"직원"},{"code":"14548","name":"이창우","dept":"교육지원부","type":"직원"},{"code":"14467","name":"이유진","dept":"교육지원부","type":"직원"},{"code":"14748","name":"채유란","dept":"교육지원부","type":"직원"},{"code":"83438","name":"이민경","dept":"교육지원부","type":"직원"},{"code":"13086","name":"박종배","dept":"교육운영부","type":"직원"},{"code":"13258","name":"전은영","dept":"교육운영부","type":"직원"},{"code":"51035","name":"장영근","dept":"교육운영부","type":"직원"},{"code":"12542","name":"주영미","dept":"교육운영부","type":"직원"},{"code":"13812","name":"백유민","dept":"교육운영부","type":"직원"},{"code":"14771","name":"김지은","dept":"교육운영부","type":"직원"},{"code":"14898","name":"박찬미","dept":"교육운영부","type":"직원"},{"code":"14592","name":"박현일","dept":"교육운영부","type":"직원"},{"code":"12848","name":"임채택","dept":"교육운영부","type":"직원"},{"code":"14603","name":"박호원","dept":"교육운영부","type":"직원"},{"code":"14685","name":"최자영","dept":"교육운영부","type":"직원"},{"code":"13281","name":"장두석","dept":"교육운영부","type":"직원"},{"code":"13509","name":"이용철","dept":"교육운영부","type":"직원"},{"code":"13670","name":"이승희","dept":"교육운영부","type":"직원"},{"code":"14265","name":"김정민","dept":"교육운영부","type":"직원"},{"code":"13238","name":"손우람","dept":"교육운영부","type":"직원"}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="2026-08-10b";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="2026-08-10c";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -705,7 +706,7 @@ function checkIn(raw){
   db.records[d]=db.records[d]||{};
   db.records[d][meal]=db.records[d][meal]||{};
   const slot=db.records[d][meal];
-  const isLunch = meal===MEALS[1], resv = !!(db.reserve[d]||{})[p.code];
+  const isLunch = meal!==MEALS[2], resv = !!(db.reserve[d]||{})[p.code];   // 석식이 아니면 저녁 예약을 묻는다
   if(slot[p.code]){
     feedback("dup","!",p.name,`이미 ${slot[p.code].t}에 체크되었습니다`,isLunch);
     beep(400,.18);
@@ -720,7 +721,7 @@ function checkIn(raw){
   feedback("ok","✓",p.name,`${p.dept||""} · ${tail}`,isLunch);
   beep(880,.1);
   if(isLunch) askDinner(p);
-  refreshAll(); queueSave();
+  refreshAll(); persist();
 }
 function feedback(cls,mark,name,sub,hold){
   const fb=$("fb"); fb.className="feedback "+cls;
@@ -845,7 +846,13 @@ async function pullResv(quiet){
     const d=dkey(), j=await apiCall({action:"day",date:d});
     db.reserve[d]=j.items||{};
     if(j.records){
-      db.records[d]=j.records;
+      const local=db.records[d]||{}, merged=j.records||{};
+      // 서버에 아직 안 올라간 로컬 기록은 절대 지우지 않는다
+      Object.keys(local).forEach(m=>{
+        merged[m]=merged[m]||{};
+        Object.keys(local[m]).forEach(c=>{ if(!merged[m][c]) merged[m][c]=local[m][c]; });
+      });
+      db.records[d]=merged;
       db.queue.filter(e=>e.date===d).forEach(e=>{
         db.records[d][e.meal]=db.records[d][e.meal]||{};
         if(e.on) db.records[d][e.meal][e.code]={t:e.t,name:e.name,dept:e.dept,g:e.guest?1:0};
@@ -1096,6 +1103,14 @@ $("rAdd").onclick=()=>{
   $("rName").value="";$("rDept").value="";$("rCode").value="";$("rName").focus();
   toast(`${name} 님을 추가했습니다`);
 };
+function drawQueue(){
+  const n=db.queue.length, box=$("queueState");
+  if(!n){ box.innerHTML='<span style="color:var(--green)">기록이 모두 서버에 올라가 있습니다.</span>'; return }
+  box.innerHTML=`<span style="color:var(--amber)">아직 서버로 보내지 못한 기록 ${n}건</span>`+
+    `<button class="btn quiet" id="qFlush" style="min-height:40px;padding:0 14px;font-size:13px">지금 보내기</button>`;
+  $("qFlush").onclick=async()=>{ await flushQueue(); drawQueue();
+    toast(db.queue.length?`${db.queue.length}건이 아직 남았습니다`:"모두 보냈습니다"); };
+}
 function drawKiosk(){
   $("verTag").textContent="· 버전 "+APP_VER;
   $("kioskNote").textContent = db.kiosk
@@ -1154,7 +1169,7 @@ function drawRosterList(){
 }
 
 function drawRoster(){
-  drawGuests(); drawRosterList(); drawApi(); drawKiosk();
+  drawGuests(); drawRosterList(); drawApi(); drawKiosk(); drawQueue();
   if(db.roster.length&&!$("rosterText").value){
     $("rosterText").value=db.roster.filter(p=>!p.guest).map(p=>[p.name,p.dept,p.code].join(", ")).join("\n");
   }
