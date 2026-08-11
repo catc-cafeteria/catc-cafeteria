@@ -2,6 +2,13 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="site.webmanifest">
+<meta name="theme-color" content="#953C1C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="식수관리">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>식수 체크인</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.js"></script>
@@ -207,6 +214,17 @@
   .mbox .mrow button{flex:1;padding:14px;border-radius:11px;font-size:15px;font-weight:600}
   .mbox .mrow button.ok{background:var(--green);color:#0B1710}
   .mbox .mrow button.no{border:1px solid var(--line);color:var(--dim)}
+  .mbox.wide{width:min(540px,100%);max-height:84vh;display:flex;flex-direction:column}
+  .mbox.wide .scroll{overflow-y:auto;min-height:0;margin:0 -4px;padding:0 4px}
+  .mealpick{display:flex;gap:8px;margin:10px 0}
+  .mealpick button{flex:1;padding:11px 0;border:1px solid var(--line);border-radius:9px;
+    font-size:14.5px;color:var(--dim);background:var(--panel2)}
+  .mealpick button.on{background:var(--amber);color:#0F141A;border-color:var(--amber);font-weight:700}
+  .fieldrow{display:flex;gap:10px}
+  .fieldrow input{flex:1}
+  .plist button.add{border-color:rgba(91,215,154,.5);color:var(--green)}
+  .plist .done{margin-left:auto;font-size:13px;color:var(--dim);padding:9px 4px}
+
   .gtag{display:inline-block;font-size:11px;color:var(--amber);border:1px solid rgba(255,184,77,.4);
     border-radius:5px;padding:1px 5px;margin-left:6px;vertical-align:1px}
 
@@ -348,6 +366,7 @@
     <button class="tab" data-go="resv" aria-selected="false">석식 예약</button>
     <button class="tab" data-go="log" aria-selected="false">기록</button>
     <button class="tab" data-go="month" aria-selected="false">월 집계</button>
+    <button class="tab" data-go="info" aria-selected="false">정보</button>
   </div>
   <div class="stamp" id="stamp"></div>
 </div>
@@ -436,33 +455,7 @@
         <button class="btn" id="rosterSave" style="margin-top:10px">이 내용으로 명단 저장</button>
       </details>
     </div>
-    <div class="card noprint">
-      <h3>예약 서버 연결</h3>
-      <p>구글 스프레드시트에 서버를 만들고 나온 주소를 넣으면, 직원들이 각자 휴대폰에서 저녁 예약을 직접 신청하고 취소할 수 있습니다.
-         비워두면 지금처럼 이 태블릿 안에서만 관리됩니다.</p>
-      <input class="scanfield" id="apiInput" style="width:100%;height:48px;border:1px solid var(--line);font-size:13px"
-        placeholder="https://script.google.com/macros/s/..../exec" autocomplete="off">
-      <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
-        <button class="btn" id="apiSave">저장하고 연결 확인</button>
-        <button class="btn quiet" id="apiClear">연결 끊기</button>
-      </div>
-      <div id="apiState" style="font-size:13px;color:var(--dim);margin-top:11px;line-height:1.7;white-space:pre-line"></div>
-      <div id="queueState" style="font-size:13px;margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"></div>
-    </div>
-    <div class="card noprint">
-      <h3>이 기기 용도 <span id="verTag" style="color:var(--dim);font-weight:400;font-size:12.5px"></span></h3>
-      <p>지금은 <b>식당 관리자 화면</b>으로 쓰고 있습니다. <span id="kioskNote"></span></p>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <button class="btn" id="toUser">내 QR 보기 화면으로 바꾸기</button>
-        <button class="btn" id="toGate">처음 화면으로</button>
-      </div>
-      <label style="display:flex;align-items:center;gap:10px;margin-top:14px;font-size:14px;cursor:pointer">
-        <input type="checkbox" id="soundChk" style="width:19px;height:19px;accent-color:#5BD79A">
-        <span>스캔할 때 소리 내기</span>
-      </label>
-      <button class="btn quiet" id="soundTest" style="margin-top:10px;min-height:42px;font-size:13.5px">소리 들어보기</button>
-    </div>
-    <div class="card noprint" id="guestBox" hidden>
+<div class="card noprint" id="guestBox" hidden>
       <h3>사내강사 직원</h3>
       <p>QR 없이 사번·이름만 받아 체크한 사내강사 직원입니다. QR은 만들지 않고, 식수 집계에는 그대로 포함됩니다.</p>
       <ul class="plist" id="guestList"></ul>
@@ -479,6 +472,48 @@
   </div>
 </div>
 
+<div class="page" data-page="info">
+  <div class="pane">
+    <div class="card">
+      <h3>식수관리시스템</h3>
+      <p>한국공항공사 항공기술훈련원 · 식당 식수 집계</p>
+      <div style="display:flex;align-items:baseline;gap:10px;margin-top:6px">
+        <span style="font-size:13px;color:var(--dim)">버전</span>
+        <span id="verBig" style="font-family:var(--mono);font-size:26px;color:var(--amber);font-weight:600"></span>
+      </div>
+      <p style="margin-top:12px">직원들 휴대폰에 뜨는 버전이 이것과 다르면 그 기기는 아직 예전 파일을 쓰고 있는 것입니다.
+         새 버전이 올라오면 화면 위에 알림 띠가 뜨고, 직원 화면은 알아서 갱신됩니다.</p>
+      <button class="btn quiet" id="verCheck" style="margin-top:12px;min-height:42px;font-size:13.5px">새 버전 확인</button>
+    </div>
+    <div class="card noprint">
+      <h3>예약 서버 연결</h3>
+      <p>구글 스프레드시트에 서버를 만들고 나온 주소를 넣으면, 직원들이 각자 휴대폰에서 저녁 예약을 직접 신청하고 취소할 수 있습니다.
+         비워두면 지금처럼 이 태블릿 안에서만 관리됩니다.</p>
+      <input class="scanfield" id="apiInput" style="width:100%;height:48px;border:1px solid var(--line);font-size:13px"
+        placeholder="https://script.google.com/macros/s/..../exec" autocomplete="off">
+      <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
+        <button class="btn" id="apiSave">저장하고 연결 확인</button>
+        <button class="btn quiet" id="apiClear">연결 끊기</button>
+      </div>
+      <div id="apiState" style="font-size:13px;color:var(--dim);margin-top:11px;line-height:1.7;white-space:pre-line"></div>
+      <div id="queueState" style="font-size:13px;margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"></div>
+    </div>
+    <div class="card noprint">
+      <h3>이 기기 용도</h3><span id="verTag" hidden></span>
+      <p>지금은 <b>식당 관리자 화면</b>으로 쓰고 있습니다. <span id="kioskNote"></span></p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn" id="toUser">내 QR 보기 화면으로 바꾸기</button>
+        <button class="btn" id="toGate">처음 화면으로</button>
+      </div>
+      <label style="display:flex;align-items:center;gap:10px;margin-top:14px;font-size:14px;cursor:pointer">
+        <input type="checkbox" id="soundChk" style="width:19px;height:19px;accent-color:#5BD79A">
+        <span>스캔할 때 소리 내기</span>
+      </label>
+      <button class="btn quiet" id="soundTest" style="margin-top:10px;min-height:42px;font-size:13.5px">소리 들어보기</button>
+    </div>
+      </div>
+</div>
+
 <!-- ================= 석식 예약 ================= -->
 <div class="page" data-page="resv">
   <div class="pane">
@@ -486,7 +521,9 @@
       <div class="rvhead">
         <div><span style="font-size:13px;color:var(--dim)">오늘 석식 예약</span><br><b id="rvTotal">0</b><span style="color:var(--dim);font-size:14px"> 명</span></div>
         <span class="rvdl" id="rvDl">—</span>
+        <button type="button" class="btn quiet" id="rvSync" style="min-height:40px;padding:0 14px;font-size:13px">서버에서 가져오기</button>
       </div>
+      <div id="syncState" style="font-size:13px;color:var(--dim);margin-top:12px;white-space:pre-line"></div>
       <p style="margin-top:14px">전화나 메신저로 취소·추가 요청이 오면 여기서 바로 처리하시면 됩니다. 검색창을 비우면 예약자만 보입니다.</p>
       <input class="scanfield" id="rvSearch" style="width:100%;height:48px;border:1px solid var(--line)" placeholder="이름 또는 사번으로 찾기" autocomplete="off">
       <ul class="plist" id="rvList"></ul>
@@ -560,6 +597,32 @@
   <button type="button" class="linkbtn" id="myMode" style="margin-top:4px">← 처음 화면으로</button>
 </div>
 
+<div class="modal" id="addModal" hidden>
+  <div class="mbox wide">
+    <h3>기록에 인원 추가</h3>
+    <p>QR을 못 찍고 지나간 분을 나중에 넣을 때 씁니다. 서버와 월 집계에도 함께 반영됩니다.</p>
+    <div class="fieldrow">
+      <input type="date" id="addDate">
+      <input type="time" id="addTime" style="max-width:130px">
+    </div>
+    <div class="mealpick" id="addMeals"></div>
+    <input class="scanfield" id="addSearch" style="width:100%;height:46px;border:1px solid var(--line)"
+      placeholder="이름 또는 사번으로 찾기" autocomplete="off">
+    <button type="button" class="btn quiet" id="addNewToggle"
+      style="min-height:42px;font-size:13.5px;margin-top:10px;width:100%">＋ 명단에 없는 사내강사</button>
+    <div id="addNewBox" hidden style="margin-top:10px">
+      <div class="addrow" style="margin-top:0">
+        <input id="nName" placeholder="이름" autocomplete="off">
+        <input id="nDept" placeholder="소속" autocomplete="off">
+        <input id="nCode" placeholder="사번" autocomplete="off" inputmode="numeric">
+      </div>
+      <button class="btn" id="nAdd" style="width:100%;margin-top:9px;min-height:46px">사내강사로 등록하고 넣기</button>
+    </div>
+    <div class="scroll" style="margin-top:12px"><ul class="plist" id="addList"></ul></div>
+    <div class="mrow"><button class="no" id="addClose">닫기</button></div>
+  </div>
+</div>
+
 <div class="modal" id="cmodal" hidden>
   <div class="mbox">
     <h3 id="cTitle">확인</h3>
@@ -629,7 +692,7 @@ function grpOf(code,v){
 const SEED_VER=3;
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원","type":"직원"},{"code":"11374","name":"양찬호","dept":"교육지원부","type":"직원"},{"code":"12194","name":"남우현","dept":"교육지원부","type":"직원"},{"code":"12412","name":"이승범","dept":"교육지원부","type":"직원"},{"code":"11663","name":"박상준","dept":"교육지원부","type":"직원"},{"code":"12837","name":"부윤섭","dept":"교육지원부","type":"직원"},{"code":"12356","name":"이상건","dept":"교육지원부","type":"직원"},{"code":"12193","name":"신동명","dept":"교육지원부","type":"직원"},{"code":"13952","name":"조부경","dept":"교육지원부","type":"직원"},{"code":"14064","name":"이경수","dept":"교육지원부","type":"직원"},{"code":"14318","name":"차규민","dept":"교육지원부","type":"직원"},{"code":"14548","name":"이창우","dept":"교육지원부","type":"직원"},{"code":"14467","name":"이유진","dept":"교육지원부","type":"직원"},{"code":"14748","name":"채유란","dept":"교육지원부","type":"직원"},{"code":"83438","name":"이민경","dept":"교육지원부","type":"직원"},{"code":"13086","name":"박종배","dept":"교육운영부","type":"직원"},{"code":"13258","name":"전은영","dept":"교육운영부","type":"직원"},{"code":"51035","name":"장영근","dept":"교육운영부","type":"직원"},{"code":"12542","name":"주영미","dept":"교육운영부","type":"직원"},{"code":"13812","name":"백유민","dept":"교육운영부","type":"직원"},{"code":"14771","name":"김지은","dept":"교육운영부","type":"직원"},{"code":"14898","name":"박찬미","dept":"교육운영부","type":"직원"},{"code":"14592","name":"박현일","dept":"교육운영부","type":"직원"},{"code":"12848","name":"임채택","dept":"교육운영부","type":"직원"},{"code":"14603","name":"박호원","dept":"교육운영부","type":"직원"},{"code":"14685","name":"최자영","dept":"교육운영부","type":"직원"},{"code":"13281","name":"장두석","dept":"교육운영부","type":"직원"},{"code":"13509","name":"이용철","dept":"교육운영부","type":"직원"},{"code":"13670","name":"이승희","dept":"교육운영부","type":"직원"},{"code":"14265","name":"김정민","dept":"교육운영부","type":"직원"},{"code":"13238","name":"손우람","dept":"교육운영부","type":"직원"}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="2026-08-10j";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="1.3";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -680,6 +743,7 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   if(t.dataset.go==="log") drawLog();
   if(t.dataset.go==="resv"){ drawResv(); pullResv(true); }
   if(t.dataset.go==="month") drawMonth();
+  if(t.dataset.go==="info") drawInfo();
   if(t.dataset.go!=="scan") stopCam();
 });
 
@@ -877,8 +941,9 @@ async function flushQueue(){
 }
 
 /** 서버의 오늘 내용을 그대로 반영 (아직 못 보낸 내역은 위에 다시 얹음) */
+let lastSync={t:"",err:""};
 async function pullResv(quiet){
-  if(!apiBase()) return false;
+  if(!apiBase()){ lastSync={t:"",err:"서버 주소가 설정되어 있지 않습니다"}; return false; }
   try{
     const d=dkey(), j=await apiCall({action:"day",date:d});
     db.reserve[d]=j.items||{};
@@ -896,9 +961,14 @@ async function pullResv(quiet){
         else delete db.records[d][e.meal][e.code];
       });
     }
+    lastSync={t:hm(),err:""};
     persist(); refreshAll(); flushQueue();
     return true;
-  }catch(e){ if(!quiet) toast("서버에 연결하지 못했습니다"); return false; }
+  }catch(e){
+    lastSync={t:hm(),err:(e&&e.message)||String(e)};
+    if(!quiet) toast("서버에서 가져오지 못했습니다");
+    drawSync(); return false;
+  }
 }
 
 /** 명단을 서버와 맞춥니다 (직원 폰에도 새 명단이 자동 반영됩니다) */
@@ -1159,8 +1229,14 @@ function drawSound(){
   $("soundChk").onchange=()=>{db.mute=!$("soundChk").checked; persist(); if(!db.mute) beep("ok")};
   $("soundTest").onclick=()=>{ if(db.mute){toast("소리가 꺼져 있습니다");return} beep("ok"); };
 }
+function drawInfo(){
+  $("verBig").textContent=APP_VER;
+  drawApi(); drawKiosk(); drawQueue(); drawSound();
+}
+$("verCheck").onclick=async()=>{ await checkUpdate();
+  toast($("updbar").hidden?"최신 버전입니다":"새 버전이 있습니다"); };
+
 function drawKiosk(){
-  $("verTag").textContent="· 버전 "+APP_VER;
   $("kioskNote").textContent = db.kiosk
     ? "이 기기는 식당 태블릿으로 지정되어 있어 비밀번호 없이 열립니다."
     : "이 기기는 창을 닫으면 관리자 화면이 풀립니다.";
@@ -1217,7 +1293,7 @@ function drawRosterList(){
 }
 
 function drawRoster(){
-  drawGuests(); drawRosterList(); drawApi(); drawKiosk(); drawQueue(); drawSound();
+  drawGuests(); drawRosterList();
   if(db.roster.length&&!$("rosterText").value){
     $("rosterText").value=db.roster.filter(p=>!p.guest).map(p=>[p.name,p.dept,p.code].join(", ")).join("\n");
   }
@@ -1254,6 +1330,85 @@ function drawGuests(){
 }
 let openLog=null;   // 펼쳐 놓은 끼니 (날짜|끼니)
 
+/** 지난 기록에 한 사람을 넣습니다. */
+function addRecord(d,m,p,t){
+  db.records[d]=db.records[d]||{};
+  db.records[d][m]=db.records[d][m]||{};
+  if(db.records[d][m][p.code]) return false;
+  db.records[d][m][p.code]={t:t,name:p.name,dept:p.dept||""};
+  if(p.guest) db.records[d][m][p.code].g=1;
+  logEvent({date:d,meal:m,code:p.code,name:p.name,dept:p.dept||"",guest:!!p.guest,t:t,on:true});
+  persist(); refreshAll(); drawLog();
+  return true;
+}
+function openAdd(d,m){
+  $("addDate").value = d || (mCur===dkey().slice(0,7) ? dkey() : mCur+"-01");
+  $("addTime").value = hm();
+  addMeal = m || meal;
+  $("addSearch").value=""; $("addNewBox").hidden=true;
+  drawAddMeals(); drawAddList();
+  $("addModal").hidden=false;
+  setTimeout(()=>$("addSearch").focus(),80);
+}
+let addMeal=MEALS[1];
+function drawAddMeals(){
+  $("addMeals").innerHTML=MEALS.map(m=>
+    `<button type="button" class="${m===addMeal?"on":""}" data-m="${m}">${m}</button>`).join("");
+  $("addMeals").querySelectorAll("button").forEach(b=>b.onclick=()=>{
+    addMeal=b.dataset.m; drawAddMeals(); drawAddList();
+  });
+}
+function drawAddList(){
+  const d=$("addDate").value, q=$("addSearch").value.trim();
+  const slot=((db.records[d]||{})[addMeal])||{};
+  let items=db.roster.filter(p=>!q||p.name.includes(q)||p.code.includes(q));
+  items=items.slice(0,60);
+  $("addList").innerHTML = items.length ? items.map((p,i)=>{
+    const on=!!slot[p.code];
+    return `<li><span><span class="pn">${esc(p.name)}</span>
+      <span class="pd">${esc(p.dept||"")} · <em>${esc(p.code)}</em></span></span>`+
+      (on?`<span class="done">이미 있음 ${esc(slot[p.code].t||"")}</span>`
+         :`<button class="add" data-i="${i}">추가</button>`)+`</li>`;
+  }).join("") : `<li style="color:var(--dim);justify-content:center;padding:26px 0">찾는 사람이 없습니다</li>`;
+  $("addList").querySelectorAll("button[data-i]").forEach(b=>b.onclick=()=>{
+    const p=items[+b.dataset.i];
+    if(addRecord($("addDate").value,addMeal,p,$("addTime").value||hm())){
+      beep("ok"); toast(`${p.name} 님을 ${addMeal}에 넣었습니다`); drawAddList();
+    }
+  });
+}
+$("addNewToggle").onclick=()=>{
+  const box=$("addNewBox"), q=$("addSearch").value.trim();
+  box.hidden=!box.hidden;
+  if(!box.hidden){
+    if(/^\d+$/.test(q)){ $("nCode").value=q; $("nName").value=""; }
+    else { $("nName").value=q; $("nCode").value=""; }
+    $("nDept").value="";
+    setTimeout(()=>($("nName").value?$("nCode"):$("nName")).focus(),60);
+  }
+};
+$("nAdd").onclick=()=>{
+  const name=$("nName").value.trim(), dept=$("nDept").value.trim(), code=$("nCode").value.trim();
+  if(!name||!code){toast("이름과 사번을 입력해 주세요");return}
+  let p=findPerson(code);
+  if(p && p.name!==name){toast(`사번 ${code}는 이미 ${p.name} 님입니다`);return}
+  if(!p){
+    p={code,name,dept,guest:true};
+    db.roster.push(p); persist(); pushRoster(); drawRoster();
+  }
+  if(addRecord($("addDate").value,addMeal,p,$("addTime").value||hm())){
+    beep("ok"); toast(`${name} 님을 ${addMeal}에 넣었습니다`);
+  }else{
+    toast("이미 들어가 있습니다");
+  }
+  $("nName").value="";$("nDept").value="";$("nCode").value="";
+  $("addNewBox").hidden=true; $("addSearch").value=""; drawAddList();
+};
+$("addSearch").addEventListener("input",drawAddList);
+$("addDate").addEventListener("change",drawAddList);
+$("addClose").onclick=()=>{$("addModal").hidden=true};
+$("addModal").onclick=e=>{if(e.target===$("addModal"))$("addModal").hidden=true};
+
 /** 지난 기록에서 한 사람을 지웁니다. 서버에도 취소로 전달됩니다. */
 async function removeRecord(d,m,code){
   const slot=(db.records[d]||{})[m];
@@ -1282,7 +1437,8 @@ function drawLog(){
     `<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
        <span style="font-size:15px;font-weight:600">${mCur.replace("-",". ")} 기록</span>
        <span style="font-family:var(--mono);color:var(--amber);font-size:17px">${total}<span style="font-family:var(--sans);color:var(--dim);font-size:13px"> 명분</span></span>
-     </div>`;
+     </div>
+     <button class="btn" id="addOpen" style="min-height:44px;font-size:14px;margin-bottom:14px">＋ 기록에 인원 추가</button>`;
   if(!days.length){
     $("logPane").innerHTML=head+`<div class="empty">이 달에는 기록이 없습니다.<br>위에서 다른 달을 골라보세요.</div>`;
     drawPicker("logPick"); return;
@@ -1299,7 +1455,9 @@ function drawLog(){
           .sort((a,b)=>String(a[1].t).localeCompare(String(b[1].t)))
           .map(([c,v])=>`<li><span><span class="pn">${esc(v.name)}</span>
             <span class="pd">${esc(v.dept||"")} · <em>${esc(c)}</em> · ${esc(v.t||"")}</span></span>
-            <button class="cancel" data-d="${d}" data-m="${m}" data-c="${esc(c)}">삭제</button></li>`).join("")+`</ul>`;
+            <button class="cancel" data-d="${d}" data-m="${m}" data-c="${esc(c)}">삭제</button></li>`).join("")+
+          `<li style="border:0;padding-top:10px"><button class="btn quiet addRow" data-d="${d}" data-m="${m}"
+             style="min-height:40px;font-size:13.5px;margin-left:0">＋ 이 끼니에 인원 추가</button></li></ul>`;
       }
       return `<div class="m logrow" data-k="${key}" style="cursor:pointer">
         <span>${open?"▾":"▸"} ${m} <i style="color:var(--dim);font-size:13px;font-style:normal">${detail}</i></span>
@@ -1312,6 +1470,10 @@ function drawLog(){
   }).join("");
 
   drawPicker("logPick");
+  if($("addOpen")) $("addOpen").onclick=()=>openAdd();
+  $("logPane").querySelectorAll(".addRow").forEach(b=>b.onclick=e=>{
+    e.stopPropagation(); openAdd(b.dataset.d,b.dataset.m);
+  });
   $("logPane").querySelectorAll(".logrow").forEach(el=>el.onclick=()=>{
     openLog = openLog===el.dataset.k ? null : el.dataset.k;
     drawLog();
@@ -1372,8 +1534,21 @@ async function toggleResv(p){
   persist(); refreshAll();
   toast(`${p.name} 님 저녁 예약을 ${on?"취소":"추가"}했습니다`);
 }
+function drawSync(){
+  const el=$("syncState"); if(!el) return;
+  if(!apiBase()){ el.textContent="서버에 연결되어 있지 않습니다. 이 태블릿 안에서만 관리됩니다."; el.style.color="var(--dim)"; return }
+  if(lastSync.err){ el.textContent="마지막 확인 "+lastSync.t+" · 실패\n"+lastSync.err; el.style.color="var(--red)"; }
+  else if(lastSync.t){ el.textContent="서버에서 가져옴 "+lastSync.t+" · 1분마다 자동으로 확인합니다"; el.style.color="var(--green)"; }
+  else { el.textContent="아직 서버를 확인하지 않았습니다."; el.style.color="var(--dim)"; }
+}
+$("rvSync").onclick=async()=>{
+  $("syncState").textContent="가져오는 중…";
+  const ok=await pullResv(false);
+  drawSync();
+  if(ok) toast("서버 내용을 가져왔습니다");
+};
 function drawResv(){
-  lockCheck();
+  lockCheck(); drawSync();
   const d=dkey(), rs=db.reserve[d]||{}, q=$("rvSearch").value.trim();
   $("rvTotal").textContent=Object.keys(rs).length;
   const dl=$("rvDl"); dl.textContent=dlText(); dl.classList.toggle("closed",pastDeadline());
