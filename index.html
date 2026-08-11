@@ -511,6 +511,24 @@
       <div id="queueState" style="font-size:13px;margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"></div>
     </div>
     <div class="card noprint">
+      <h3>위치로 식수 체크</h3>
+      <p>QR이 잘 안 읽힐 때를 대비한 예비 수단입니다. 켜두면 직원이 식당 근처에 왔을 때
+         본인 화면에 체크 버튼이 켜지고, 누르면 바로 식수에 반영됩니다.
+         담당자 화면에서는 <b>위치</b> 표시가 붙어 구분됩니다.</p>
+      <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer">
+        <input type="checkbox" id="locOn" style="width:19px;height:19px;accent-color:#5BD79A">
+        <span>위치로 체크하기 사용</span>
+      </label>
+      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn" id="locHere">지금 이 자리를 식당으로 지정</button>
+      </div>
+      <div class="addrow" style="margin-top:10px">
+        <input id="locR" placeholder="인식 반경 (m)" inputmode="numeric" style="max-width:170px">
+        <button class="btn" id="locSave" style="flex:none">저장</button>
+      </div>
+      <div id="locState" style="font-size:13px;color:var(--dim);margin-top:11px;line-height:1.7;white-space:pre-line"></div>
+    </div>
+    <div class="card noprint">
       <h3>이 기기 용도</h3><span id="verTag" hidden></span>
       <p>지금은 <b>식당 관리자 화면</b>으로 쓰고 있습니다. <span id="kioskNote"></span></p>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
@@ -609,6 +627,10 @@
     <div class="qrbox" id="myQr" style="width:min(260px,68vw)"></div>
     <div class="mycode" id="myCode"></div>
     <p>식당 입구 태블릿 카메라에 이 화면을 비춰 주세요.<br>잘 안 읽히면 화면 밝기를 올리시면 됩니다.</p>
+    <div id="myLoc" hidden style="width:min(300px,100%);border-top:1px solid var(--line);padding-top:18px">
+      <div id="myLocState" style="font-size:14px;color:var(--dim);margin-bottom:12px"></div>
+      <button class="btn" id="myLocBtn" style="width:100%;min-height:60px;font-size:17px" disabled></button>
+    </div>
     <div id="myResv" hidden style="width:min(300px,100%);border-top:1px solid var(--line);padding-top:18px">
       <div id="myResvState" style="font-size:16px;font-weight:600;margin-bottom:12px"></div>
       <button class="btn" id="myResvBtn" style="width:100%"></button>
@@ -714,11 +736,11 @@ function grpOf(code,v){
 const SEED_VER=3;
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원","type":"직원"},{"code":"11374","name":"양찬호","dept":"교육지원부","type":"직원"},{"code":"12194","name":"남우현","dept":"교육지원부","type":"직원"},{"code":"12412","name":"이승범","dept":"교육지원부","type":"직원"},{"code":"11663","name":"박상준","dept":"교육지원부","type":"직원"},{"code":"12837","name":"부윤섭","dept":"교육지원부","type":"직원"},{"code":"12356","name":"이상건","dept":"교육지원부","type":"직원"},{"code":"12193","name":"신동명","dept":"교육지원부","type":"직원"},{"code":"13952","name":"조부경","dept":"교육지원부","type":"직원"},{"code":"14064","name":"이경수","dept":"교육지원부","type":"직원"},{"code":"14318","name":"차규민","dept":"교육지원부","type":"직원"},{"code":"14548","name":"이창우","dept":"교육지원부","type":"직원"},{"code":"14467","name":"이유진","dept":"교육지원부","type":"직원"},{"code":"14748","name":"채유란","dept":"교육지원부","type":"직원"},{"code":"83438","name":"이민경","dept":"교육지원부","type":"직원"},{"code":"13086","name":"박종배","dept":"교육운영부","type":"직원"},{"code":"13258","name":"전은영","dept":"교육운영부","type":"직원"},{"code":"51035","name":"장영근","dept":"교육운영부","type":"직원"},{"code":"12542","name":"주영미","dept":"교육운영부","type":"직원"},{"code":"13812","name":"백유민","dept":"교육운영부","type":"직원"},{"code":"14771","name":"김지은","dept":"교육운영부","type":"직원"},{"code":"14898","name":"박찬미","dept":"교육운영부","type":"직원"},{"code":"14592","name":"박현일","dept":"교육운영부","type":"직원"},{"code":"12848","name":"임채택","dept":"교육운영부","type":"직원"},{"code":"14603","name":"박호원","dept":"교육운영부","type":"직원"},{"code":"14685","name":"최자영","dept":"교육운영부","type":"직원"},{"code":"13281","name":"장두석","dept":"교육운영부","type":"직원"},{"code":"13509","name":"이용철","dept":"교육운영부","type":"직원"},{"code":"13670","name":"이승희","dept":"교육운영부","type":"직원"},{"code":"14265","name":"김정민","dept":"교육운영부","type":"직원"},{"code":"13238","name":"손우람","dept":"교육운영부","type":"직원"}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="2.1";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="2.2";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
-let db={roster:[],records:{},reserve:{},lock:{},queue:[],mode:null,myCode:null,api:"",seedVer:0};
+let db={roster:[],records:{},reserve:{},lock:{},queue:[],conf:{},mode:null,myCode:null,api:"",seedVer:0};
 let meal=MEALS[new Date().getHours()<10?0:new Date().getHours()<15?1:2];
 let stream=null,scanning=false,detector=null,lastCode="",lastAt=0,saveTimer=null,lastIn=null;
 let facing="user";   // 태블릿을 세워두고 쓰므로 전면 카메라가 기본
@@ -750,14 +772,14 @@ async function load(){
     const c=decodeURIComponent(location.hash.slice(1)).trim();
     if(SEED.some(p=>p.code===c)){db.mode="user"; db.myCode=c;}
   }
-  db.reserve=db.reserve||{}; db.lock=db.lock||{}; db.queue=db.queue||[];
+  db.reserve=db.reserve||{}; db.lock=db.lock||{}; db.queue=db.queue||[]; db.conf=db.conf||{};
   if(db.facing) facing=db.facing;
   if(db.seedVer!==SEED_VER){
     db.roster=SEED.map(p=>({code:p.code,name:p.name,dept:p.dept}));
     db.seedVer=SEED_VER; persist();
   }
   buildMeals(); render(); drawRoster(); drawLog(); applyDim(); applyMode();
-  if(apiBase()){ await pullRoster(); drawRoster(); if(curMode()==="user") drawMy(); flushQueue(); }
+  if(apiBase()){ await pullConf(); await pullRoster(); drawRoster(); if(curMode()==="user") drawMy(); flushQueue(); }
 }
 function queueSave(){clearTimeout(saveTimer);saveTimer=setTimeout(persist,600)}
 async function persist(){try{await Store.set(KEY,JSON.stringify(db))}catch(e){}}
@@ -908,7 +930,7 @@ function render(){
     return `<div>${esc(dp)}<b>${n}</b></div>`;
   }).join("");
   $("recent").innerHTML=list.slice(0,60).map(([c,v])=>
-    `<li><span>${esc(v.name)} <i>${esc(v.dept||"")}</i></span><em>${v.t}</em>`+
+    `<li><span>${esc(v.name)} <i>${esc(v.dept||"")}</i>${v.via?' <span class="gtag">위치</span>':""}</span><em>${v.t}</em>`+
     `<button type="button" data-c="${esc(c)}">취소</button></li>`).join("")
     || `<li style="color:var(--dim)">아직 체크인이 없습니다</li>`;
   $("recent").querySelectorAll("button[data-c]").forEach(b=>b.onclick=()=>cancelIn(b.dataset.c));
@@ -988,7 +1010,7 @@ async function pullResv(quiet){
       db.records[d]=merged;
       db.queue.filter(e=>e.date===d).forEach(e=>{
         db.records[d][e.meal]=db.records[d][e.meal]||{};
-        if(e.on) db.records[d][e.meal][e.code]={t:e.t,name:e.name,dept:e.dept,g:e.guest?1:0};
+        if(e.on) db.records[d][e.meal][e.code]={t:e.t,name:e.name,dept:e.dept,g:e.guest?1:0,via:e.via||""};
         else delete db.records[d][e.meal][e.code];
       });
     }
@@ -1013,6 +1035,22 @@ async function pushRoster(){
     }
   }catch(e){}
 }
+async function pullConf(){
+  if(!apiBase()) return;
+  try{ const j=await apiCall({action:"config"}); if(j&&j.conf) { db.conf=j.conf; persist(); } }catch(e){}
+}
+async function pushConf(conf){
+  const j=await apiCall({action:"configSet",conf});
+  if(j&&j.conf){ db.conf=j.conf; persist(); }
+}
+function locConf(){ return Object.assign({on:false,lat:0,lng:0,r:150}, db.conf.loc||{}); }
+function distM(a,b,c,d){
+  const R=6371000, t=x=>x*Math.PI/180;
+  const dLat=t(c-a), dLng=t(d-b);
+  const x=Math.sin(dLat/2)**2 + Math.cos(t(a))*Math.cos(t(c))*Math.sin(dLng/2)**2;
+  return Math.round(2*R*Math.asin(Math.sqrt(x)));
+}
+
 async function pullRoster(){
   if(!apiBase()) return;
   try{
@@ -1298,7 +1336,7 @@ function drawSound(){
 }
 function drawInfo(){
   $("verBig").textContent=APP_VER;
-  drawApi(); drawKiosk(); drawQueue(); drawSound(); drawDim();
+  drawApi(); drawKiosk(); drawQueue(); drawSound(); drawDim(); drawLocConf();
 }
 $("verCheck").onclick=async()=>{ await checkUpdate();
   toast($("updbar").hidden?"최신 버전입니다":"새 버전이 있습니다"); };
@@ -1308,6 +1346,35 @@ function drawKiosk(){
     ? "이 기기는 식당 태블릿으로 지정되어 있어 비밀번호 없이 열립니다."
     : "이 기기는 창을 닫으면 관리자 화면이 풀립니다.";
 }
+function drawLocConf(){
+  const c=locConf();
+  $("locOn").checked=!!c.on;
+  $("locR").value=c.r||150;
+  $("locState").textContent = c.lat
+    ? `지정된 위치 ${c.lat.toFixed(5)}, ${c.lng.toFixed(5)} · 반경 ${c.r}m`
+    : "아직 식당 위치가 지정되지 않았습니다. 태블릿을 식당에 둔 상태에서 지정해 주세요.";
+}
+async function saveLoc(next){
+  try{ await pushConf({loc:next}); drawLocConf(); toast("저장했습니다"); }
+  catch(e){ toast("저장하지 못했습니다 · "+(e.message||e)); }
+}
+$("locOn").onchange=()=>saveLoc(Object.assign(locConf(),{on:$("locOn").checked}));
+$("locSave").onclick=()=>{
+  const r=Math.max(20,Math.min(2000,Number($("locR").value)||150));
+  saveLoc(Object.assign(locConf(),{r}));
+};
+$("locHere").onclick=()=>{
+  if(!navigator.geolocation){toast("이 기기는 위치를 쓸 수 없습니다");return}
+  $("locState").textContent="현재 위치를 확인하는 중…";
+  navigator.geolocation.getCurrentPosition(pos=>{
+    saveLoc(Object.assign(locConf(),{lat:pos.coords.latitude,lng:pos.coords.longitude}));
+  },err=>{
+    $("locState").textContent = err.code===1
+      ? "위치 권한이 거부되었습니다. 브라우저 설정에서 허용해 주세요."
+      : "위치를 확인하지 못했습니다.";
+  },{enableHighAccuracy:true,timeout:20000});
+};
+
 function drawApi(){
   $("apiInput").value=API_URL||db.api||"";
   $("apiNow").textContent = apiBase() ? "지금 쓰는 주소 · "+apiBase() : "";
@@ -1523,7 +1590,7 @@ function drawLog(){
         rows=`<ul class="plist" style="margin:6px 0 14px">`+entries
           .sort((a,b)=>String(a[1].t).localeCompare(String(b[1].t)))
           .map(([c,v])=>`<li><span><span class="pn">${esc(v.name)}</span>
-            <span class="pd">${esc(v.dept||"")} · <em>${esc(c)}</em></span></span>
+            <span class="pd">${esc(v.dept||"")} · <em>${esc(c)}</em>${v.via?' <span class="gtag">위치</span>':""}</span></span>
             <button class="cancel" data-d="${d}" data-m="${m}" data-c="${esc(c)}">삭제</button></li>`).join("")+
           `<li style="border:0;padding-top:10px"><button class="btn quiet addRow" data-d="${d}" data-m="${m}"
              style="min-height:40px;font-size:13.5px;margin-left:0">＋ 이 끼니에 인원 추가</button></li></ul>`;
@@ -1888,6 +1955,7 @@ function applyMode(){
   keepAwake(m==="admin");
   drawFs();
   if(m!=="admin") stopCam();
+  if(m!=="user") stopWatch();
   if(m==="user") drawMy();
 }
 function setMode(m,keep){
@@ -1918,6 +1986,57 @@ $("brandHome").onclick=async()=>{
     if(!await askOk("처음 화면으로 나갈까요?\n식수 체크를 계속하시려면 취소를 누르세요.","나가기")) return;
   }
   leaveMode();
+};
+
+/* ---------- 위치로 식수 체크 ---------- */
+let watchId=null, myDist=null, myDone=null;
+function stopWatch(){ if(watchId!==null){ navigator.geolocation.clearWatch(watchId); watchId=null; } }
+function startWatch(){
+  const c=locConf();
+  if(!c.on || !c.lat || !navigator.geolocation){ $("myLoc").hidden=true; return; }
+  $("myLoc").hidden=false;
+  drawLoc("식당 근처인지 확인하는 중…",false);
+  stopWatch();
+  watchId=navigator.geolocation.watchPosition(pos=>{
+    myDist=distM(pos.coords.latitude,pos.coords.longitude,c.lat,c.lng);
+    updateLoc();
+  },err=>{
+    myDist=null;
+    drawLoc(err.code===1?"위치 권한이 꺼져 있습니다. 허용하시면 이 자리에서 체크할 수 있습니다."
+                        :"위치를 확인하지 못했습니다.",false);
+  },{enableHighAccuracy:true,maximumAge:15000,timeout:20000});
+}
+function drawLoc(msg,ok,label){
+  $("myLocState").textContent=msg;
+  $("myLocState").style.color = ok?"var(--green)":"var(--dim)";
+  const b=$("myLocBtn");
+  b.disabled=!ok; b.textContent=label||"식수 체크";
+  b.style.background = ok?"var(--green)":"#26313E";
+  b.style.color = ok?"#0B1710":"#5A6A7A";
+  b.style.borderColor = ok?"var(--green)":"#43566D";
+}
+function updateLoc(){
+  const c=locConf(), m=timeMeal();
+  if(myDone===dkey()+"|"+m){ drawLoc(`${m} 식수 체크가 되었습니다`,false,"체크 완료"); return; }
+  if(myDist===null){ drawLoc("위치를 확인하는 중…",false); return; }
+  if(myDist>c.r){
+    drawLoc(`식당에서 약 ${myDist}m 떨어져 있습니다. 가까이 가면 버튼이 켜집니다.`,false);
+  }else{
+    drawLoc(`식당 근처입니다. 버튼을 누르면 ${m} 식수가 체크됩니다.`,true,`${m} 식수 체크`);
+  }
+}
+$("myLocBtn").onclick=async()=>{
+  const p=db.roster.find(x=>x.code===db.myCode); if(!p) return;
+  const d=dkey(), m=timeMeal();
+  $("myLocBtn").disabled=true; $("myLocState").textContent="처리하는 중…";
+  try{
+    await apiCall({action:"push",events:[{date:d,meal:m,code:p.code,name:p.name,
+      dept:p.dept||"",guest:!!p.guest,t:hm(),on:true,via:"위치"}]});
+    myDone=d+"|"+m; beep("ok"); toast(`${m} 식수가 체크되었습니다`);
+  }catch(e){
+    toast("체크하지 못했습니다 · "+(e.message||e));
+  }
+  updateLoc();
 };
 
 let myOn=false;
@@ -1953,6 +2072,7 @@ $("myResvBtn").onclick=async()=>{
     toast(myOn?"저녁 식사 신청을 취소했습니다":"저녁 식사를 신청했습니다");
   }catch(e){ toast("처리하지 못했습니다. 잠시 후 다시 시도해 주세요"); }
   drawMyResv(p);
+  startWatch();
 };
 
 function drawMy(){
