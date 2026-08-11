@@ -393,7 +393,7 @@
     </div>
   </div>
   <div class="foot">
-    <input class="scanfield" id="scanfield" placeholder="스캐너 입력 / 코드 직접 입력 후 Enter" autocomplete="off">
+    <input class="scanfield" id="scanfield" placeholder="사번 입력 후 Enter" autocomplete="off" inputmode="numeric">
     <button class="btn" id="undoBtn">직전 취소</button>
     <button class="btn" id="guestBtn">＋ 사내강사 직원</button>
     <button class="btn" id="camBtn">카메라 켜기</button>
@@ -629,7 +629,7 @@ function grpOf(code,v){
 const SEED_VER=3;
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원","type":"직원"},{"code":"11374","name":"양찬호","dept":"교육지원부","type":"직원"},{"code":"12194","name":"남우현","dept":"교육지원부","type":"직원"},{"code":"12412","name":"이승범","dept":"교육지원부","type":"직원"},{"code":"11663","name":"박상준","dept":"교육지원부","type":"직원"},{"code":"12837","name":"부윤섭","dept":"교육지원부","type":"직원"},{"code":"12356","name":"이상건","dept":"교육지원부","type":"직원"},{"code":"12193","name":"신동명","dept":"교육지원부","type":"직원"},{"code":"13952","name":"조부경","dept":"교육지원부","type":"직원"},{"code":"14064","name":"이경수","dept":"교육지원부","type":"직원"},{"code":"14318","name":"차규민","dept":"교육지원부","type":"직원"},{"code":"14548","name":"이창우","dept":"교육지원부","type":"직원"},{"code":"14467","name":"이유진","dept":"교육지원부","type":"직원"},{"code":"14748","name":"채유란","dept":"교육지원부","type":"직원"},{"code":"83438","name":"이민경","dept":"교육지원부","type":"직원"},{"code":"13086","name":"박종배","dept":"교육운영부","type":"직원"},{"code":"13258","name":"전은영","dept":"교육운영부","type":"직원"},{"code":"51035","name":"장영근","dept":"교육운영부","type":"직원"},{"code":"12542","name":"주영미","dept":"교육운영부","type":"직원"},{"code":"13812","name":"백유민","dept":"교육운영부","type":"직원"},{"code":"14771","name":"김지은","dept":"교육운영부","type":"직원"},{"code":"14898","name":"박찬미","dept":"교육운영부","type":"직원"},{"code":"14592","name":"박현일","dept":"교육운영부","type":"직원"},{"code":"12848","name":"임채택","dept":"교육운영부","type":"직원"},{"code":"14603","name":"박호원","dept":"교육운영부","type":"직원"},{"code":"14685","name":"최자영","dept":"교육운영부","type":"직원"},{"code":"13281","name":"장두석","dept":"교육운영부","type":"직원"},{"code":"13509","name":"이용철","dept":"교육운영부","type":"직원"},{"code":"13670","name":"이승희","dept":"교육운영부","type":"직원"},{"code":"14265","name":"김정민","dept":"교육운영부","type":"직원"},{"code":"13238","name":"손우람","dept":"교육운영부","type":"직원"}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="2026-08-10h";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="2026-08-10j";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -840,37 +840,34 @@ $("closeMeal").onclick=async()=>{
 
 /* ---------- 예약 서버 연결 ---------- */
 function apiBase(){return (db.api||API_URL||"").trim()}
-async function apiList(date){
-  const u=apiBase(); if(!u) return null;
-  const r=await fetch(`${u}?action=list&date=${encodeURIComponent(date)}&key=${encodeURIComponent(API_KEY)}`);
-  const j=await r.json();
-  if(!j.ok) throw new Error(j.error||"서버 오류");
-  return j.items||{};
-}
-async function apiSet(date,p,on){
-  const u=apiBase(); if(!u) return null;
-  const r=await fetch(u,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
-    body:JSON.stringify({action:"set",key:API_KEY,date,code:p.code,name:p.name,dept:p.dept||"",on:!!on})});
-  const j=await r.json();
-  if(!j.ok) throw new Error(j.error||"서버 오류");
-  return j.items||{};
-}
+/* 구글 앱스스크립트는 POST가 막히는 환경이 있어 주소로 보내는 방식을 먼저 씁니다 */
 async function apiCall(body){
   const u=apiBase(); if(!u) return null;
-  const r=await fetch(u,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
-    body:JSON.stringify(Object.assign({key:API_KEY},body))});
-  const j=await r.json();
+  const payload=JSON.stringify(Object.assign({key:API_KEY},body));
+  const q=u+"?p="+encodeURIComponent(payload);
+  let r;
+  if(q.length<7000){ r=await fetch(q); }
+  else { r=await fetch(u,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:payload}); }
+  const t=await r.text();
+  let j; try{ j=JSON.parse(t); }catch(e){ throw new Error("서버가 다른 화면을 보냈습니다 (HTTP "+r.status+")"); }
   if(!j.ok) throw new Error(j.error||"서버 오류");
   return j;
 }
-
+async function apiList(date){
+  const j=await apiCall({action:"list",date});
+  return j? (j.items||{}) : null;
+}
+async function apiSet(date,p,on){
+  const j=await apiCall({action:"set",date,code:p.code,name:p.name,dept:p.dept||"",on:!!on});
+  return j? (j.items||{}) : null;
+}
 /* --- 오프라인에도 멈추지 않도록: 로컬에 먼저 쓰고 대기열로 올려보냄 --- */
 let flushing=false;
 function logEvent(ev){ db.queue.push(ev); queueSave(); flushQueue(); }
 async function flushQueue(){
   if(flushing||!apiBase()||!db.queue.length) return;
   flushing=true;
-  const batch=db.queue.slice(0,60);
+  const batch=db.queue.slice(0,8);
   try{
     await apiCall({action:"push",events:batch});
     db.queue=db.queue.slice(batch.length); persist();
@@ -907,7 +904,13 @@ async function pullResv(quiet){
 /** 명단을 서버와 맞춥니다 (직원 폰에도 새 명단이 자동 반영됩니다) */
 async function pushRoster(){
   if(!apiBase()) return;
-  try{ await apiCall({action:"rosterSet",roster:db.roster}); }catch(e){}
+  try{
+    const all=db.roster.slice();
+    if(!all.length){ await apiCall({action:"rosterSet",roster:[],reset:true}); return; }
+    for(let i=0;i<all.length;i+=12){
+      await apiCall({action:"rosterSet",roster:all.slice(i,i+12),reset:i===0});
+    }
+  }catch(e){}
 }
 async function pullRoster(){
   if(!apiBase()) return;
@@ -1672,7 +1675,7 @@ async function drawMyResv(p){
       ? `${DEADLINE[0]}시 마감이 지났습니다. 지금 바꾸시면 식당에 따로 알려 주세요.`
       : `${DEADLINE[0]}시까지 자유롭게 바꾸실 수 있습니다.`;
   }catch(e){
-    $("myResvState").textContent="예약 서버에 연결하지 못했습니다";
+    $("myResvState").textContent="연결하지 못했습니다 · "+(e.message||e);
     $("myResvState").style.color="var(--red)";
     $("myResvBtn").textContent="다시 시도";
     $("myResvBtn").disabled=false;
