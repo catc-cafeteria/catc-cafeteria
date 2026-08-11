@@ -693,7 +693,7 @@ function grpOf(code,v){
 const SEED_VER=3;
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원","type":"직원"},{"code":"11374","name":"양찬호","dept":"교육지원부","type":"직원"},{"code":"12194","name":"남우현","dept":"교육지원부","type":"직원"},{"code":"12412","name":"이승범","dept":"교육지원부","type":"직원"},{"code":"11663","name":"박상준","dept":"교육지원부","type":"직원"},{"code":"12837","name":"부윤섭","dept":"교육지원부","type":"직원"},{"code":"12356","name":"이상건","dept":"교육지원부","type":"직원"},{"code":"12193","name":"신동명","dept":"교육지원부","type":"직원"},{"code":"13952","name":"조부경","dept":"교육지원부","type":"직원"},{"code":"14064","name":"이경수","dept":"교육지원부","type":"직원"},{"code":"14318","name":"차규민","dept":"교육지원부","type":"직원"},{"code":"14548","name":"이창우","dept":"교육지원부","type":"직원"},{"code":"14467","name":"이유진","dept":"교육지원부","type":"직원"},{"code":"14748","name":"채유란","dept":"교육지원부","type":"직원"},{"code":"83438","name":"이민경","dept":"교육지원부","type":"직원"},{"code":"13086","name":"박종배","dept":"교육운영부","type":"직원"},{"code":"13258","name":"전은영","dept":"교육운영부","type":"직원"},{"code":"51035","name":"장영근","dept":"교육운영부","type":"직원"},{"code":"12542","name":"주영미","dept":"교육운영부","type":"직원"},{"code":"13812","name":"백유민","dept":"교육운영부","type":"직원"},{"code":"14771","name":"김지은","dept":"교육운영부","type":"직원"},{"code":"14898","name":"박찬미","dept":"교육운영부","type":"직원"},{"code":"14592","name":"박현일","dept":"교육운영부","type":"직원"},{"code":"12848","name":"임채택","dept":"교육운영부","type":"직원"},{"code":"14603","name":"박호원","dept":"교육운영부","type":"직원"},{"code":"14685","name":"최자영","dept":"교육운영부","type":"직원"},{"code":"13281","name":"장두석","dept":"교육운영부","type":"직원"},{"code":"13509","name":"이용철","dept":"교육운영부","type":"직원"},{"code":"13670","name":"이승희","dept":"교육운영부","type":"직원"},{"code":"14265","name":"김정민","dept":"교육운영부","type":"직원"},{"code":"13238","name":"손우람","dept":"교육운영부","type":"직원"}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="1.5";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="1.6";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -1457,7 +1457,7 @@ function drawLog(){
         rows=`<ul class="plist" style="margin:6px 0 14px">`+entries
           .sort((a,b)=>String(a[1].t).localeCompare(String(b[1].t)))
           .map(([c,v])=>`<li><span><span class="pn">${esc(v.name)}</span>
-            <span class="pd">${esc(v.dept||"")} · <em>${esc(c)}</em> · ${esc(v.t||"")}</span></span>
+            <span class="pd">${esc(v.dept||"")} · <em>${esc(c)}</em></span></span>
             <button class="cancel" data-d="${d}" data-m="${m}" data-c="${esc(c)}">삭제</button></li>`).join("")+
           `<li style="border:0;padding-top:10px"><button class="btn quiet addRow" data-d="${d}" data-m="${m}"
              style="min-height:40px;font-size:13.5px;margin-left:0">＋ 이 끼니에 인원 추가</button></li></ul>`;
@@ -1580,7 +1580,7 @@ function drawResv(){
     const on=!!rs[p.code];
     return `<li><span class="dot ${on?"":"off"}"></span>
       <span><span class="pn">${esc(p.name)}</span>
-      <span class="pd">${esc(p.dept||"")} · <em>${esc(p.code)}</em>${on?" · "+rs[p.code].t+" 예약":""}${p.missing?' <span class="gtag">명단에 없음</span>':""}</span></span>
+      <span class="pd">${esc(p.dept||"")} · <em>${esc(p.code)}</em>${p.missing?' <span class="gtag">명단에 없음</span>':""}</span></span>
       <button data-i="${i}" class="${on?"cancel":"add"}">${on?"예약 취소":"예약 추가"}</button></li>`;
   }).join("");
   $("rvList").querySelectorAll("button").forEach(b=>b.onclick=()=>toggleResv(items[+b.dataset.i]));
