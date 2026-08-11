@@ -363,6 +363,7 @@
   <div class="rule"></div>
   <div class="bt">식수관리시스템</div>
   <div class="bs">항공기술훈련원</div>
+  <button type="button" class="modebtn" id="lockBtn" hidden>화면 잠금</button>
   <button type="button" class="modebtn" id="fsBtn" hidden>전체화면</button>
   <button type="button" class="modebtn" id="modeBtn" hidden>처음으로</button>
 </div>
@@ -762,7 +763,7 @@ function grpOf(code,v){
 const SEED_VER=3;
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원","type":"직원"},{"code":"11374","name":"양찬호","dept":"교육지원부","type":"직원"},{"code":"12194","name":"남우현","dept":"교육지원부","type":"직원"},{"code":"12412","name":"이승범","dept":"교육지원부","type":"직원"},{"code":"11663","name":"박상준","dept":"교육지원부","type":"직원"},{"code":"12837","name":"부윤섭","dept":"교육지원부","type":"직원"},{"code":"12356","name":"이상건","dept":"교육지원부","type":"직원"},{"code":"12193","name":"신동명","dept":"교육지원부","type":"직원"},{"code":"13952","name":"조부경","dept":"교육지원부","type":"직원"},{"code":"14064","name":"이경수","dept":"교육지원부","type":"직원"},{"code":"14318","name":"차규민","dept":"교육지원부","type":"직원"},{"code":"14548","name":"이창우","dept":"교육지원부","type":"직원"},{"code":"14467","name":"이유진","dept":"교육지원부","type":"직원"},{"code":"14748","name":"채유란","dept":"교육지원부","type":"직원"},{"code":"83438","name":"이민경","dept":"교육지원부","type":"직원"},{"code":"13086","name":"박종배","dept":"교육운영부","type":"직원"},{"code":"13258","name":"전은영","dept":"교육운영부","type":"직원"},{"code":"51035","name":"장영근","dept":"교육운영부","type":"직원"},{"code":"12542","name":"주영미","dept":"교육운영부","type":"직원"},{"code":"13812","name":"백유민","dept":"교육운영부","type":"직원"},{"code":"14771","name":"김지은","dept":"교육운영부","type":"직원"},{"code":"14898","name":"박찬미","dept":"교육운영부","type":"직원"},{"code":"14592","name":"박현일","dept":"교육운영부","type":"직원"},{"code":"12848","name":"임채택","dept":"교육운영부","type":"직원"},{"code":"14603","name":"박호원","dept":"교육운영부","type":"직원"},{"code":"14685","name":"최자영","dept":"교육운영부","type":"직원"},{"code":"13281","name":"장두석","dept":"교육운영부","type":"직원"},{"code":"13509","name":"이용철","dept":"교육운영부","type":"직원"},{"code":"13670","name":"이승희","dept":"교육운영부","type":"직원"},{"code":"14265","name":"김정민","dept":"교육운영부","type":"직원"},{"code":"13238","name":"손우람","dept":"교육운영부","type":"직원"}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="3.1";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="3.2";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -2068,17 +2069,25 @@ $("mCopy").onclick=async()=>{
 
 /* ---------- 기기 모드 (관리자 태블릿 / 개인 휴대폰) ---------- */
 function fnv(s){let x=0x811c9dc5;for(let i=0;i<s.length;i++){x^=s.charCodeAt(i);x=Math.imul(x,0x01000193)>>>0}return x.toString(16)}
-let pinOpen=false;
+let pinOpen=false, pinPurpose="enter";
 let sessionMode=null;                 // 태블릿으로 지정하지 않은 기기는 창을 닫으면 풀림
 function curMode(){return sessionMode||db.mode}
 function applyMode(){
-  const m=curMode();
+  const m=curMode(), locked = m==="admin" && !!db.locked;
   $("gate").hidden = !!m || pinOpen;
   $("pinpane").hidden = !pinOpen;
   $("mypage").hidden = m!=="user";
-  document.querySelector(".topbar").hidden = m!=="admin";
-  document.querySelectorAll(".page").forEach(el=>{el.hidden = m!=="admin"});
-  $("modeBtn").hidden = m!=="admin";
+  document.querySelector(".topbar").hidden = m!=="admin" || locked;
+  document.querySelectorAll(".page").forEach(el=>{
+    el.hidden = m!=="admin" || (locked && el.dataset.page!=="scan");
+  });
+  if(locked){
+    document.querySelectorAll(".page").forEach(el=>el.dataset.on = el.dataset.page==="scan"?"1":"0");
+    document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",String(t.dataset.go==="scan")));
+  }
+  $("lockBtn").hidden = m!=="admin";
+  $("lockBtn").textContent = locked ? "잠금 해제" : "화면 잠금";
+  $("modeBtn").hidden = m!=="admin" || locked;
   $("fsBtn").hidden = m!=="admin" || !fsOK;
   keepAwake(m==="admin");
   drawFs();
@@ -2095,10 +2104,14 @@ function leaveMode(){ sessionMode=null; db.mode=null; db.kiosk=false; pinOpen=fa
 $("pickUser").onclick=()=>setMode("user");
 $("pickAdmin").onclick=()=>{pinOpen=true; applyMode(); $("pinInput").value="";
   setTimeout(()=>$("pinInput").focus(),80)};
-$("pinBack").onclick=()=>{pinOpen=false; applyMode()};
+$("pinBack").onclick=()=>{pinOpen=false; pinPurpose="enter"; applyMode()};
 $("pinGo").onclick=()=>{
   if(fnv($("pinInput").value.trim())!==ADMIN_PIN){
     $("pinInput").value=""; beep("bad"); toast("비밀번호가 맞지 않습니다"); return;
+  }
+  if(pinPurpose==="unlock"){
+    db.locked=false; pinPurpose="enter"; pinOpen=false; persist(); applyMode();
+    toast("잠금을 해제했습니다"); return;
   }
   const keep=$("pinKeep").checked;
   db.kiosk=keep; pinOpen=false;
@@ -2109,7 +2122,18 @@ $("pinInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefaul
 $("toUser").onclick=()=>{db.myCode=null; db.kiosk=false; setMode("user")};
 $("toGate").onclick=leaveMode;
 $("modeBtn").onclick=leaveMode;
+$("lockBtn").onclick=async()=>{
+  if(db.locked){
+    pinPurpose="unlock"; pinOpen=true; applyMode();
+    $("pinInput").value=""; setTimeout(()=>$("pinInput").focus(),80);
+  }else{
+    if(!await askOk("식수 체크 화면만 남기고 잠급니다.\n다른 화면으로 가려면 비밀번호가 필요합니다.","잠그기")) return;
+    db.locked=true; persist(); applyMode(); toast("화면을 잠갔습니다");
+  }
+};
+
 $("brandHome").onclick=async()=>{
+  if(curMode()==="admin" && db.locked){ toast("잠금을 먼저 해제해 주세요"); return; }
   if(curMode()==="admin"){
     if(!await askOk("처음 화면으로 나갈까요?\n식수 체크를 계속하시려면 취소를 누르세요.","나가기")) return;
   }
