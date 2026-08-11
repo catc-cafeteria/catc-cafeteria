@@ -693,7 +693,7 @@ function grpOf(code,v){
 const SEED_VER=3;
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원","type":"직원"},{"code":"11374","name":"양찬호","dept":"교육지원부","type":"직원"},{"code":"12194","name":"남우현","dept":"교육지원부","type":"직원"},{"code":"12412","name":"이승범","dept":"교육지원부","type":"직원"},{"code":"11663","name":"박상준","dept":"교육지원부","type":"직원"},{"code":"12837","name":"부윤섭","dept":"교육지원부","type":"직원"},{"code":"12356","name":"이상건","dept":"교육지원부","type":"직원"},{"code":"12193","name":"신동명","dept":"교육지원부","type":"직원"},{"code":"13952","name":"조부경","dept":"교육지원부","type":"직원"},{"code":"14064","name":"이경수","dept":"교육지원부","type":"직원"},{"code":"14318","name":"차규민","dept":"교육지원부","type":"직원"},{"code":"14548","name":"이창우","dept":"교육지원부","type":"직원"},{"code":"14467","name":"이유진","dept":"교육지원부","type":"직원"},{"code":"14748","name":"채유란","dept":"교육지원부","type":"직원"},{"code":"83438","name":"이민경","dept":"교육지원부","type":"직원"},{"code":"13086","name":"박종배","dept":"교육운영부","type":"직원"},{"code":"13258","name":"전은영","dept":"교육운영부","type":"직원"},{"code":"51035","name":"장영근","dept":"교육운영부","type":"직원"},{"code":"12542","name":"주영미","dept":"교육운영부","type":"직원"},{"code":"13812","name":"백유민","dept":"교육운영부","type":"직원"},{"code":"14771","name":"김지은","dept":"교육운영부","type":"직원"},{"code":"14898","name":"박찬미","dept":"교육운영부","type":"직원"},{"code":"14592","name":"박현일","dept":"교육운영부","type":"직원"},{"code":"12848","name":"임채택","dept":"교육운영부","type":"직원"},{"code":"14603","name":"박호원","dept":"교육운영부","type":"직원"},{"code":"14685","name":"최자영","dept":"교육운영부","type":"직원"},{"code":"13281","name":"장두석","dept":"교육운영부","type":"직원"},{"code":"13509","name":"이용철","dept":"교육운영부","type":"직원"},{"code":"13670","name":"이승희","dept":"교육운영부","type":"직원"},{"code":"14265","name":"김정민","dept":"교육운영부","type":"직원"},{"code":"13238","name":"손우람","dept":"교육운영부","type":"직원"}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="1.7";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="1.8";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -1059,6 +1059,12 @@ async function startCam(){
     stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facing,
       width:{ideal:1920},height:{ideal:1080}}});
     video.srcObject=stream; await video.play();
+    try{                                  // 되는 기기에서는 자동 초점을 계속 켭니다
+      const tr=stream.getVideoTracks()[0];
+      const cap=tr.getCapabilities?tr.getCapabilities():{};
+      if(cap.focusMode&&cap.focusMode.includes("continuous"))
+        await tr.applyConstraints({advanced:[{focusMode:"continuous"}]});
+    }catch(e){}
     detector=null;
     if("BarcodeDetector" in window){
       try{
@@ -1097,18 +1103,18 @@ let scanN=0, hitAt=0, zoomTurn=false;
 function readCanvas(){
   if(!window.jsQR) return null;
   const img=ctx.getImageData(0,0,canvas.width,canvas.height);
-  const c=jsQR(img.data,img.width,img.height,{inversionAttempts:"attemptBoth"});
+  const c=jsQR(img.data,img.width,img.height,{inversionAttempts:"dontInvert"});
   return (c&&c.data)?c.data:null;
 }
 function grab(zoom){
   const vw=video.videoWidth, vh=video.videoHeight;
   if(!vw||!vh) return false;
-  if(zoom){                       // 가운데 절반만 잘라 확대 — 작게 보이는 QR용
-    const s=Math.min(vw,vh)*0.55;
-    canvas.width=640; canvas.height=640;
-    ctx.drawImage(video,(vw-s)/2,(vh-s)/2,s,s,0,0,640,640);
-  }else{
-    const k=Math.min(1,960/vw);
+  if(zoom){                       // 가운데만 잘라 원본 화소 그대로 — 작게 보이는 QR용
+    const s=Math.round(Math.min(vw,vh)*0.6);
+    canvas.width=s; canvas.height=s;
+    ctx.drawImage(video,Math.round((vw-s)/2),Math.round((vh-s)/2),s,s,0,0,s,s);
+  }else{                          // 줄이지 않고 원본 해상도로 읽습니다
+    const k=Math.min(1,1600/vw);
     canvas.width=Math.round(vw*k); canvas.height=Math.round(vh*k);
     ctx.drawImage(video,0,0,canvas.width,canvas.height);
   }
@@ -1125,8 +1131,8 @@ async function tick(){
         if(codes.length) found=codes[0].rawValue;
       }
       if(!found && window.jsQR){
-        zoomTurn=!zoomTurn;
-        if(grab(zoomTurn)) found=readCanvas();
+        if(grab(false)) found=readCanvas();
+        if(!found && grab(true)) found=readCanvas();
       }
     }catch(e){}
   }
