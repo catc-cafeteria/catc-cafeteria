@@ -492,6 +492,7 @@
         <span style="font-size:13px;color:var(--dim)">버전</span>
         <span id="verBig" style="font-family:var(--mono);font-size:26px;color:var(--amber);font-weight:600"></span>
       </div>
+      <div id="sverTag" style="font-size:13px;margin-top:8px"></div>
       <p style="margin-top:12px">직원들 휴대폰에 뜨는 버전이 이것과 다르면 그 기기는 아직 예전 파일을 쓰고 있는 것입니다.
          새 버전이 올라오면 화면 위에 알림 띠가 뜨고, 직원 화면은 알아서 갱신됩니다.</p>
       <button class="btn quiet" id="verCheck" style="margin-top:12px;min-height:42px;font-size:13.5px">새 버전 확인</button>
@@ -736,7 +737,7 @@ function grpOf(code,v){
 const SEED_VER=3;
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원","type":"직원"},{"code":"11374","name":"양찬호","dept":"교육지원부","type":"직원"},{"code":"12194","name":"남우현","dept":"교육지원부","type":"직원"},{"code":"12412","name":"이승범","dept":"교육지원부","type":"직원"},{"code":"11663","name":"박상준","dept":"교육지원부","type":"직원"},{"code":"12837","name":"부윤섭","dept":"교육지원부","type":"직원"},{"code":"12356","name":"이상건","dept":"교육지원부","type":"직원"},{"code":"12193","name":"신동명","dept":"교육지원부","type":"직원"},{"code":"13952","name":"조부경","dept":"교육지원부","type":"직원"},{"code":"14064","name":"이경수","dept":"교육지원부","type":"직원"},{"code":"14318","name":"차규민","dept":"교육지원부","type":"직원"},{"code":"14548","name":"이창우","dept":"교육지원부","type":"직원"},{"code":"14467","name":"이유진","dept":"교육지원부","type":"직원"},{"code":"14748","name":"채유란","dept":"교육지원부","type":"직원"},{"code":"83438","name":"이민경","dept":"교육지원부","type":"직원"},{"code":"13086","name":"박종배","dept":"교육운영부","type":"직원"},{"code":"13258","name":"전은영","dept":"교육운영부","type":"직원"},{"code":"51035","name":"장영근","dept":"교육운영부","type":"직원"},{"code":"12542","name":"주영미","dept":"교육운영부","type":"직원"},{"code":"13812","name":"백유민","dept":"교육운영부","type":"직원"},{"code":"14771","name":"김지은","dept":"교육운영부","type":"직원"},{"code":"14898","name":"박찬미","dept":"교육운영부","type":"직원"},{"code":"14592","name":"박현일","dept":"교육운영부","type":"직원"},{"code":"12848","name":"임채택","dept":"교육운영부","type":"직원"},{"code":"14603","name":"박호원","dept":"교육운영부","type":"직원"},{"code":"14685","name":"최자영","dept":"교육운영부","type":"직원"},{"code":"13281","name":"장두석","dept":"교육운영부","type":"직원"},{"code":"13509","name":"이용철","dept":"교육운영부","type":"직원"},{"code":"13670","name":"이승희","dept":"교육운영부","type":"직원"},{"code":"14265","name":"김정민","dept":"교육운영부","type":"직원"},{"code":"13238","name":"손우람","dept":"교육운영부","type":"직원"}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="2.2";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="2.3";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -963,6 +964,7 @@ async function apiCall(body){
   const t=await r.text();
   let j; try{ j=JSON.parse(t); }catch(e){ throw new Error("서버가 다른 화면을 보냈습니다 (HTTP "+r.status+")"); }
   if(!j.ok) throw new Error(j.error||"서버 오류");
+  if(j.sver!==undefined) db.sver=j.sver;
   return j;
 }
 async function apiList(date){
@@ -1041,7 +1043,8 @@ async function pullConf(){
 }
 async function pushConf(conf){
   const j=await apiCall({action:"configSet",conf});
-  if(j&&j.conf){ db.conf=j.conf; persist(); }
+  if(!j||!j.conf) throw new Error("서버가 설정을 저장하지 못했습니다. 서버 코드를 새로 배포해 주세요.");
+  db.conf=j.conf; persist();
 }
 function locConf(){ return Object.assign({on:false,lat:0,lng:0,r:150}, db.conf.loc||{}); }
 function distM(a,b,c,d){
@@ -1336,6 +1339,8 @@ function drawSound(){
 }
 function drawInfo(){
   $("verBig").textContent=APP_VER;
+  $("sverTag").textContent = db.sver ? "서버 코드 "+db.sver+"단계" : "서버 코드 단계 확인 안 됨";
+  $("sverTag").style.color = (db.sver||0)>=2 ? "var(--green)" : "var(--red)";
   drawApi(); drawKiosk(); drawQueue(); drawSound(); drawDim(); drawLocConf();
 }
 $("verCheck").onclick=async()=>{ await checkUpdate();
@@ -1350,9 +1355,12 @@ function drawLocConf(){
   const c=locConf();
   $("locOn").checked=!!c.on;
   $("locR").value=c.r||150;
-  $("locState").textContent = c.lat
+  const sv=(db.sver||0);
+  const svTxt = sv>=2 ? "" : "\n\n서버 코드가 예전 버전입니다. 이 기능을 쓰려면 Apps Script를 새로 배포해 주세요.";
+  $("locState").textContent = (c.lat
     ? `지정된 위치 ${c.lat.toFixed(5)}, ${c.lng.toFixed(5)} · 반경 ${c.r}m`
-    : "아직 식당 위치가 지정되지 않았습니다. 태블릿을 식당에 둔 상태에서 지정해 주세요.";
+    : "아직 식당 위치가 지정되지 않았습니다. 태블릿을 식당에 둔 상태에서 지정해 주세요.") + svTxt;
+  $("locState").style.color = sv>=2 ? "var(--dim)" : "var(--red)";
 }
 async function saveLoc(next){
   try{ await pushConf({loc:next}); drawLocConf(); toast("저장했습니다"); }
