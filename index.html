@@ -82,7 +82,7 @@
   .camstat b{color:var(--green);font-weight:600}
   .reticle{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
   .reticle b{width:min(50%,270px);aspect-ratio:1;border:2px solid rgba(255,184,77,.95);
-    border-radius:18px;box-shadow:0 0 0 9999px rgba(4,6,9,.78),0 0 22px rgba(255,184,77,.35)}
+    border-radius:18px;box-shadow:0 0 0 9999px rgba(2,4,6,var(--dimlv,.88)),0 0 22px rgba(255,184,77,.4)}
   .camoff{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
     justify-content:center;gap:14px;text-align:center;padding:24px;color:var(--dim);font-size:14px;line-height:1.7}
 
@@ -522,6 +522,16 @@
         <span>스캔할 때 소리 내기</span>
       </label>
       <button class="btn quiet" id="soundTest" style="margin-top:10px;min-height:42px;font-size:13.5px">소리 들어보기</button>
+
+      <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--line)">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <span style="font-size:14px">카메라 화면 어둡기</span>
+          <span id="dimVal" style="font-family:var(--mono);font-size:14px;color:var(--amber)"></span>
+        </div>
+        <p style="margin:6px 0 10px">조준 네모 바깥을 얼마나 어둡게 할지 정합니다. 오른쪽으로 갈수록 어두워집니다.</p>
+        <input type="range" id="dimRange" min="30" max="97" step="1"
+          style="width:100%;accent-color:#FFB84D;height:36px">
+      </div>
     </div>
       </div>
 </div>
@@ -704,7 +714,7 @@ function grpOf(code,v){
 const SEED_VER=3;
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원","type":"직원"},{"code":"11374","name":"양찬호","dept":"교육지원부","type":"직원"},{"code":"12194","name":"남우현","dept":"교육지원부","type":"직원"},{"code":"12412","name":"이승범","dept":"교육지원부","type":"직원"},{"code":"11663","name":"박상준","dept":"교육지원부","type":"직원"},{"code":"12837","name":"부윤섭","dept":"교육지원부","type":"직원"},{"code":"12356","name":"이상건","dept":"교육지원부","type":"직원"},{"code":"12193","name":"신동명","dept":"교육지원부","type":"직원"},{"code":"13952","name":"조부경","dept":"교육지원부","type":"직원"},{"code":"14064","name":"이경수","dept":"교육지원부","type":"직원"},{"code":"14318","name":"차규민","dept":"교육지원부","type":"직원"},{"code":"14548","name":"이창우","dept":"교육지원부","type":"직원"},{"code":"14467","name":"이유진","dept":"교육지원부","type":"직원"},{"code":"14748","name":"채유란","dept":"교육지원부","type":"직원"},{"code":"83438","name":"이민경","dept":"교육지원부","type":"직원"},{"code":"13086","name":"박종배","dept":"교육운영부","type":"직원"},{"code":"13258","name":"전은영","dept":"교육운영부","type":"직원"},{"code":"51035","name":"장영근","dept":"교육운영부","type":"직원"},{"code":"12542","name":"주영미","dept":"교육운영부","type":"직원"},{"code":"13812","name":"백유민","dept":"교육운영부","type":"직원"},{"code":"14771","name":"김지은","dept":"교육운영부","type":"직원"},{"code":"14898","name":"박찬미","dept":"교육운영부","type":"직원"},{"code":"14592","name":"박현일","dept":"교육운영부","type":"직원"},{"code":"12848","name":"임채택","dept":"교육운영부","type":"직원"},{"code":"14603","name":"박호원","dept":"교육운영부","type":"직원"},{"code":"14685","name":"최자영","dept":"교육운영부","type":"직원"},{"code":"13281","name":"장두석","dept":"교육운영부","type":"직원"},{"code":"13509","name":"이용철","dept":"교육운영부","type":"직원"},{"code":"13670","name":"이승희","dept":"교육운영부","type":"직원"},{"code":"14265","name":"김정민","dept":"교육운영부","type":"직원"},{"code":"13238","name":"손우람","dept":"교육운영부","type":"직원"}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="1.9";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="2.1";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -746,7 +756,7 @@ async function load(){
     db.roster=SEED.map(p=>({code:p.code,name:p.name,dept:p.dept}));
     db.seedVer=SEED_VER; persist();
   }
-  buildMeals(); render(); drawRoster(); drawLog(); applyMode();
+  buildMeals(); render(); drawRoster(); drawLog(); applyDim(); applyMode();
   if(apiBase()){ await pullRoster(); drawRoster(); if(curMode()==="user") drawMy(); flushQueue(); }
 }
 function queueSave(){clearTimeout(saveTimer);saveTimer=setTimeout(persist,600)}
@@ -1270,6 +1280,17 @@ function drawQueue(){
   $("qFlush").onclick=async()=>{ await flushQueue(); drawQueue();
     toast(db.queue.length?`${db.queue.length}건이 아직 남았습니다`:"모두 보냈습니다"); };
 }
+function applyDim(){
+  const v=(db.dim===undefined?88:db.dim);
+  document.documentElement.style.setProperty("--dimlv",(v/100).toFixed(2));
+  if($("dimVal")) $("dimVal").textContent=v+"%";
+  if($("dimRange")) $("dimRange").value=v;
+}
+function drawDim(){
+  applyDim();
+  $("dimRange").oninput=()=>{ db.dim=Number($("dimRange").value); applyDim(); };
+  $("dimRange").onchange=()=>persist();
+}
 function drawSound(){
   $("soundChk").checked=!db.mute;
   $("soundChk").onchange=()=>{db.mute=!$("soundChk").checked; persist(); if(!db.mute) beep("ok")};
@@ -1277,7 +1298,7 @@ function drawSound(){
 }
 function drawInfo(){
   $("verBig").textContent=APP_VER;
-  drawApi(); drawKiosk(); drawQueue(); drawSound();
+  drawApi(); drawKiosk(); drawQueue(); drawSound(); drawDim();
 }
 $("verCheck").onclick=async()=>{ await checkUpdate();
   toast($("updbar").hidden?"최신 버전입니다":"새 버전이 있습니다"); };
