@@ -71,6 +71,12 @@
     border:1px solid rgba(255,255,255,.4);background:rgba(7,10,13,.6);color:#fff;
     border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600}
   .camswitch:active{background:rgba(7,10,13,.9)}
+  .camzoom{position:absolute;right:12px;bottom:12px;z-index:3;display:flex;align-items:center;gap:2px;
+    background:rgba(7,10,13,.62);border:1px solid rgba(255,255,255,.35);border-radius:10px;overflow:hidden}
+  .camzoom button{width:46px;height:42px;color:#fff;font-size:20px;line-height:1}
+  .camzoom button:active{background:rgba(255,255,255,.18)}
+  .camzoom span{font-family:var(--mono);font-size:13px;color:#fff;min-width:46px;text-align:center}
+
   .camstat{position:absolute;left:12px;top:12px;z-index:3;font-family:var(--mono);font-size:11.5px;
     background:rgba(7,10,13,.62);color:var(--dim);border-radius:8px;padding:7px 11px;letter-spacing:.04em}
   .camstat b{color:var(--green);font-weight:600}
@@ -381,6 +387,11 @@
         <video id="video" playsinline muted></video>
         <div class="reticle" id="reticle" hidden><b></b></div>
         <button type="button" class="camswitch" id="camSwitch" hidden>카메라 전환</button>
+        <div class="camzoom" id="camZoom" hidden>
+          <button type="button" data-z="-1">−</button>
+          <span id="zoomVal">1.0×</span>
+          <button type="button" data-z="1">＋</button>
+        </div>
         <div class="camstat" id="camStat" hidden></div>
         <div class="camoff" id="camoff">
           카메라가 꺼져 있습니다.<br>아래 <b>카메라 켜기</b>를 누르거나,<br>바코드 스캐너를 연결하면 바로 입력됩니다.<br><br>앞면 카메라로 켜집니다. 필요하면 화면 위쪽에서 바꿀 수 있습니다.
@@ -693,7 +704,7 @@ function grpOf(code,v){
 const SEED_VER=3;
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원","type":"직원"},{"code":"11374","name":"양찬호","dept":"교육지원부","type":"직원"},{"code":"12194","name":"남우현","dept":"교육지원부","type":"직원"},{"code":"12412","name":"이승범","dept":"교육지원부","type":"직원"},{"code":"11663","name":"박상준","dept":"교육지원부","type":"직원"},{"code":"12837","name":"부윤섭","dept":"교육지원부","type":"직원"},{"code":"12356","name":"이상건","dept":"교육지원부","type":"직원"},{"code":"12193","name":"신동명","dept":"교육지원부","type":"직원"},{"code":"13952","name":"조부경","dept":"교육지원부","type":"직원"},{"code":"14064","name":"이경수","dept":"교육지원부","type":"직원"},{"code":"14318","name":"차규민","dept":"교육지원부","type":"직원"},{"code":"14548","name":"이창우","dept":"교육지원부","type":"직원"},{"code":"14467","name":"이유진","dept":"교육지원부","type":"직원"},{"code":"14748","name":"채유란","dept":"교육지원부","type":"직원"},{"code":"83438","name":"이민경","dept":"교육지원부","type":"직원"},{"code":"13086","name":"박종배","dept":"교육운영부","type":"직원"},{"code":"13258","name":"전은영","dept":"교육운영부","type":"직원"},{"code":"51035","name":"장영근","dept":"교육운영부","type":"직원"},{"code":"12542","name":"주영미","dept":"교육운영부","type":"직원"},{"code":"13812","name":"백유민","dept":"교육운영부","type":"직원"},{"code":"14771","name":"김지은","dept":"교육운영부","type":"직원"},{"code":"14898","name":"박찬미","dept":"교육운영부","type":"직원"},{"code":"14592","name":"박현일","dept":"교육운영부","type":"직원"},{"code":"12848","name":"임채택","dept":"교육운영부","type":"직원"},{"code":"14603","name":"박호원","dept":"교육운영부","type":"직원"},{"code":"14685","name":"최자영","dept":"교육운영부","type":"직원"},{"code":"13281","name":"장두석","dept":"교육운영부","type":"직원"},{"code":"13509","name":"이용철","dept":"교육운영부","type":"직원"},{"code":"13670","name":"이승희","dept":"교육운영부","type":"직원"},{"code":"14265","name":"김정민","dept":"교육운영부","type":"직원"},{"code":"13238","name":"손우람","dept":"교육운영부","type":"직원"}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="1.8";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="1.9";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -1057,14 +1068,21 @@ const video=$("video"),canvas=document.createElement("canvas"),ctx=canvas.getCon
 async function startCam(){
   try{
     stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facing,
-      width:{ideal:1920},height:{ideal:1080}}});
+      width:{ideal:2560},height:{ideal:1440}}});
     video.srcObject=stream; await video.play();
-    try{                                  // 되는 기기에서는 자동 초점을 계속 켭니다
+    try{
       const tr=stream.getVideoTracks()[0];
       const cap=tr.getCapabilities?tr.getCapabilities():{};
-      if(cap.focusMode&&cap.focusMode.includes("continuous"))
-        await tr.applyConstraints({advanced:[{focusMode:"continuous"}]});
-    }catch(e){}
+      const adv=[];
+      if(cap.focusMode&&cap.focusMode.includes("continuous")) adv.push({focusMode:"continuous"});
+      zoomCap = cap.zoom || null;
+      if(zoomCap){
+        curZoom=Math.min(Math.max(db.zoom||2, zoomCap.min||1), zoomCap.max||1);
+        adv.push({zoom:curZoom});
+      }
+      if(adv.length) await tr.applyConstraints({advanced:adv});
+      $("camZoom").hidden=!zoomCap; drawZoom();
+    }catch(e){ $("camZoom").hidden=true; }
     detector=null;
     if("BarcodeDetector" in window){
       try{
@@ -1089,10 +1107,20 @@ async function startCam(){
 function stopCam(){
   scanning=false;
   if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
-  $("reticle").hidden=true;$("camoff").hidden=false;$("camSwitch").hidden=true;$("camStat").hidden=true;
+  $("reticle").hidden=true;$("camoff").hidden=false;$("camSwitch").hidden=true;$("camStat").hidden=true;$("camZoom").hidden=true;
   $("camBtn").textContent="카메라 켜기";$("camBtn").classList.remove("on");
 }
 $("camBtn").onclick=()=>stream?stopCam():startCam();
+let zoomCap=null, curZoom=1;
+function drawZoom(){ $("zoomVal").textContent=curZoom.toFixed(1)+"×"; }
+$("camZoom").querySelectorAll("button").forEach(b=>b.onclick=async()=>{
+  if(!zoomCap||!stream) return;
+  const step=(zoomCap.step&&zoomCap.step>0)?Math.max(zoomCap.step,0.2):0.2;
+  curZoom=Math.min(Math.max(curZoom+step*Number(b.dataset.z), zoomCap.min||1), zoomCap.max||1);
+  db.zoom=curZoom; persist(); drawZoom();
+  try{ await stream.getVideoTracks()[0].applyConstraints({advanced:[{zoom:curZoom}]}); }catch(e){}
+});
+
 $("camSwitch").onclick=async()=>{
   facing = facing==="user" ? "environment" : "user";
   db.facing=facing; persist();
@@ -1106,17 +1134,17 @@ function readCanvas(){
   const c=jsQR(img.data,img.width,img.height,{inversionAttempts:"dontInvert"});
   return (c&&c.data)?c.data:null;
 }
-function grab(zoom){
+function grab(frac){
   const vw=video.videoWidth, vh=video.videoHeight;
   if(!vw||!vh) return false;
-  if(zoom){                       // 가운데만 잘라 원본 화소 그대로 — 작게 보이는 QR용
-    const s=Math.round(Math.min(vw,vh)*0.6);
-    canvas.width=s; canvas.height=s;
-    ctx.drawImage(video,Math.round((vw-s)/2),Math.round((vh-s)/2),s,s,0,0,s,s);
-  }else{                          // 줄이지 않고 원본 해상도로 읽습니다
+  if(frac>=1){                    // 화면 전체 (너무 크면 조금만 줄임)
     const k=Math.min(1,1600/vw);
     canvas.width=Math.round(vw*k); canvas.height=Math.round(vh*k);
     ctx.drawImage(video,0,0,canvas.width,canvas.height);
+  }else{                          // 가운데만 잘라 원본 화소 그대로
+    const s=Math.round(Math.min(vw,vh)*frac);
+    canvas.width=s; canvas.height=s;
+    ctx.drawImage(video,Math.round((vw-s)/2),Math.round((vh-s)/2),s,s,0,0,s,s);
   }
   return true;
 }
@@ -1131,8 +1159,10 @@ async function tick(){
         if(codes.length) found=codes[0].rawValue;
       }
       if(!found && window.jsQR){
-        if(grab(false)) found=readCanvas();
-        if(!found && grab(true)) found=readCanvas();
+        for(const f of [1,0.55,0.35]){        // 넓게 → 좁게 훑습니다
+          if(grab(f)) found=readCanvas();
+          if(found) break;
+        }
       }
     }catch(e){}
   }
