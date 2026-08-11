@@ -512,6 +512,12 @@
       <div id="queueState" style="font-size:13px;margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"></div>
     </div>
     <div class="card noprint">
+      <h3>배식 시간</h3>
+      <p>끼니를 자동으로 판단하고, 이 시간대에는 화면이 더 자주 갱신됩니다.</p>
+      <div id="mealTimes"></div>
+      <button class="btn" id="mealTimeSave" style="margin-top:12px">배식 시간 저장</button>
+    </div>
+    <div class="card noprint">
       <h3>위치로 식수 체크</h3>
       <p>QR이 잘 안 읽힐 때를 대비한 예비 수단입니다. 켜두면 직원이 식당 근처에 왔을 때
          본인 화면에 체크 버튼이 켜지고, 누르면 바로 식수에 반영됩니다.
@@ -743,12 +749,12 @@ function grpOf(code,v){
 const SEED_VER=3;
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원","type":"직원"},{"code":"11374","name":"양찬호","dept":"교육지원부","type":"직원"},{"code":"12194","name":"남우현","dept":"교육지원부","type":"직원"},{"code":"12412","name":"이승범","dept":"교육지원부","type":"직원"},{"code":"11663","name":"박상준","dept":"교육지원부","type":"직원"},{"code":"12837","name":"부윤섭","dept":"교육지원부","type":"직원"},{"code":"12356","name":"이상건","dept":"교육지원부","type":"직원"},{"code":"12193","name":"신동명","dept":"교육지원부","type":"직원"},{"code":"13952","name":"조부경","dept":"교육지원부","type":"직원"},{"code":"14064","name":"이경수","dept":"교육지원부","type":"직원"},{"code":"14318","name":"차규민","dept":"교육지원부","type":"직원"},{"code":"14548","name":"이창우","dept":"교육지원부","type":"직원"},{"code":"14467","name":"이유진","dept":"교육지원부","type":"직원"},{"code":"14748","name":"채유란","dept":"교육지원부","type":"직원"},{"code":"83438","name":"이민경","dept":"교육지원부","type":"직원"},{"code":"13086","name":"박종배","dept":"교육운영부","type":"직원"},{"code":"13258","name":"전은영","dept":"교육운영부","type":"직원"},{"code":"51035","name":"장영근","dept":"교육운영부","type":"직원"},{"code":"12542","name":"주영미","dept":"교육운영부","type":"직원"},{"code":"13812","name":"백유민","dept":"교육운영부","type":"직원"},{"code":"14771","name":"김지은","dept":"교육운영부","type":"직원"},{"code":"14898","name":"박찬미","dept":"교육운영부","type":"직원"},{"code":"14592","name":"박현일","dept":"교육운영부","type":"직원"},{"code":"12848","name":"임채택","dept":"교육운영부","type":"직원"},{"code":"14603","name":"박호원","dept":"교육운영부","type":"직원"},{"code":"14685","name":"최자영","dept":"교육운영부","type":"직원"},{"code":"13281","name":"장두석","dept":"교육운영부","type":"직원"},{"code":"13509","name":"이용철","dept":"교육운영부","type":"직원"},{"code":"13670","name":"이승희","dept":"교육운영부","type":"직원"},{"code":"14265","name":"김정민","dept":"교육운영부","type":"직원"},{"code":"13238","name":"손우람","dept":"교육운영부","type":"직원"}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="2.8";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="2.9";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
 let db={roster:[],records:{},reserve:{},lock:{},queue:[],conf:{},mode:null,myCode:null,api:"",seedVer:0};
-let meal=MEALS[new Date().getHours()<10?0:new Date().getHours()<15?1:2];
+let meal=MEALS[1];   // 화면이 열린 뒤 배식 시간표에 맞춰 다시 잡습니다
 let stream=null,scanning=false,detector=null,lastCode="",lastAt=0,saveTimer=null,lastIn=null;
 let facing="user";   // 태블릿을 세워두고 쓰므로 전면 카메라가 기본
 
@@ -785,6 +791,7 @@ async function load(){
     db.roster=SEED.map(p=>({code:p.code,name:p.name,dept:p.dept}));
     db.seedVer=SEED_VER; persist();
   }
+  meal=timeMeal();
   buildMeals(); render(); drawRoster(); drawLog(); applyDim(); applyMode();
   if(apiBase()){ await pullConf(); await pullRoster(); drawRoster(); if(curMode()==="user") drawMy(); flushQueue(); }
 }
@@ -1068,6 +1075,14 @@ async function pushConf(conf){
   const j=await apiCall({action:"configSet",conf});
   if(!j||!j.conf) throw new Error("서버가 설정을 저장하지 못했습니다. 서버 코드를 새로 배포해 주세요.");
   db.conf=j.conf; persist();
+}
+const MEAL_DEFAULT={"조식":["07:50","08:40"],"중식":["11:30","12:30"],"석식":["17:50","18:20"]};
+function mealsConf(){ return Object.assign({},MEAL_DEFAULT, db.conf.meals||{}); }
+function toMin(s){ const m=String(s||"").match(/(\d{1,2}):(\d{2})/); return m?Number(m[1])*60+Number(m[2]):null; }
+function nowMin(){ const d=new Date(); return d.getHours()*60+d.getMinutes(); }
+function inMealWindow(){
+  const c=mealsConf(), n=nowMin();
+  return MEALS.some(m=>{ const s=toMin(c[m][0]), e=toMin(c[m][1]); return s!==null&&e!==null&&n>=s&&n<=e+10; });
 }
 function locConf(){ return Object.assign({on:false,lat:0,lng:0,r:150}, db.conf.loc||{}); }
 function distM(a,b,c,d){
@@ -1364,7 +1379,7 @@ function drawInfo(){
   $("verBig").textContent=APP_VER;
   $("sverTag").textContent = db.sver ? "서버 코드 "+db.sver+"단계" : "서버 코드 단계 확인 안 됨";
   $("sverTag").style.color = (db.sver||0)>=2 ? "var(--green)" : "var(--red)";
-  drawApi(); drawKiosk(); drawQueue(); drawSound(); drawDim(); drawLocConf();
+  drawApi(); drawKiosk(); drawQueue(); drawSound(); drawDim(); drawLocConf(); drawMealTimes();
 }
 $("verCheck").onclick=async()=>{ await checkUpdate();
   toast($("updbar").hidden?"최신 버전입니다":"새 버전이 있습니다"); };
@@ -1374,6 +1389,32 @@ function drawKiosk(){
     ? "이 기기는 식당 태블릿으로 지정되어 있어 비밀번호 없이 열립니다."
     : "이 기기는 창을 닫으면 관리자 화면이 풀립니다.";
 }
+function drawMealTimes(){
+  const c=mealsConf();
+  $("mealTimes").innerHTML=MEALS.map(m=>
+    `<div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+       <span style="width:46px;font-size:14.5px;font-weight:600">${m}</span>
+       <input type="time" data-m="${m}" data-i="0" value="${c[m][0]}" style="flex:1;height:46px;
+         background:var(--panel2);border:1px solid var(--line);border-radius:10px;color:var(--ink);padding:0 12px;font-size:15px">
+       <span style="color:var(--dim)">~</span>
+       <input type="time" data-m="${m}" data-i="1" value="${c[m][1]}" style="flex:1;height:46px;
+         background:var(--panel2);border:1px solid var(--line);border-radius:10px;color:var(--ink);padding:0 12px;font-size:15px">
+     </div>`).join("");
+}
+$("mealTimeSave").onclick=async()=>{
+  const next={};
+  MEALS.forEach(m=>next[m]=["",""]);
+  $("mealTimes").querySelectorAll("input").forEach(el=>{
+    next[el.dataset.m][Number(el.dataset.i)]=el.value;
+  });
+  for(const m of MEALS){
+    if(!toMin(next[m][0])||!toMin(next[m][1])){toast(`${m} 시간을 확인해 주세요`);return}
+    if(toMin(next[m][1])<=toMin(next[m][0])){toast(`${m} 끝 시각이 시작보다 빠릅니다`);return}
+  }
+  try{ await pushConf({meals:next}); drawMealTimes(); meal=timeMeal(); render(); toast("배식 시간을 저장했습니다"); }
+  catch(e){ toast("저장하지 못했습니다 · "+(e.message||e)); }
+};
+
 function drawLocConf(){
   const c=locConf();
   $("locOn").checked=!!c.on;
@@ -1665,7 +1706,18 @@ $("copyBtn").onclick=async()=>{
 };
 
 
-function timeMeal(){const h=new Date().getHours();return h<10?MEALS[0]:h<15?MEALS[1]:MEALS[2]}
+function timeMeal(){
+  const c=mealsConf(), n=nowMin();
+  for(const m of MEALS){                       // 배식 중이면 그 끼니
+    const s=toMin(c[m][0]), e=toMin(c[m][1]);
+    if(s!==null&&e!==null&&n>=s&&n<=e) return m;
+  }
+  for(const m of MEALS){                       // 아니면 다음에 올 끼니
+    const s=toMin(c[m][0]);
+    if(s!==null&&n<s) return m;
+  }
+  return MEALS[2];
+}
 function checkMealWindow(){
   const t=timeMeal(), bar=$("alertbar");
   if(t===meal){bar.hidden=true;return}
@@ -1689,7 +1741,12 @@ async function quickCheck(){
   }catch(e){}
   pinging=false;
 }
-setInterval(quickCheck,2500);
+let tickN=0;
+setInterval(()=>{
+  tickN++;
+  if(inMealWindow()) quickCheck();            // 배식 중에는 1.5초마다
+  else if(tickN%4===0) quickCheck();          // 그 외에는 6초마다
+},1500);
 setInterval(()=>{checkMealWindow();lockCheck();
   if(document.querySelector('[data-page="resv"]').dataset.on==="1") drawResv();},20000);
 
