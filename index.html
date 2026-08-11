@@ -739,7 +739,7 @@ function grpOf(code,v){
 const SEED_VER=3;
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원","type":"직원"},{"code":"11374","name":"양찬호","dept":"교육지원부","type":"직원"},{"code":"12194","name":"남우현","dept":"교육지원부","type":"직원"},{"code":"12412","name":"이승범","dept":"교육지원부","type":"직원"},{"code":"11663","name":"박상준","dept":"교육지원부","type":"직원"},{"code":"12837","name":"부윤섭","dept":"교육지원부","type":"직원"},{"code":"12356","name":"이상건","dept":"교육지원부","type":"직원"},{"code":"12193","name":"신동명","dept":"교육지원부","type":"직원"},{"code":"13952","name":"조부경","dept":"교육지원부","type":"직원"},{"code":"14064","name":"이경수","dept":"교육지원부","type":"직원"},{"code":"14318","name":"차규민","dept":"교육지원부","type":"직원"},{"code":"14548","name":"이창우","dept":"교육지원부","type":"직원"},{"code":"14467","name":"이유진","dept":"교육지원부","type":"직원"},{"code":"14748","name":"채유란","dept":"교육지원부","type":"직원"},{"code":"83438","name":"이민경","dept":"교육지원부","type":"직원"},{"code":"13086","name":"박종배","dept":"교육운영부","type":"직원"},{"code":"13258","name":"전은영","dept":"교육운영부","type":"직원"},{"code":"51035","name":"장영근","dept":"교육운영부","type":"직원"},{"code":"12542","name":"주영미","dept":"교육운영부","type":"직원"},{"code":"13812","name":"백유민","dept":"교육운영부","type":"직원"},{"code":"14771","name":"김지은","dept":"교육운영부","type":"직원"},{"code":"14898","name":"박찬미","dept":"교육운영부","type":"직원"},{"code":"14592","name":"박현일","dept":"교육운영부","type":"직원"},{"code":"12848","name":"임채택","dept":"교육운영부","type":"직원"},{"code":"14603","name":"박호원","dept":"교육운영부","type":"직원"},{"code":"14685","name":"최자영","dept":"교육운영부","type":"직원"},{"code":"13281","name":"장두석","dept":"교육운영부","type":"직원"},{"code":"13509","name":"이용철","dept":"교육운영부","type":"직원"},{"code":"13670","name":"이승희","dept":"교육운영부","type":"직원"},{"code":"14265","name":"김정민","dept":"교육운영부","type":"직원"},{"code":"13238","name":"손우람","dept":"교육운영부","type":"직원"}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="2.5";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="2.7";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -804,7 +804,7 @@ function buildMeals(){
   MEALS.forEach(m=>{
     const b=document.createElement("button");
     b.className="meal";b.textContent=m;b.setAttribute("aria-pressed",String(m===meal));
-    b.onclick=()=>{meal=m;render()};
+    b.onclick=()=>{meal=m;seenLoc=null;render()};
     $("meals").appendChild(b);
   });
 }
@@ -993,6 +993,22 @@ async function flushQueue(){
 }
 
 /** 서버의 오늘 내용을 그대로 반영 (아직 못 보낸 내역은 위에 다시 얹음) */
+/* 휴대폰에서 위치로 체크한 사람을 태블릿에서 알려줍니다 */
+let seenLoc=null;
+function announceLoc(d){
+  const slot=((db.records[d]||{})[meal])||{};
+  const now=new Set(Object.keys(slot).filter(c=>slot[c].via));
+  if(seenLoc===null){ seenLoc=now; return; }        // 처음 불러온 것은 알리지 않음
+  const fresh=[...now].filter(c=>!seenLoc.has(c));
+  seenLoc=now;
+  if(!fresh.length || curMode()!=="admin") return;
+  fresh.forEach((c,i)=>setTimeout(()=>{
+    const v=slot[c];
+    beep("ok");
+    feedback("ok","✓",v.name,`${v.dept||""} · 위치로 체크됨`);
+  }, i*1400));
+}
+
 let lastSync={t:"",err:""};
 async function pullResv(quiet){
   if(!apiBase()){ lastSync={t:"",err:"서버 주소가 설정되어 있지 않습니다"}; return false; }
@@ -1018,6 +1034,7 @@ async function pullResv(quiet){
         else delete db.records[d][e.meal][e.code];
       });
     }
+    announceLoc(d);
     lastSync={t:hm(),err:""};
     persist(); refreshAll(); flushQueue();
     return true;
@@ -1654,6 +1671,12 @@ function checkMealWindow(){
   bar.querySelector("button").onclick=()=>{meal=t;render()};
 }
 setInterval(()=>{if(!apiBase())return; flushQueue(); if(curMode()==="admin") pullResv(true);},60000);
+setInterval(()=>{                       // 배식 중에는 8초마다 확인
+  if(!apiBase()||curMode()!=="admin") return;
+  if(document.hidden) return;
+  if(!visible("scan")) return;
+  pullResv(true);
+},8000);
 setInterval(()=>{checkMealWindow();lockCheck();
   if(document.querySelector('[data-page="resv"]').dataset.on==="1") drawResv();},20000);
 
@@ -2102,7 +2125,6 @@ $("myResvBtn").onclick=async()=>{
     toast(myOn?"저녁 식사 신청을 취소했습니다":"저녁 식사를 신청했습니다");
   }catch(e){ toast("처리하지 못했습니다. 잠시 후 다시 시도해 주세요"); }
   drawMyResv(p);
-  startWatch();
 };
 
 function drawMy(){
@@ -2115,6 +2137,7 @@ function drawMy(){
   const box=$("myQr"); box.innerHTML="";
   if(window.QRCode) try{new QRCode(box,{text:p.code,width:520,height:520,correctLevel:QRCode.CorrectLevel.H})}catch(e){}
   drawMyResv(p);
+  startWatch();
 }
 $("myGo").onclick=()=>{
   const c=$("myInput").value.trim();
