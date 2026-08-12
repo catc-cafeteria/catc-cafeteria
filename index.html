@@ -948,10 +948,13 @@ function viaTag(v){
   if(!v||!v.via) return "";
   return ` <span class="gtag">${esc(v.via)}</span>`;
 }
-const SEED_VER=5;
+const SEED_VER=6;
+function seedStamp(){                       // 파일 명단의 지문
+  return SEED.length+":"+SEED.map(p=>p.code).join(",");
+}
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원"},{"code":"11374","name":"양찬호","dept":"교육지원부"},{"code":"12194","name":"남우현","dept":"교육지원부"},{"code":"12412","name":"이승범","dept":"교육지원부"},{"code":"11663","name":"박상준","dept":"교육지원부"},{"code":"12837","name":"부윤섭","dept":"교육지원부"},{"code":"12356","name":"이상건","dept":"교육지원부"},{"code":"12193","name":"신동명","dept":"교육지원부"},{"code":"13952","name":"조부경","dept":"교육지원부"},{"code":"14064","name":"이경수","dept":"교육지원부"},{"code":"14318","name":"차규민","dept":"교육지원부"},{"code":"14548","name":"이창우","dept":"교육지원부"},{"code":"14467","name":"이유진","dept":"교육지원부"},{"code":"14748","name":"채유란","dept":"교육지원부"},{"code":"83483","name":"이민경","dept":"교육지원부"},{"code":"13086","name":"박종배","dept":"교육운영부"},{"code":"13258","name":"전은영","dept":"교육운영부"},{"code":"51035","name":"장영근","dept":"교육운영부"},{"code":"12542","name":"주영미","dept":"교육운영부"},{"code":"13812","name":"백유민","dept":"교육운영부"},{"code":"14771","name":"김지은","dept":"교육운영부"},{"code":"14898","name":"박찬미","dept":"교육운영부"},{"code":"14592","name":"박현일","dept":"교육운영부"},{"code":"12848","name":"임채택","dept":"교육운영부"},{"code":"14603","name":"박호원","dept":"교육운영부"},{"code":"14685","name":"최자영","dept":"교육운영부"},{"code":"13281","name":"장두석","dept":"교육운영부"},{"code":"13509","name":"이용철","dept":"교육운영부"},{"code":"13670","name":"이승희","dept":"교육운영부"},{"code":"14265","name":"김정민","dept":"교육운영부"},{"code":"13238","name":"손우람","dept":"교육운영부"},{"code":"1057","name":"신동민","dept":"KAC공항서비스","sub":true},{"code":"1058","name":"이현훈","dept":"KAC공항서비스","sub":true},{"code":"1060","name":"박용범","dept":"KAC공항서비스","sub":true},{"code":"1061","name":"우시준","dept":"KAC공항서비스","sub":true},{"code":"1062","name":"홍제표","dept":"KAC공항서비스","sub":true},{"code":"1063","name":"김성중","dept":"KAC공항서비스","sub":true},{"code":"1064","name":"김시환","dept":"KAC공항서비스","sub":true},{"code":"1065","name":"정승영","dept":"KAC공항서비스","sub":true},{"code":"1066","name":"권우정","dept":"KAC공항서비스","sub":true},{"code":"1067","name":"강미순","dept":"KAC공항서비스","sub":true},{"code":"1071","name":"류원호","dept":"KAC공항서비스","sub":true},{"code":"1072","name":"신동원","dept":"KAC공항서비스","sub":true},{"code":"1077","name":"배용호","dept":"KAC공항서비스","sub":true},{"code":"1712","name":"박성철","dept":"KAC공항서비스","sub":true},{"code":"2164","name":"천미영","dept":"KAC공항서비스","sub":true},{"code":"2271","name":"원종복","dept":"KAC공항서비스","sub":true},{"code":"2434","name":"이윤경","dept":"KAC공항서비스","sub":true},{"code":"2436","name":"김선희","dept":"KAC공항서비스","sub":true},{"code":"2531","name":"한강섭","dept":"KAC공항서비스","sub":true},{"code":"2532","name":"이문숙","dept":"KAC공항서비스","sub":true},{"code":"2691","name":"윤희상","dept":"KAC공항서비스","sub":true},{"code":"2692","name":"박진화","dept":"KAC공항서비스","sub":true},{"code":"90494","name":"고은영","dept":"KAC공항서비스","sub":true}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="5.4";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="5.5";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -989,11 +992,12 @@ async function load(){
   }
   db.reserve=db.reserve||{}; db.lock=db.lock||{}; db.queue=db.queue||[]; db.conf=db.conf||{};
   if(db.facing) facing=db.facing;
-  if(db.seedVer!==SEED_VER){
+  if(db.seedStamp!==seedStamp()){           // 파일 명단이 바뀌었으면 그것을 따릅니다
     const keep=(db.roster||[]).filter(p=>p.guest);        // 사내강사는 유지
     db.roster=SEED.map(p=>({code:p.code,name:p.name,dept:p.dept,sub:!!p.sub}))
       .concat(keep.filter(g=>!SEED.some(s=>s.code===g.code)));
     db.seedVer=SEED_VER;
+    db.seedStamp=seedStamp();
     db.seedFresh=true;      // 파일 명단이 더 새로우니 서버로 올려야 합니다
     persist();
   }
@@ -1397,17 +1401,17 @@ function purgeOld(keepMonths){
 
 async function pullRoster(){
   if(!apiBase()) return;
-  // 파일에 새 명단이 들어온 직후에는 서버 명단으로 덮어쓰지 않고, 오히려 서버에 올립니다
-  if(db.seedFresh){
-    try{
-      const sent=await pushRoster(true);
-      if(sent){ db.seedFresh=false; persist(); }
-    }catch(e){}          // 실패하면 다음 기회에 다시 시도합니다
-    return;
-  }
   try{
     const j=await apiCall({action:"roster"});
-    if(j.roster&&j.roster.length){ db.roster=j.roster; persist(); }
+    const remote=(j&&j.roster)||[];
+    // 서버에 파일 명단이 다 들어 있지 않으면, 받아오지 않고 파일 명단을 올립니다
+    const missing=SEED.filter(s=>!remote.some(r=>r.code===s.code));
+    if(db.seedFresh || missing.length){
+      const sent=await pushRoster(true);
+      if(sent){ db.seedFresh=false; persist(); }
+      return;
+    }
+    if(remote.length){ db.roster=remote; persist(); }
   }catch(e){}
 }
 
