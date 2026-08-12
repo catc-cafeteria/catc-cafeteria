@@ -580,6 +580,25 @@
       <div id="queueState" style="font-size:13px;margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"></div>
     </div>
     <div class="card noprint">
+      <h3>기록 정리</h3>
+      <p>이 기기에 쌓인 기록을 서버 내용으로 맞추고, 오래된 것은 비웁니다.
+         서버(스프레드시트)의 자료는 지워지지 않으니 언제든 다시 받아올 수 있습니다.</p>
+      <div class="addrow" style="margin-top:12px">
+        <input id="syncYm" type="month" style="max-width:190px">
+        <button class="btn" id="syncMonth" style="flex:none">이 달 서버에서 다시 받기</button>
+      </div>
+      <div class="addrow" style="margin-top:10px">
+        <select id="keepM" style="flex:1;min-width:120px;height:48px;background:var(--panel2);
+          border:1px solid var(--line);border-radius:10px;color:var(--ink);padding:0 12px;font-size:15px">
+          <option value="3">최근 3개월만 남기기</option>
+          <option value="6" selected>최근 6개월만 남기기</option>
+          <option value="12">최근 12개월만 남기기</option>
+        </select>
+        <button class="btn quiet" id="purgeBtn" style="flex:none">오래된 기록 비우기</button>
+      </div>
+      <div id="syncState" style="font-size:13px;color:var(--dim);margin-top:12px;line-height:1.7;white-space:pre-line"></div>
+    </div>
+    <div class="card noprint">
       <h3>배식 시간</h3>
       <p>끼니를 자동으로 판단하고, 이 시간대에는 화면이 더 자주 갱신됩니다.</p>
       <div id="mealTimes"></div>
@@ -890,7 +909,7 @@ function subTag(code,v){ return isSub(code,v)?' <span class="stag">자회사</sp
 const SEED_VER=4;
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원"},{"code":"11374","name":"양찬호","dept":"교육지원부"},{"code":"12194","name":"남우현","dept":"교육지원부"},{"code":"12412","name":"이승범","dept":"교육지원부"},{"code":"11663","name":"박상준","dept":"교육지원부"},{"code":"12837","name":"부윤섭","dept":"교육지원부"},{"code":"12356","name":"이상건","dept":"교육지원부"},{"code":"12193","name":"신동명","dept":"교육지원부"},{"code":"13952","name":"조부경","dept":"교육지원부"},{"code":"14064","name":"이경수","dept":"교육지원부"},{"code":"14318","name":"차규민","dept":"교육지원부"},{"code":"14548","name":"이창우","dept":"교육지원부"},{"code":"14467","name":"이유진","dept":"교육지원부"},{"code":"14748","name":"채유란","dept":"교육지원부"},{"code":"83438","name":"이민경","dept":"교육지원부"},{"code":"13086","name":"박종배","dept":"교육운영부"},{"code":"13258","name":"전은영","dept":"교육운영부"},{"code":"51035","name":"장영근","dept":"교육운영부"},{"code":"12542","name":"주영미","dept":"교육운영부"},{"code":"13812","name":"백유민","dept":"교육운영부"},{"code":"14771","name":"김지은","dept":"교육운영부"},{"code":"14898","name":"박찬미","dept":"교육운영부"},{"code":"14592","name":"박현일","dept":"교육운영부"},{"code":"12848","name":"임채택","dept":"교육운영부"},{"code":"14603","name":"박호원","dept":"교육운영부"},{"code":"14685","name":"최자영","dept":"교육운영부"},{"code":"13281","name":"장두석","dept":"교육운영부"},{"code":"13509","name":"이용철","dept":"교육운영부"},{"code":"13670","name":"이승희","dept":"교육운영부"},{"code":"14265","name":"김정민","dept":"교육운영부"},{"code":"13238","name":"손우람","dept":"교육운영부"},{"code":"1057","name":"신동민","dept":"KAC공항서비스","sub":true},{"code":"1058","name":"이현훈","dept":"KAC공항서비스","sub":true},{"code":"1060","name":"박용범","dept":"KAC공항서비스","sub":true},{"code":"1061","name":"우시준","dept":"KAC공항서비스","sub":true},{"code":"1062","name":"홍제표","dept":"KAC공항서비스","sub":true},{"code":"1063","name":"김성중","dept":"KAC공항서비스","sub":true},{"code":"1064","name":"김시환","dept":"KAC공항서비스","sub":true},{"code":"1065","name":"정승영","dept":"KAC공항서비스","sub":true},{"code":"1066","name":"권우정","dept":"KAC공항서비스","sub":true},{"code":"1067","name":"강미순","dept":"KAC공항서비스","sub":true},{"code":"1071","name":"류원호","dept":"KAC공항서비스","sub":true},{"code":"1072","name":"신동원","dept":"KAC공항서비스","sub":true},{"code":"1077","name":"배용호","dept":"KAC공항서비스","sub":true},{"code":"1712","name":"박성철","dept":"KAC공항서비스","sub":true},{"code":"2164","name":"천미영","dept":"KAC공항서비스","sub":true},{"code":"2271","name":"원종복","dept":"KAC공항서비스","sub":true},{"code":"2434","name":"이윤경","dept":"KAC공항서비스","sub":true},{"code":"2436","name":"김선희","dept":"KAC공항서비스","sub":true},{"code":"2531","name":"한강섭","dept":"KAC공항서비스","sub":true},{"code":"2532","name":"이문숙","dept":"KAC공항서비스","sub":true},{"code":"2691","name":"윤희상","dept":"KAC공항서비스","sub":true},{"code":"2692","name":"박진화","dept":"KAC공항서비스","sub":true},{"code":"90494","name":"고은영","dept":"KAC공항서비스","sub":true}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="4.4";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="4.6";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -934,6 +953,9 @@ async function load(){
   }
   meal=timeMeal();
   buildMeals(); render(); drawRoster(); drawLog(); applyDim(); applyMode();
+  if(apiBase() && curMode()==="admin" && db.lastSyncDay!==dkey()){
+    try{ await pullMonth(dkey().slice(0,7)); db.lastSyncDay=dkey(); persist(); }catch(e){}
+  }
   if(apiBase()){ await pullConf(); await pullRoster(); drawRoster(); if(curMode()==="user") drawMy(); flushQueue(); }
 }
 function queueSave(){clearTimeout(saveTimer);saveTimer=setTimeout(persist,600)}
@@ -1250,6 +1272,48 @@ function distM(a,b,c,d){
   const dLat=t(c-a), dLng=t(d-b);
   const x=Math.sin(dLat/2)**2 + Math.cos(t(a))*Math.cos(t(c))*Math.sin(dLng/2)**2;
   return Math.round(2*R*Math.asin(Math.sqrt(x)));
+}
+
+/** 한 달치를 서버 기준으로 맞춥니다. 아직 못 보낸 기록은 지키고 덮어씁니다. */
+async function pullMonth(ym){
+  if(!apiBase()) throw new Error("서버에 연결되어 있지 않습니다");
+  const j=await apiCall({action:"month",ym});
+  if(!j||!j.records) throw new Error("서버가 자료를 돌려주지 않았습니다");
+  Object.keys(j.records).forEach(d=>{
+    const rec=j.records[d]||{};
+    Object.keys(rec).forEach(m=>Object.keys(rec[m]).forEach(c=>{
+      rec[m][c].t=shortT(rec[m][c].t);
+    }));
+    db.records[d]=rec;
+  });
+  Object.keys(j.reserve||{}).forEach(d=>{
+    const r=j.reserve[d]||{};
+    Object.keys(r).forEach(c=>{ r[c].t=shortT(r[c].t); });
+    db.reserve[d]=r;
+  });
+  // 아직 서버로 못 보낸 기록은 다시 얹습니다
+  db.queue.filter(e=>e.date.startsWith(ym)).forEach(e=>{
+    db.records[e.date]=db.records[e.date]||{};
+    db.records[e.date][e.meal]=db.records[e.date][e.meal]||{};
+    if(e.on) db.records[e.date][e.meal][e.code]={t:e.t,name:e.name,dept:e.dept,g:e.guest?1:0,s:e.sub?1:0,via:e.via||""};
+    else delete db.records[e.date][e.meal][e.code];
+  });
+  persist();
+  let n=0; Object.keys(j.records).forEach(d=>MEALS.forEach(m=>{ if(j.records[d][m]) n+=Object.keys(j.records[d][m]).length; }));
+  return n;
+}
+
+/** 오래된 기록을 태블릿에서만 비웁니다. 서버 자료는 그대로입니다. */
+function purgeOld(keepMonths){
+  const now=new Date();
+  const cut=new Date(now.getFullYear(), now.getMonth()-keepMonths+1, 1);
+  const ymCut=`${cut.getFullYear()}-${String(cut.getMonth()+1).padStart(2,"0")}`;
+  let n=0;
+  [db.records,db.reserve,db.lock].forEach(store=>{
+    Object.keys(store).forEach(d=>{ if(d.slice(0,7)<ymCut){ delete store[d]; n++; } });
+  });
+  persist();
+  return n;
 }
 
 async function pullRoster(){
@@ -1580,7 +1644,7 @@ function drawInfo(){
   $("verBig").textContent=APP_VER;
   $("sverTag").textContent = db.sver ? "서버 코드 "+db.sver+"단계" : "서버 코드 단계 확인 안 됨";
   $("sverTag").style.color = (db.sver||0)>=2 ? "var(--green)" : "var(--red)";
-  drawApi(); drawKiosk(); drawQueue(); drawSound(); drawDim(); drawStep(); drawDet(); drawLocConf(); drawMealTimes();
+  drawApi(); drawKiosk(); drawQueue(); drawSound(); drawDim(); drawStep(); drawDet(); drawLocConf(); drawMealTimes(); drawSyncTool();
 }
 $("verCheck").onclick=async()=>{ await checkUpdate();
   toast($("updbar").hidden?"최신 버전입니다":"새 버전이 있습니다"); };
@@ -1590,6 +1654,35 @@ function drawKiosk(){
     ? "이 기기는 식당 태블릿으로 지정되어 있어 비밀번호 없이 열립니다."
     : "이 기기는 창을 닫으면 관리자 화면이 풀립니다.";
 }
+function drawSyncTool(){
+  if(!$("syncYm").value) $("syncYm").value=mCur||dkey().slice(0,7);
+  const last=db.lastSyncDay;
+  $("syncState").textContent = last
+    ? `마지막으로 서버에서 받은 날 ${last.replace(/-/g,".")}`
+    : "아직 서버에서 통째로 받은 적이 없습니다.";
+}
+$("syncMonth").onclick=async()=>{
+  const ym=$("syncYm").value;
+  if(!ym){toast("월을 골라 주세요");return}
+  $("syncState").textContent="서버에서 받는 중…";
+  try{
+    const n=await pullMonth(ym);
+    db.lastSyncDay=dkey(); persist();
+    seenLoc=null; refreshAll(); drawSyncTool();
+    $("syncState").textContent=`${ym.replace("-",". ")} 자료를 받았습니다. 식수 기록 ${n}건.`;
+    toast("서버 내용으로 맞췄습니다");
+  }catch(e){
+    $("syncState").textContent="받지 못했습니다 · "+(e.message||e);
+  }
+};
+$("purgeBtn").onclick=async()=>{
+  const k=Number($("keepM").value);
+  if(!await askOk(`최근 ${k}개월보다 오래된 기록을 이 기기에서 비웁니다.\n스프레드시트의 자료는 그대로 남고, 필요하면 다시 받아올 수 있습니다.`,"비우기")) return;
+  const n=purgeOld(k);
+  refreshAll(); drawSyncTool();
+  toast(n?`${n}일치를 비웠습니다`:"비울 기록이 없습니다");
+};
+
 function drawMealTimes(){
   const c=mealsConf();
   $("mealTimes").innerHTML=MEALS.map(m=>
@@ -2433,7 +2526,7 @@ $("myLocBtn").onclick=async()=>{
     await apiCall({action:"push",events:[{date:d,meal:m,code:p.code,name:p.name,
       dept:p.dept||"",guest:!!p.guest,t:hm(),on:true,via:"위치"}]});
     myDone=d+"|"+m; beep("ok"); toast(`${m} 식수가 체크되었습니다`);
-    if(mineYm===d.slice(0,7)) drawMine();
+    if(mineYm===d.slice(0,7)) drawMine(true);
   }catch(e){
     toast("체크하지 못했습니다 · "+(e.message||e));
   }
@@ -2442,31 +2535,36 @@ $("myLocBtn").onclick=async()=>{
 
 /* ---------- 내 식사 내역 ---------- */
 let mineYm=dkey().slice(0,7);
-async function drawMine(){
+function paintMine(items){
+  const cnt={}; MEALS.forEach(m=>cnt[m]=0);
+    items.forEach(x=>{ if(cnt[x.meal]!==undefined) cnt[x.meal]++; });
+  $("mineSum").innerHTML=MEALS.map(m=>{
+    const c={"조식":"#8FD3F4","중식":"#FFB84D","석식":"#B79CFF"}[m];
+    return `<div><span>${m}</span><b style="color:${cnt[m]?c:"#3A4756"}">${cnt[m]}</b></div>`;
+  }).join("")+
+      `<div style="background:rgba(255,184,77,.12);border-color:rgba(255,184,77,.4)">
+         <span>합계</span><b style="color:var(--amber)">${items.length}</b></div>`;
+  $("mineList").innerHTML = items.length
+    ? items.map(x=>{
+        const c={"조식":"#8FD3F4","중식":"#FFB84D","석식":"#B79CFF"}[x.meal]||"var(--ink)";
+        return `<div><span>${x.date.slice(5).replace("-",".")}</span>
+        <span style="color:${c};font-weight:600">${x.meal}<em>${x.t||""}</em></span></div>`;
+      }).reverse().join("")
+    : `<div style="color:var(--dim);justify-content:center;border:0;padding:22px 0">이 달에는 이용 내역이 없습니다</div>`;
+}
+
+async function drawMine(force){
   const p=db.roster.find(x=>x.code===db.myCode);
   if(!p||!apiBase()){ $("mineBox").hidden=true; return; }
   $("mineBox").hidden=false;
   $("mineYm").textContent=mineYm.replace("-",". ");
+  if(!force && meCache && meCache.ym===mineYm){ paintMine(meCache.items); return; }
   $("mineList").innerHTML=`<div style="color:var(--dim);justify-content:center;border:0;padding:18px 0">불러오는 중…</div>`;
   $("mineSum").innerHTML="";
   try{
     const j=await apiCall({action:"mine",code:p.code,ym:mineYm});
-    const items=(j&&j.items)||[];
-    const cnt={}; MEALS.forEach(m=>cnt[m]=0);
-    items.forEach(x=>{ if(cnt[x.meal]!==undefined) cnt[x.meal]++; });
-    $("mineSum").innerHTML=MEALS.map(m=>{
-      const c={"조식":"#8FD3F4","중식":"#FFB84D","석식":"#B79CFF"}[m];
-      return `<div><span>${m}</span><b style="color:${cnt[m]?c:"#3A4756"}">${cnt[m]}</b></div>`;
-    }).join("")+
-      `<div style="background:rgba(255,184,77,.12);border-color:rgba(255,184,77,.4)">
-         <span>합계</span><b style="color:var(--amber)">${items.length}</b></div>`;
-    $("mineList").innerHTML = items.length
-      ? items.map(x=>{
-          const c={"조식":"#8FD3F4","중식":"#FFB84D","석식":"#B79CFF"}[x.meal]||"var(--ink)";
-          return `<div><span>${x.date.slice(5).replace("-",".")}</span>
-          <span style="color:${c};font-weight:600">${x.meal}<em>${x.t||""}</em></span></div>`;
-        }).reverse().join("")
-      : `<div style="color:var(--dim);justify-content:center;border:0;padding:22px 0">이 달에는 이용 내역이 없습니다</div>`;
+    meCache={ym:mineYm,items:(j&&j.items)||[]};
+    paintMine(meCache.items);
   }catch(e){
     $("mineList").innerHTML=`<div style="color:var(--red);justify-content:center;border:0;padding:18px 0">불러오지 못했습니다</div>`;
   }
@@ -2486,9 +2584,11 @@ async function drawCal(){
   $("calYm").textContent=mineYm.replace("-",". ");
   $("calGrid").innerHTML=`<div style="grid-column:1/-1;text-align:center;color:var(--dim);padding:30px 0">불러오는 중…</div>`;
   $("calSum").innerHTML=""; $("calList").innerHTML="";
-  try{
+  if(meCache && meCache.ym===mineYm){ calItems=meCache.items; }
+  else try{
     const j=await apiCall({action:"mine",code:p.code,ym:mineYm});
-    calItems=(j&&j.items)||[];
+    meCache={ym:mineYm,items:(j&&j.items)||[]};
+    calItems=meCache.items;
   }catch(e){
     $("calGrid").innerHTML=`<div style="grid-column:1/-1;text-align:center;color:var(--red);padding:30px 0">불러오지 못했습니다</div>`;
     return;
@@ -2536,6 +2636,13 @@ $("calPrev").onclick=()=>{ shiftMineYm(-1); drawCal(); };
 $("calNext").onclick=()=>{ if(mineYm<dkey().slice(0,7)){ shiftMineYm(1); drawCal(); } };
 
 let myOn=false;
+async function loadMe(p,ym){
+  const j=await apiCall({action:"me",code:p.code,ym:ym||mineYm});
+  if(j&&j.mine) meCache={ym:ym||mineYm,items:j.mine};
+  return j;
+}
+let meCache=null;
+
 async function drawMyResv(p){
   const box=$("myResv");
   if(!apiBase()){box.hidden=true;return}
@@ -2543,8 +2650,9 @@ async function drawMyResv(p){
   $("myResvState").textContent="예약 상태를 확인하는 중…";
   $("myResvBtn").disabled=true;
   try{
-    const items=await apiList(dkey());
-    myOn=!!items[p.code];
+    const j=await loadMe(p,mineYm);
+    myOn=!!(j&&j.reserved);
+    if(j&&j.mine) paintMine(j.mine);
     $("myResvState").textContent = myOn ? "오늘 저녁 식사 신청됨" : "오늘 저녁 식사 신청 안 함";
     $("myResvState").style.color = myOn ? "var(--green)" : "var(--dim)";
     $("myResvBtn").textContent = myOn ? "신청 취소하기" : "저녁 식사 신청하기";
@@ -2558,6 +2666,8 @@ async function drawMyResv(p){
     $("myResvState").style.color="var(--red)";
     $("myResvBtn").textContent="다시 시도";
     $("myResvBtn").disabled=false;
+    if($("mineList").textContent.indexOf("불러오는")>=0)
+      $("mineList").innerHTML=`<div style="color:var(--red);justify-content:center;border:0;padding:18px 0">불러오지 못했습니다</div>`;
   }
 }
 $("myResvBtn").onclick=async()=>{
@@ -2565,7 +2675,13 @@ $("myResvBtn").onclick=async()=>{
   $("myResvBtn").disabled=true;
   try{
     await apiSet(dkey(),p,!myOn);
-    toast(myOn?"저녁 식사 신청을 취소했습니다":"저녁 식사를 신청했습니다");
+    myOn=!myOn;
+    toast(myOn?"저녁 식사를 신청했습니다":"저녁 식사 신청을 취소했습니다");
+    $("myResvState").textContent = myOn ? "오늘 저녁 식사 신청됨" : "오늘 저녁 식사 신청 안 함";
+    $("myResvState").style.color = myOn ? "var(--green)" : "var(--dim)";
+    $("myResvBtn").textContent = myOn ? "신청 취소하기" : "저녁 식사 신청하기";
+    $("myResvBtn").disabled=false;
+    return;
   }catch(e){ toast("처리하지 못했습니다. 잠시 후 다시 시도해 주세요"); }
   drawMyResv(p);
 };
@@ -2579,9 +2695,12 @@ function drawMy(){
   $("myCode").textContent=p.code;
   const box=$("myQr"); box.innerHTML="";
   if(window.QRCode) try{new QRCode(box,{text:p.code,width:520,height:520,correctLevel:QRCode.CorrectLevel.H})}catch(e){}
-  drawMyResv(p);
+  mineYm=dkey().slice(0,7);
+  $("mineBox").hidden=!apiBase();
+  $("mineYm").textContent=mineYm.replace("-",". ");
+  $("mineList").innerHTML=`<div style="color:var(--dim);justify-content:center;border:0;padding:18px 0">불러오는 중…</div>`;
+  drawMyResv(p);          // 예약 상태와 이번 달 내역을 한 번에 받아옵니다
   startWatch();
-  mineYm=dkey().slice(0,7); drawMine();
 }
 $("myGo").onclick=()=>{
   const c=$("myInput").value.trim();
