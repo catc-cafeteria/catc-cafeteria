@@ -307,6 +307,36 @@
   .minelist div span:first-child{font-family:var(--mono);color:var(--dim);font-size:13px}
   .minelist em{font-style:normal;color:var(--dim);font-size:12.5px;margin-left:8px}
 
+  .calwrap{position:fixed;inset:0;z-index:65;background:var(--bg);display:flex;flex-direction:column;
+    padding:20px 18px calc(20px + env(safe-area-inset-bottom))}
+  .calhead{flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+  .calhead b{font-family:var(--mono);font-size:19px}
+  .calhead button{border:1px solid var(--line);border-radius:9px;padding:9px 13px;font-size:15px;
+    background:var(--panel2);color:var(--ink)}
+  .calbody{flex:1;min-height:0;overflow-y:auto}
+  .caldow{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin:14px 0 6px}
+  .caldow span{text-align:center;font-size:12px;color:var(--dim)}
+  .calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+  .cell{aspect-ratio:1;border:1px solid var(--line);border-radius:9px;background:var(--panel2);
+    padding:5px 4px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
+  .cell.empty{border:0;background:transparent}
+  .cell.on{border-color:rgba(255,184,77,.55);background:rgba(255,184,77,.10)}
+  .cell.today{outline:2px solid rgba(91,215,154,.6);outline-offset:-2px}
+  .cell u{text-decoration:none;font-family:var(--mono);font-size:12.5px;color:var(--dim)}
+  .cell.on u{color:var(--ink)}
+  .cell .dots{display:flex;gap:3px;margin-top:auto;padding-bottom:3px}
+  .cell .dots i{width:14px;height:14px;border-radius:4px;display:block;font-style:normal;
+    font-size:9.5px;line-height:14px;text-align:center;font-weight:700;color:#0F141A}
+  .cell .dots i.b{background:#8FD3F4}   /* 조식 */
+  .cell .dots i.l{background:#FFB84D}   /* 중식 */
+  .cell .dots i.d{background:#B79CFF}   /* 석식 */
+  .callegend{flex-wrap:wrap;gap:12px 16px}
+  .callegend i{width:14px;height:14px;border-radius:4px;font-style:normal;font-size:9.5px;
+    line-height:14px;text-align:center;font-weight:700;color:#0F141A}
+  .callegend{display:flex;gap:16px;justify-content:center;margin-top:16px;font-size:12.5px;color:var(--dim)}
+  .callegend span{display:flex;align-items:center;gap:6px}
+  .callegend i{width:8px;height:8px;border-radius:50%;display:block;background:var(--amber)}
+
   .qrbox{background:#fff;padding:18px;border-radius:16px;line-height:0}
   .qrbox canvas,.qrbox img{display:block;width:100%!important;height:auto!important}
   .myname{font-size:26px;font-weight:700}
@@ -715,6 +745,7 @@
       </div>
       <div class="minesum" id="mineSum"></div>
       <div class="minelist" id="mineList"></div>
+      <button class="btn quiet" id="mineDetail" style="width:100%;margin-top:12px;min-height:44px;font-size:14px">달력으로 자세히 보기</button>
     </div>
 
     <button type="button" class="linkbtn" id="myReset">다른 사번으로 보기</button>
@@ -723,6 +754,27 @@
   <div style="margin-top:14px;display:flex;align-items:center;gap:12px;font-size:12.5px;color:var(--dim)">
     <span id="myVer" style="font-family:var(--mono)"></span>
     <button type="button" class="linkbtn" id="myUpd" style="padding:6px">새 버전 확인</button>
+  </div>
+</div>
+
+<div class="calwrap" id="calView" hidden>
+  <div class="calhead">
+    <button type="button" id="calPrev">◀</button>
+    <b id="calYm"></b>
+    <button type="button" id="calNext">▶</button>
+    <button type="button" id="calClose" style="margin-left:auto">닫기</button>
+  </div>
+  <div class="calbody">
+    <div class="minesum" id="calSum"></div>
+    <div class="caldow"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+    <div class="calgrid" id="calGrid"></div>
+    <div class="callegend">
+      <span><i class="b">조</i>조식</span>
+      <span><i class="l">중</i>중식</span>
+      <span><i class="d">석</i>석식</span>
+      <span style="color:var(--green)">초록 테두리는 오늘</span>
+    </div>
+    <div id="calList" style="margin-top:18px"></div>
   </div>
 </div>
 
@@ -838,7 +890,7 @@ function subTag(code,v){ return isSub(code,v)?' <span class="stag">자회사</sp
 const SEED_VER=4;
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원"},{"code":"11374","name":"양찬호","dept":"교육지원부"},{"code":"12194","name":"남우현","dept":"교육지원부"},{"code":"12412","name":"이승범","dept":"교육지원부"},{"code":"11663","name":"박상준","dept":"교육지원부"},{"code":"12837","name":"부윤섭","dept":"교육지원부"},{"code":"12356","name":"이상건","dept":"교육지원부"},{"code":"12193","name":"신동명","dept":"교육지원부"},{"code":"13952","name":"조부경","dept":"교육지원부"},{"code":"14064","name":"이경수","dept":"교육지원부"},{"code":"14318","name":"차규민","dept":"교육지원부"},{"code":"14548","name":"이창우","dept":"교육지원부"},{"code":"14467","name":"이유진","dept":"교육지원부"},{"code":"14748","name":"채유란","dept":"교육지원부"},{"code":"83438","name":"이민경","dept":"교육지원부"},{"code":"13086","name":"박종배","dept":"교육운영부"},{"code":"13258","name":"전은영","dept":"교육운영부"},{"code":"51035","name":"장영근","dept":"교육운영부"},{"code":"12542","name":"주영미","dept":"교육운영부"},{"code":"13812","name":"백유민","dept":"교육운영부"},{"code":"14771","name":"김지은","dept":"교육운영부"},{"code":"14898","name":"박찬미","dept":"교육운영부"},{"code":"14592","name":"박현일","dept":"교육운영부"},{"code":"12848","name":"임채택","dept":"교육운영부"},{"code":"14603","name":"박호원","dept":"교육운영부"},{"code":"14685","name":"최자영","dept":"교육운영부"},{"code":"13281","name":"장두석","dept":"교육운영부"},{"code":"13509","name":"이용철","dept":"교육운영부"},{"code":"13670","name":"이승희","dept":"교육운영부"},{"code":"14265","name":"김정민","dept":"교육운영부"},{"code":"13238","name":"손우람","dept":"교육운영부"},{"code":"1057","name":"신동민","dept":"KAC공항서비스","sub":true},{"code":"1058","name":"이현훈","dept":"KAC공항서비스","sub":true},{"code":"1060","name":"박용범","dept":"KAC공항서비스","sub":true},{"code":"1061","name":"우시준","dept":"KAC공항서비스","sub":true},{"code":"1062","name":"홍제표","dept":"KAC공항서비스","sub":true},{"code":"1063","name":"김성중","dept":"KAC공항서비스","sub":true},{"code":"1064","name":"김시환","dept":"KAC공항서비스","sub":true},{"code":"1065","name":"정승영","dept":"KAC공항서비스","sub":true},{"code":"1066","name":"권우정","dept":"KAC공항서비스","sub":true},{"code":"1067","name":"강미순","dept":"KAC공항서비스","sub":true},{"code":"1071","name":"류원호","dept":"KAC공항서비스","sub":true},{"code":"1072","name":"신동원","dept":"KAC공항서비스","sub":true},{"code":"1077","name":"배용호","dept":"KAC공항서비스","sub":true},{"code":"1712","name":"박성철","dept":"KAC공항서비스","sub":true},{"code":"2164","name":"천미영","dept":"KAC공항서비스","sub":true},{"code":"2271","name":"원종복","dept":"KAC공항서비스","sub":true},{"code":"2434","name":"이윤경","dept":"KAC공항서비스","sub":true},{"code":"2436","name":"김선희","dept":"KAC공항서비스","sub":true},{"code":"2531","name":"한강섭","dept":"KAC공항서비스","sub":true},{"code":"2532","name":"이문숙","dept":"KAC공항서비스","sub":true},{"code":"2691","name":"윤희상","dept":"KAC공항서비스","sub":true},{"code":"2692","name":"박진화","dept":"KAC공항서비스","sub":true},{"code":"90494","name":"고은영","dept":"KAC공항서비스","sub":true}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="4.1";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="4.3";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -2392,25 +2444,86 @@ async function drawMine(){
     const items=(j&&j.items)||[];
     const cnt={}; MEALS.forEach(m=>cnt[m]=0);
     items.forEach(x=>{ if(cnt[x.meal]!==undefined) cnt[x.meal]++; });
-    $("mineSum").innerHTML=MEALS.map(m=>
-      `<div><span>${m}</span><b style="color:${cnt[m]?"var(--amber)":"#3A4756"}">${cnt[m]}</b></div>`).join("")+
+    $("mineSum").innerHTML=MEALS.map(m=>{
+      const c={"조식":"#8FD3F4","중식":"#FFB84D","석식":"#B79CFF"}[m];
+      return `<div><span>${m}</span><b style="color:${cnt[m]?c:"#3A4756"}">${cnt[m]}</b></div>`;
+    }).join("")+
       `<div style="background:rgba(255,184,77,.12);border-color:rgba(255,184,77,.4)">
          <span>합계</span><b style="color:var(--amber)">${items.length}</b></div>`;
     $("mineList").innerHTML = items.length
-      ? items.map(x=>`<div><span>${x.date.slice(5).replace("-",".")}</span>
-          <span>${x.meal}<em>${x.t||""}</em></span></div>`).reverse().join("")
+      ? items.map(x=>{
+          const c={"조식":"#8FD3F4","중식":"#FFB84D","석식":"#B79CFF"}[x.meal]||"var(--ink)";
+          return `<div><span>${x.date.slice(5).replace("-",".")}</span>
+          <span style="color:${c};font-weight:600">${x.meal}<em>${x.t||""}</em></span></div>`;
+        }).reverse().join("")
       : `<div style="color:var(--dim);justify-content:center;border:0;padding:22px 0">이 달에는 이용 내역이 없습니다</div>`;
   }catch(e){
     $("mineList").innerHTML=`<div style="color:var(--red);justify-content:center;border:0;padding:18px 0">불러오지 못했습니다</div>`;
   }
 }
-function shiftMine(k){
+function shiftMineYm(k){
   const [y,m]=mineYm.split("-").map(Number), d=new Date(y,m-1+k,1);
   mineYm=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
-  drawMine();
 }
+function shiftMine(k){ shiftMineYm(k); drawMine(); }
 $("minePrev").onclick=()=>shiftMine(-1);
 $("mineNext").onclick=()=>{ if(mineYm<dkey().slice(0,7)) shiftMine(1); };
+
+/* ---------- 달력으로 보기 ---------- */
+let calItems=[];
+async function drawCal(){
+  const p=db.roster.find(x=>x.code===db.myCode); if(!p) return;
+  $("calYm").textContent=mineYm.replace("-",". ");
+  $("calGrid").innerHTML=`<div style="grid-column:1/-1;text-align:center;color:var(--dim);padding:30px 0">불러오는 중…</div>`;
+  $("calSum").innerHTML=""; $("calList").innerHTML="";
+  try{
+    const j=await apiCall({action:"mine",code:p.code,ym:mineYm});
+    calItems=(j&&j.items)||[];
+  }catch(e){
+    $("calGrid").innerHTML=`<div style="grid-column:1/-1;text-align:center;color:var(--red);padding:30px 0">불러오지 못했습니다</div>`;
+    return;
+  }
+  const byDay={};
+  calItems.forEach(x=>{ const d=Number(x.date.slice(8)); (byDay[d]=byDay[d]||[]).push(x.meal); });
+  const [y,m]=mineYm.split("-").map(Number);
+  const first=new Date(y,m-1,1).getDay(), nd=new Date(y,m,0).getDate();
+  const today=dkey();
+  let cells="";
+  for(let i=0;i<first;i++) cells+=`<div class="cell empty"></div>`;
+  for(let d=1;d<=nd;d++){
+    const ms=byDay[d]||[];
+    const key=`${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const cls={"조식":"b","중식":"l","석식":"d"};
+    const marks=MEALS.filter(x=>ms.includes(x))
+      .map(x=>`<i class="${cls[x]}">${x[0]}</i>`).join("");
+    cells+=`<div class="cell ${ms.length?"on":""} ${key===today?"today":""}">
+      <u>${d}</u><span class="dots">${marks}</span></div>`;
+  }
+  $("calGrid").innerHTML=cells;
+
+  const cnt={}; MEALS.forEach(x=>cnt[x]=0);
+  calItems.forEach(x=>{ if(cnt[x.meal]!==undefined) cnt[x.meal]++; });
+  $("calSum").innerHTML=MEALS.map(x=>{
+    const c={"조식":"#8FD3F4","중식":"#FFB84D","석식":"#B79CFF"}[x];
+    return `<div><span>${x}</span><b style="color:${cnt[x]?c:"#3A4756"}">${cnt[x]}</b></div>`;
+  }).join("")+
+    `<div style="background:rgba(255,184,77,.12);border-color:rgba(255,184,77,.4)">
+       <span>합계</span><b style="color:var(--amber)">${calItems.length}</b></div>`;
+
+  $("calList").innerHTML = calItems.length
+    ? `<div style="font-size:13px;color:var(--dim);margin-bottom:8px">전체 내역</div>`+
+      `<div class="minelist" style="max-height:none">`+
+      calItems.map(x=>{
+        const c={"조식":"#8FD3F4","중식":"#FFB84D","석식":"#B79CFF"}[x.meal]||"var(--ink)";
+        return `<div><span>${x.date.slice(5).replace("-",".")}</span>
+        <span style="color:${c};font-weight:600">${x.meal}<em>${x.t||""}</em></span></div>`;
+      }).reverse().join("")+`</div>`
+    : "";
+}
+$("mineDetail").onclick=()=>{ $("calView").hidden=false; drawCal(); };
+$("calClose").onclick=()=>{ $("calView").hidden=true; drawMine(); };
+$("calPrev").onclick=()=>{ shiftMineYm(-1); drawCal(); };
+$("calNext").onclick=()=>{ if(mineYm<dkey().slice(0,7)){ shiftMineYm(1); drawCal(); } };
 
 let myOn=false;
 async function drawMyResv(p){
