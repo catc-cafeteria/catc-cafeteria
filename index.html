@@ -309,12 +309,12 @@
   .minelist em{font-style:normal;color:var(--dim);font-size:12.5px;margin-left:8px}
 
   .menucard{width:min(340px,100%);border:1px solid var(--line);border-radius:14px;
-    background:var(--panel);padding:16px 18px;text-align:left}
+    background:var(--panel);padding:16px 14px;text-align:left;box-sizing:border-box}
   .menucard h4{margin:0 0 4px;font-size:16px}
   .menucard .sub{font-size:12.5px;color:var(--dim)}
-  .menutabs{display:flex;gap:6px;margin:14px 0 12px;flex-wrap:wrap}
-  .menutabs button{flex:1;min-width:52px;padding:9px 0;border:1px solid var(--line);border-radius:9px;
-    font-size:13.5px;color:var(--dim);background:var(--panel2)}
+  .menutabs{display:flex;gap:4px;margin:14px 0 12px;flex-wrap:nowrap;width:100%}
+  .menutabs button{flex:1 1 0;min-width:0;padding:8px 2px;border:1px solid var(--line);border-radius:9px;
+    font-size:13px;color:var(--dim);background:var(--panel2);white-space:nowrap;overflow:hidden}
   .menutabs button.on{background:var(--amber);color:#0F141A;border-color:var(--amber);font-weight:700}
   .menumeal{margin-bottom:14px}
   .menumeal .mt{display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:700;margin-bottom:6px}
@@ -1008,7 +1008,7 @@ function seedStamp(){                       // 파일 명단의 지문
 }
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원"},{"code":"11374","name":"양찬호","dept":"교육지원부"},{"code":"12194","name":"남우현","dept":"교육지원부"},{"code":"12412","name":"이승범","dept":"교육지원부"},{"code":"11663","name":"박상준","dept":"교육지원부"},{"code":"12837","name":"부윤섭","dept":"교육지원부"},{"code":"12356","name":"이상건","dept":"교육지원부"},{"code":"12193","name":"신동명","dept":"교육지원부"},{"code":"13952","name":"조부경","dept":"교육지원부"},{"code":"14064","name":"이경수","dept":"교육지원부"},{"code":"14318","name":"차규민","dept":"교육지원부"},{"code":"14548","name":"이창우","dept":"교육지원부"},{"code":"14467","name":"이유진","dept":"교육지원부"},{"code":"14748","name":"채유란","dept":"교육지원부"},{"code":"83483","name":"이민경","dept":"교육지원부"},{"code":"13086","name":"박종배","dept":"교육운영부"},{"code":"13258","name":"전은영","dept":"교육운영부"},{"code":"51035","name":"장영근","dept":"교육운영부"},{"code":"12542","name":"주영미","dept":"교육운영부"},{"code":"13812","name":"백유민","dept":"교육운영부"},{"code":"14771","name":"김지은","dept":"교육운영부"},{"code":"14898","name":"박찬미","dept":"교육운영부"},{"code":"14592","name":"박현일","dept":"교육운영부"},{"code":"12848","name":"임채택","dept":"교육운영부"},{"code":"14603","name":"박호원","dept":"교육운영부"},{"code":"14685","name":"최자영","dept":"교육운영부"},{"code":"13281","name":"장두석","dept":"교육운영부"},{"code":"13509","name":"이용철","dept":"교육운영부"},{"code":"13670","name":"이승희","dept":"교육운영부"},{"code":"14265","name":"김정민","dept":"교육운영부"},{"code":"13238","name":"손우람","dept":"교육운영부"},{"code":"01057","name":"신동민","dept":"KAC공항서비스","sub":true},{"code":"01058","name":"이현훈","dept":"KAC공항서비스","sub":true},{"code":"01060","name":"박용범","dept":"KAC공항서비스","sub":true},{"code":"01061","name":"우시준","dept":"KAC공항서비스","sub":true},{"code":"01062","name":"홍제표","dept":"KAC공항서비스","sub":true},{"code":"01063","name":"김성중","dept":"KAC공항서비스","sub":true},{"code":"01064","name":"김시환","dept":"KAC공항서비스","sub":true},{"code":"01065","name":"정승영","dept":"KAC공항서비스","sub":true},{"code":"01066","name":"권우정","dept":"KAC공항서비스","sub":true},{"code":"01067","name":"강미순","dept":"KAC공항서비스","sub":true},{"code":"01071","name":"류원호","dept":"KAC공항서비스","sub":true},{"code":"01072","name":"신동원","dept":"KAC공항서비스","sub":true},{"code":"01077","name":"배용호","dept":"KAC공항서비스","sub":true},{"code":"01712","name":"박성철","dept":"KAC공항서비스","sub":true},{"code":"02164","name":"천미영","dept":"KAC공항서비스","sub":true},{"code":"02271","name":"원종복","dept":"KAC공항서비스","sub":true},{"code":"02434","name":"이윤경","dept":"KAC공항서비스","sub":true},{"code":"02436","name":"김선희","dept":"KAC공항서비스","sub":true},{"code":"02531","name":"한강섭","dept":"KAC공항서비스","sub":true},{"code":"02532","name":"이문숙","dept":"KAC공항서비스","sub":true},{"code":"02691","name":"윤희상","dept":"KAC공항서비스","sub":true},{"code":"02692","name":"박진화","dept":"KAC공항서비스","sub":true},{"code":"90494","name":"고은영","dept":"KAC공항서비스","sub":true}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="6.2";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="6.3";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -3073,7 +3073,7 @@ async function drawMyResv(p){
   $("myResvBtn").disabled=true;
   try{
     const j=await loadMe(p,mineYm);
-    myOn=!!(j&&j.reserved);
+    if(!resvSending) myOn=!!(j&&j.reserved);
     if(j&&j.mine) paintMine(j.mine);
     $("myResvState").textContent = myOn ? "오늘 저녁 식사 신청됨" : "오늘 저녁 식사 신청 안 함";
     $("myResvState").style.color = myOn ? "var(--green)" : "var(--dim)";
@@ -3092,20 +3092,28 @@ async function drawMyResv(p){
       $("mineList").innerHTML=`<div style="color:var(--red);justify-content:center;border:0;padding:18px 0">불러오지 못했습니다</div>`;
   }
 }
-$("myResvBtn").onclick=async()=>{
-  const p=db.roster.find(x=>x.code===db.myCode); if(!p) return;
-  $("myResvBtn").disabled=true;
-  try{
-    await apiSet(dkey(),p,!myOn);
-    myOn=!myOn;
-    toast(myOn?"저녁 식사를 신청했습니다":"저녁 식사 신청을 취소했습니다");
-    $("myResvState").textContent = myOn ? "오늘 저녁 식사 신청됨" : "오늘 저녁 식사 신청 안 함";
-    $("myResvState").style.color = myOn ? "var(--green)" : "var(--dim)";
-    $("myResvBtn").textContent = myOn ? "신청 취소하기" : "저녁 식사 신청하기";
-    $("myResvBtn").disabled=false;
-    return;
-  }catch(e){ toast("처리하지 못했습니다. 잠시 후 다시 시도해 주세요"); }
-  drawMyResv(p);
+function paintResv(on,busy){
+  myOn=on;
+  $("myResvState").textContent = on ? "오늘 저녁 식사 신청됨" : "오늘 저녁 식사 신청 안 함";
+  $("myResvState").style.color = on ? "var(--green)" : "var(--dim)";
+  $("myResvBtn").textContent = (busy?"보내는 중… ":"")+(on ? "신청 취소하기" : "저녁 식사 신청하기");
+  $("myResvBtn").disabled=!!busy;
+}
+/* 누르는 즉시 화면을 바꾸고, 서버 전송은 뒤에서 합니다. 실패하면 되돌립니다. */
+let resvSending=false;
+$("myResvBtn").onclick=()=>{
+  const p=db.roster.find(x=>x.code===db.myCode); if(!p||resvSending) return;
+  const want=!myOn, prev=myOn;
+  resvSending=true;
+  paintResv(want,true);
+  beep(want?"yes":"no");
+  toast(want?"저녁 식사를 신청했습니다":"저녁 식사 신청을 취소했습니다");
+  apiSet(dkey(),p,want)
+    .then(()=>{ resvSending=false; paintResv(want,false); })
+    .catch(()=>{
+      resvSending=false; paintResv(prev,false);
+      toast("서버에 전달하지 못했습니다. 다시 눌러 주세요");
+    });
 };
 
 function drawMy(){
@@ -3169,7 +3177,7 @@ function drawMenuCard(){
   $("menuCardSub").textContent=days[0].replace("/",".")+" ~ "+days[days.length-1].replace("/",".");
   $("menuDays").innerHTML=days.map(k=>{
     const d=c.data.days[k];
-    return `<button type="button" class="${k===menuDay?"on":""}" data-k="${k}">${d.dow}<br><span style="font-size:11px;opacity:.75">${k.replace("/",".")}</span></button>`;
+    return `<button type="button" class="${k===menuDay?"on":""}" data-k="${k}">${d.dow}<br><span style="font-size:10px;opacity:.75">${k.replace("/",".")}</span></button>`;
   }).join("");
   $("menuDays").querySelectorAll("button").forEach(b=>b.onclick=()=>{menuDay=b.dataset.k; drawMenuCard();});
   const col={"조식":"#8FD3F4","중식":"#FFB84D","석식":"#B79CFF"};
