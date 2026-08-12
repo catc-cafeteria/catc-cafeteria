@@ -81,7 +81,7 @@
     background:rgba(7,10,13,.62);color:var(--dim);border-radius:8px;padding:7px 11px;letter-spacing:.04em}
   .camstat b{color:var(--green);font-weight:600}
   .reticle{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
-  .reticle b{width:min(50%,270px);aspect-ratio:1;border:2px solid rgba(255,184,77,.95);
+  .reticle b{width:var(--retsz,min(50%,270px));aspect-ratio:1;border:2px solid rgba(255,184,77,.95);
     border-radius:18px;box-shadow:0 0 0 9999px rgba(2,4,6,var(--dimlv,.88)),0 0 22px rgba(255,184,77,.4)}
   .camoff{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
     justify-content:center;gap:14px;text-align:center;padding:24px;color:var(--dim);font-size:14px;line-height:1.7}
@@ -394,6 +394,7 @@
           <button type="button" data-z="-1">−</button>
           <span id="zoomVal">1.0×</span>
           <button type="button" data-z="1">＋</button>
+          <button type="button" data-z="max" style="width:auto;padding:0 12px;font-size:13px">최대</button>
         </div>
         <div class="camstat" id="camStat" hidden></div>
         <div class="camoff" id="camoff">
@@ -772,7 +773,7 @@ function grpOf(code,v){
 const SEED_VER=3;
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원","type":"직원"},{"code":"11374","name":"양찬호","dept":"교육지원부","type":"직원"},{"code":"12194","name":"남우현","dept":"교육지원부","type":"직원"},{"code":"12412","name":"이승범","dept":"교육지원부","type":"직원"},{"code":"11663","name":"박상준","dept":"교육지원부","type":"직원"},{"code":"12837","name":"부윤섭","dept":"교육지원부","type":"직원"},{"code":"12356","name":"이상건","dept":"교육지원부","type":"직원"},{"code":"12193","name":"신동명","dept":"교육지원부","type":"직원"},{"code":"13952","name":"조부경","dept":"교육지원부","type":"직원"},{"code":"14064","name":"이경수","dept":"교육지원부","type":"직원"},{"code":"14318","name":"차규민","dept":"교육지원부","type":"직원"},{"code":"14548","name":"이창우","dept":"교육지원부","type":"직원"},{"code":"14467","name":"이유진","dept":"교육지원부","type":"직원"},{"code":"14748","name":"채유란","dept":"교육지원부","type":"직원"},{"code":"83438","name":"이민경","dept":"교육지원부","type":"직원"},{"code":"13086","name":"박종배","dept":"교육운영부","type":"직원"},{"code":"13258","name":"전은영","dept":"교육운영부","type":"직원"},{"code":"51035","name":"장영근","dept":"교육운영부","type":"직원"},{"code":"12542","name":"주영미","dept":"교육운영부","type":"직원"},{"code":"13812","name":"백유민","dept":"교육운영부","type":"직원"},{"code":"14771","name":"김지은","dept":"교육운영부","type":"직원"},{"code":"14898","name":"박찬미","dept":"교육운영부","type":"직원"},{"code":"14592","name":"박현일","dept":"교육운영부","type":"직원"},{"code":"12848","name":"임채택","dept":"교육운영부","type":"직원"},{"code":"14603","name":"박호원","dept":"교육운영부","type":"직원"},{"code":"14685","name":"최자영","dept":"교육운영부","type":"직원"},{"code":"13281","name":"장두석","dept":"교육운영부","type":"직원"},{"code":"13509","name":"이용철","dept":"교육운영부","type":"직원"},{"code":"13670","name":"이승희","dept":"교육운영부","type":"직원"},{"code":"14265","name":"김정민","dept":"교육운영부","type":"직원"},{"code":"13238","name":"손우람","dept":"교육운영부","type":"직원"}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="3.4";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="3.5";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -1202,7 +1203,7 @@ async function startCam(){
       if(cap.focusMode&&cap.focusMode.includes("continuous")) adv.push({focusMode:"continuous"});
       zoomCap = (cap.zoom && cap.zoom.max && cap.zoom.max>1) ? cap.zoom : null;
       if(zoomCap){
-        const want = db.zoom || Math.min(2, zoomCap.max);
+        const want = db.zoom || Math.min(4, zoomCap.max);
         curZoom=Math.min(Math.max(want, zoomCap.min||1), zoomCap.max||1);
         db.zoom=curZoom; persist();
         adv.push({zoom:curZoom});
@@ -1239,11 +1240,16 @@ function stopCam(){
 }
 $("camBtn").onclick=()=>stream?stopCam():startCam();
 let zoomCap=null, curZoom=1;
-function drawZoom(){ $("zoomVal").textContent=curZoom.toFixed(1)+"×"; }
+function drawZoom(){
+  $("zoomVal").textContent=curZoom.toFixed(1)+"×";
+  const pct=Math.min(78, 44+ (curZoom-1)*9);      // 많이 당길수록 네모도 크게
+  document.documentElement.style.setProperty("--retsz", pct+"%");
+}
 $("camZoom").querySelectorAll("button").forEach(b=>b.onclick=async()=>{
   if(!zoomCap||!stream) return;
-  const step=(zoomCap.step&&zoomCap.step>0)?Math.max(zoomCap.step,0.2):0.2;
-  curZoom=Math.min(Math.max(curZoom+step*Number(b.dataset.z), zoomCap.min||1), zoomCap.max||1);
+  const step=(zoomCap.step&&zoomCap.step>0)?Math.max(zoomCap.step,0.5):0.5;
+  const next = b.dataset.z==="max" ? (zoomCap.max||1) : curZoom+step*Number(b.dataset.z);
+  curZoom=Math.min(Math.max(next, zoomCap.min||1), zoomCap.max||1);
   db.zoom=curZoom; persist(); drawZoom();
   try{ await stream.getVideoTracks()[0].applyConstraints({advanced:[{zoom:curZoom}]}); }catch(e){}
 });
@@ -1297,7 +1303,7 @@ async function tick(){
   const st=$("camStat");
   if(!st.hidden){
     const eng = detector ? "고속 인식" : (window.jsQR ? "일반 인식" : "인식 불가");
-    const z = zoomCap ? curZoom.toFixed(1)+"×" : "확대 없음";
+    const z = zoomCap ? curZoom.toFixed(1)+"× / 최대 "+(zoomCap.max||1).toFixed(1)+"×" : "확대 없음";
     const res = video.videoWidth ? video.videoWidth+"×"+video.videoHeight : "—";
     st.innerHTML = (Date.now()-hitAt<1500)
       ? `<b>QR 읽음</b> · ${hitBy}`
