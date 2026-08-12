@@ -81,8 +81,9 @@
     background:rgba(7,10,13,.62);color:var(--dim);border-radius:8px;padding:7px 11px;letter-spacing:.04em}
   .camstat b{color:var(--green);font-weight:600}
   .reticle{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
-  .reticle b{width:var(--retsz,min(50%,270px));aspect-ratio:1;border:2px solid rgba(255,184,77,.95);
-    border-radius:18px;box-shadow:0 0 0 9999px rgba(2,4,6,var(--dimlv,.88)),0 0 22px rgba(255,184,77,.4)}
+  .reticle b{width:var(--retsz,58%);aspect-ratio:1;max-width:88%;max-height:82%;
+    border:2px solid rgba(255,184,77,.95);border-radius:14px;
+    box-shadow:0 0 0 9999px rgba(2,4,6,var(--dimlv,.88)),0 0 22px rgba(255,184,77,.4)}
   .camoff{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
     justify-content:center;gap:14px;text-align:center;padding:24px;color:var(--dim);font-size:14px;line-height:1.7}
 
@@ -229,9 +230,17 @@
   .fieldrow{display:flex;gap:10px}
   .fieldrow input{flex:1}
   .plist button.add{border-color:rgba(91,215,154,.5);color:var(--green)}
+  .plist .ord{width:34px;flex:none;font-family:var(--mono);font-size:13px;color:var(--dim);text-align:right}
+  .plist .movebox{margin-left:auto;display:flex;gap:5px;flex:none}
+  .plist .movebox button{width:42px;height:42px;border-radius:9px;font-size:17px;line-height:1;
+    border:1px solid var(--line);color:var(--dim);background:var(--panel2);margin:0}
+  .plist .movebox button:active{background:#33424F;color:var(--ink)}
+  .plist .movebox button:disabled{opacity:.25}
   .plist .done{margin-left:auto;font-size:13px;color:var(--dim);padding:9px 4px}
 
   .gtag{display:inline-block;font-size:11px;color:var(--amber);border:1px solid rgba(255,184,77,.4);
+    border-radius:5px;padding:1px 5px;margin-left:6px;vertical-align:1px}
+  .stag{display:inline-block;font-size:11px;color:#7FC4E8;border:1px solid rgba(127,196,232,.45);
     border-radius:5px;padding:1px 5px;margin-left:6px;vertical-align:1px}
 
   .ymbar{margin-bottom:16px}
@@ -456,6 +465,13 @@
         <button class="btn" id="rAdd" style="flex:none">추가</button>
       </div>
 
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:20px;gap:12px;flex-wrap:wrap">
+        <span style="font-size:13.5px;color:var(--dim)">▲ ▼ 로 순서를 바꾸면 월 집계와 엑셀도 이 순서로 나옵니다</span>
+        <span style="display:flex;gap:8px">
+          <button class="btn quiet" id="sortName" style="min-height:38px;padding:0 12px;font-size:13px">가나다순</button>
+          <button class="btn quiet" id="sortCode" style="min-height:38px;padding:0 12px;font-size:13px">사번순</button>
+        </span>
+      </div>
       <ul class="plist" id="rosterList"></ul>
 
       <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
@@ -472,7 +488,7 @@
     </div>
 <div class="card noprint" id="guestBox" hidden>
       <h3>사내강사 직원</h3>
-      <p>QR 없이 사번·이름만 받아 체크한 사내강사 직원입니다. QR은 만들지 않고, 식수 집계에는 그대로 포함됩니다.</p>
+      <p>QR 없이 사번·이름만 받아 체크한 사내강사 직원입니다. QR은 만들지 않고, 식수 집계에는 그대로 포함됩니다.<br>▲ ▼ 로 순서를 바꾸면 월 집계와 엑셀도 이 순서로 나옵니다.</p>
       <ul class="plist" id="guestList"></ul>
     </div>
     <div class="card" id="qrCard" hidden>
@@ -551,6 +567,17 @@
         <span>스캔할 때 소리 내기</span>
       </label>
       <button class="btn quiet" id="soundTest" style="margin-top:10px;min-height:42px;font-size:13.5px">소리 들어보기</button>
+
+      <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--line)">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <span style="font-size:14px">카메라 확대 조절 폭</span>
+          <span id="stepVal" style="font-family:var(--mono);font-size:14px;color:var(--amber)"></span>
+        </div>
+        <p style="margin:6px 0 10px">＋ − 버튼을 한 번 누를 때 배율이 얼마나 바뀔지 정합니다.
+           작게 하면 세밀하게, 크게 하면 빠르게 조절됩니다.</p>
+        <input type="range" id="stepRange" min="1" max="20" step="1"
+          style="width:100%;accent-color:#FFB84D;height:36px">
+      </div>
 
       <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--line)">
         <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer">
@@ -759,7 +786,8 @@ const MEALS=["조식","중식","석식"], KEY="meal-qr-system";
 const GUEST_LABEL="사내강사";
 const depts=()=>{
   const s=[];
-  db.roster.filter(p=>!p.guest).forEach(p=>{const d=p.dept||"기타";if(!s.includes(d))s.push(d)});
+  db.roster.filter(p=>!p.guest&&!p.sub).forEach(p=>{const d=p.dept||"기타";if(!s.includes(d))s.push(d)});
+  db.roster.filter(p=>p.sub).forEach(p=>{const d=p.dept||"자회사";if(!s.includes(d))s.push(d)});
   if(db.roster.some(p=>p.guest)) s.push(GUEST_LABEL);
   return s;
 };
@@ -770,10 +798,16 @@ function grpOf(code,v){
   if(p&&p.guest) return GUEST_LABEL;
   return (v&&v.dept)||(p&&p.dept)||"기타";
 }
-const SEED_VER=3;
-const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원","type":"직원"},{"code":"11374","name":"양찬호","dept":"교육지원부","type":"직원"},{"code":"12194","name":"남우현","dept":"교육지원부","type":"직원"},{"code":"12412","name":"이승범","dept":"교육지원부","type":"직원"},{"code":"11663","name":"박상준","dept":"교육지원부","type":"직원"},{"code":"12837","name":"부윤섭","dept":"교육지원부","type":"직원"},{"code":"12356","name":"이상건","dept":"교육지원부","type":"직원"},{"code":"12193","name":"신동명","dept":"교육지원부","type":"직원"},{"code":"13952","name":"조부경","dept":"교육지원부","type":"직원"},{"code":"14064","name":"이경수","dept":"교육지원부","type":"직원"},{"code":"14318","name":"차규민","dept":"교육지원부","type":"직원"},{"code":"14548","name":"이창우","dept":"교육지원부","type":"직원"},{"code":"14467","name":"이유진","dept":"교육지원부","type":"직원"},{"code":"14748","name":"채유란","dept":"교육지원부","type":"직원"},{"code":"83438","name":"이민경","dept":"교육지원부","type":"직원"},{"code":"13086","name":"박종배","dept":"교육운영부","type":"직원"},{"code":"13258","name":"전은영","dept":"교육운영부","type":"직원"},{"code":"51035","name":"장영근","dept":"교육운영부","type":"직원"},{"code":"12542","name":"주영미","dept":"교육운영부","type":"직원"},{"code":"13812","name":"백유민","dept":"교육운영부","type":"직원"},{"code":"14771","name":"김지은","dept":"교육운영부","type":"직원"},{"code":"14898","name":"박찬미","dept":"교육운영부","type":"직원"},{"code":"14592","name":"박현일","dept":"교육운영부","type":"직원"},{"code":"12848","name":"임채택","dept":"교육운영부","type":"직원"},{"code":"14603","name":"박호원","dept":"교육운영부","type":"직원"},{"code":"14685","name":"최자영","dept":"교육운영부","type":"직원"},{"code":"13281","name":"장두석","dept":"교육운영부","type":"직원"},{"code":"13509","name":"이용철","dept":"교육운영부","type":"직원"},{"code":"13670","name":"이승희","dept":"교육운영부","type":"직원"},{"code":"14265","name":"김정민","dept":"교육운영부","type":"직원"},{"code":"13238","name":"손우람","dept":"교육운영부","type":"직원"}];
+function isSub(code,v){
+  if(v&&v.s) return true;
+  const p=db.roster.find(x=>x.code===code);
+  return !!(p&&p.sub);
+}
+function subTag(code,v){ return isSub(code,v)?' <span class="stag">자회사</span>':""; }
+const SEED_VER=4;
+const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원"},{"code":"11374","name":"양찬호","dept":"교육지원부"},{"code":"12194","name":"남우현","dept":"교육지원부"},{"code":"12412","name":"이승범","dept":"교육지원부"},{"code":"11663","name":"박상준","dept":"교육지원부"},{"code":"12837","name":"부윤섭","dept":"교육지원부"},{"code":"12356","name":"이상건","dept":"교육지원부"},{"code":"12193","name":"신동명","dept":"교육지원부"},{"code":"13952","name":"조부경","dept":"교육지원부"},{"code":"14064","name":"이경수","dept":"교육지원부"},{"code":"14318","name":"차규민","dept":"교육지원부"},{"code":"14548","name":"이창우","dept":"교육지원부"},{"code":"14467","name":"이유진","dept":"교육지원부"},{"code":"14748","name":"채유란","dept":"교육지원부"},{"code":"83438","name":"이민경","dept":"교육지원부"},{"code":"13086","name":"박종배","dept":"교육운영부"},{"code":"13258","name":"전은영","dept":"교육운영부"},{"code":"51035","name":"장영근","dept":"교육운영부"},{"code":"12542","name":"주영미","dept":"교육운영부"},{"code":"13812","name":"백유민","dept":"교육운영부"},{"code":"14771","name":"김지은","dept":"교육운영부"},{"code":"14898","name":"박찬미","dept":"교육운영부"},{"code":"14592","name":"박현일","dept":"교육운영부"},{"code":"12848","name":"임채택","dept":"교육운영부"},{"code":"14603","name":"박호원","dept":"교육운영부"},{"code":"14685","name":"최자영","dept":"교육운영부"},{"code":"13281","name":"장두석","dept":"교육운영부"},{"code":"13509","name":"이용철","dept":"교육운영부"},{"code":"13670","name":"이승희","dept":"교육운영부"},{"code":"14265","name":"김정민","dept":"교육운영부"},{"code":"13238","name":"손우람","dept":"교육운영부"},{"code":"1057","name":"신동민","dept":"KAC공항서비스","sub":true},{"code":"1058","name":"이현훈","dept":"KAC공항서비스","sub":true},{"code":"1060","name":"박용범","dept":"KAC공항서비스","sub":true},{"code":"1061","name":"우시준","dept":"KAC공항서비스","sub":true},{"code":"1062","name":"홍제표","dept":"KAC공항서비스","sub":true},{"code":"1063","name":"김성중","dept":"KAC공항서비스","sub":true},{"code":"1064","name":"김시환","dept":"KAC공항서비스","sub":true},{"code":"1065","name":"정승영","dept":"KAC공항서비스","sub":true},{"code":"1066","name":"권우정","dept":"KAC공항서비스","sub":true},{"code":"1067","name":"강미순","dept":"KAC공항서비스","sub":true},{"code":"1071","name":"류원호","dept":"KAC공항서비스","sub":true},{"code":"1072","name":"신동원","dept":"KAC공항서비스","sub":true},{"code":"1077","name":"배용호","dept":"KAC공항서비스","sub":true},{"code":"1712","name":"박성철","dept":"KAC공항서비스","sub":true},{"code":"2164","name":"천미영","dept":"KAC공항서비스","sub":true},{"code":"2271","name":"원종복","dept":"KAC공항서비스","sub":true},{"code":"2434","name":"이윤경","dept":"KAC공항서비스","sub":true},{"code":"2436","name":"김선희","dept":"KAC공항서비스","sub":true},{"code":"2531","name":"한강섭","dept":"KAC공항서비스","sub":true},{"code":"2532","name":"이문숙","dept":"KAC공항서비스","sub":true},{"code":"2691","name":"윤희상","dept":"KAC공항서비스","sub":true},{"code":"2692","name":"박진화","dept":"KAC공항서비스","sub":true},{"code":"90494","name":"고은영","dept":"KAC공항서비스","sub":true}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="3.5";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="3.9";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -812,7 +846,7 @@ async function load(){
   db.reserve=db.reserve||{}; db.lock=db.lock||{}; db.queue=db.queue||[]; db.conf=db.conf||{};
   if(db.facing) facing=db.facing;
   if(db.seedVer!==SEED_VER){
-    db.roster=SEED.map(p=>({code:p.code,name:p.name,dept:p.dept}));
+    db.roster=SEED.map(p=>({code:p.code,name:p.name,dept:p.dept,sub:!!p.sub}));
     db.seedVer=SEED_VER; persist();
   }
   meal=timeMeal();
@@ -882,7 +916,8 @@ function checkIn(raw){
   }
   slot[p.code]={t:hm(),name:p.name,dept:p.dept,resv};
   if(p.guest) slot[p.code].g=1;
-  logEvent({date:d,meal,code:p.code,name:p.name,dept:p.dept||"",guest:!!p.guest,t:hm(),on:true});
+  if(p.sub) slot[p.code].s=1;
+  logEvent({date:d,meal,code:p.code,name:p.name,dept:p.dept||"",guest:!!p.guest,sub:!!p.sub,t:hm(),on:true});
   lastIn={d,meal,code:p.code,name:p.name};
   const tail = meal===MEALS[2] ? (resv?"예약 확인 · "+hm():"예약 없이 오심 · "+hm()) : hm();
   feedback("ok","✓",p.name,`${p.dept||""} · ${tail}`,isLunch);
@@ -976,7 +1011,7 @@ function render(){
     return `<div>${esc(dp)}<b>${n}</b></div>`;
   }).join("");
   $("recent").innerHTML=list.slice(0,60).map(([c,v])=>
-    `<li><span>${esc(v.name)} <i>${esc(v.dept||"")}</i>${v.via?' <span class="gtag">위치</span>':""}</span><em>${v.t}</em>`+
+    `<li><span>${esc(v.name)} <i>${esc(v.dept||"")}</i>${subTag(c,v)}${v.via?' <span class="gtag">위치</span>':""}</span><em>${v.t}</em>`+
     `<button type="button" data-c="${esc(c)}">취소</button></li>`).join("")
     || `<li style="color:var(--dim)">아직 체크인이 없습니다</li>`;
   $("recent").querySelectorAll("button[data-c]").forEach(b=>b.onclick=()=>cancelIn(b.dataset.c));
@@ -1076,7 +1111,7 @@ async function pullResv(quiet){
       db.records[d]=merged;
       db.queue.filter(e=>e.date===d).forEach(e=>{
         db.records[d][e.meal]=db.records[d][e.meal]||{};
-        if(e.on) db.records[d][e.meal][e.code]={t:e.t,name:e.name,dept:e.dept,g:e.guest?1:0,via:e.via||""};
+        if(e.on) db.records[d][e.meal][e.code]={t:e.t,name:e.name,dept:e.dept,g:e.guest?1:0,s:e.sub?1:0,via:e.via||""};
         else delete db.records[d][e.meal][e.code];
       });
     }
@@ -1242,12 +1277,12 @@ $("camBtn").onclick=()=>stream?stopCam():startCam();
 let zoomCap=null, curZoom=1;
 function drawZoom(){
   $("zoomVal").textContent=curZoom.toFixed(1)+"×";
-  const pct=Math.min(78, 44+ (curZoom-1)*9);      // 많이 당길수록 네모도 크게
+  const pct=Math.min(80, 52+ (curZoom-1)*7);      // 많이 당길수록 네모도 크게
   document.documentElement.style.setProperty("--retsz", pct+"%");
 }
 $("camZoom").querySelectorAll("button").forEach(b=>b.onclick=async()=>{
   if(!zoomCap||!stream) return;
-  const step=(zoomCap.step&&zoomCap.step>0)?Math.max(zoomCap.step,0.5):0.5;
+  const step=Number(db.zoomStep)||0.5;
   const next = b.dataset.z==="max" ? (zoomCap.max||1) : curZoom+step*Number(b.dataset.z);
   curZoom=Math.min(Math.max(next, zoomCap.min||1), zoomCap.max||1);
   db.zoom=curZoom; persist(); drawZoom();
@@ -1292,7 +1327,7 @@ async function tick(){
         if(codes.length){ found=codes[0].rawValue; hitBy="내장"; }
       }
       if(!found && window.jsQR){
-        for(const f of [1,0.6,0.4,0.28,0.2]){      // 넓게 → 아주 좁게까지
+        for(const f of [0.6,0.42,0.3,0.2,1]){      // 네모 안쪽부터, 마지막에 전체
           if(grab(f)) found=readCanvas();
           if(found){ hitBy="보조"; break; }
         }
@@ -1388,6 +1423,21 @@ $("drop").addEventListener("drop",e=>{
   const f=e.dataTransfer.files&&e.dataTransfer.files[0]; if(f) importFile(f)});
 
 /* ---------- 한 명씩 추가 / 목록 ---------- */
+function sortRoster(key){
+  const guests=db.roster.filter(p=>p.guest);
+  const main=db.roster.filter(p=>!p.guest&&!p.sub);
+  const subs=db.roster.filter(p=>!p.guest&&p.sub);
+  const cmp = key==="name"
+    ? (a,b)=>a.name.localeCompare(b.name,"ko")
+    : (a,b)=>String(a.code).padStart(12,"0").localeCompare(String(b.code).padStart(12,"0"));
+  main.sort(cmp); subs.sort(cmp); guests.sort(cmp);
+  db.roster=main.concat(subs,guests);
+  persist(); pushRoster(); drawRoster();
+  toast(key==="name"?"가나다순으로 정렬했습니다":"사번순으로 정렬했습니다");
+}
+$("sortName").onclick=()=>sortRoster("name");
+$("sortCode").onclick=()=>sortRoster("code");
+
 $("rAdd").onclick=()=>{
   const name=$("rName").value.trim(), dept=$("rDept").value.trim(), code=$("rCode").value.trim();
   if(!name||!code){toast("이름과 사번을 입력해 주세요");return}
@@ -1411,6 +1461,16 @@ function applyDim(){
   if($("dimVal")) $("dimVal").textContent=v+"%";
   if($("dimRange")) $("dimRange").value=v;
 }
+function drawStep(){
+  const v=Number(db.zoomStep)||0.5;
+  $("stepRange").value=Math.round(v*10);
+  $("stepVal").textContent=v.toFixed(1)+"× 씩";
+  $("stepRange").oninput=()=>{
+    db.zoomStep=Number($("stepRange").value)/10;
+    $("stepVal").textContent=db.zoomStep.toFixed(1)+"× 씩";
+  };
+  $("stepRange").onchange=()=>persist();
+}
 function drawDet(){
   $("noDet").checked=!!db.noDetector;
   $("noDet").onchange=()=>{db.noDetector=$("noDet").checked; persist();
@@ -1430,7 +1490,7 @@ function drawInfo(){
   $("verBig").textContent=APP_VER;
   $("sverTag").textContent = db.sver ? "서버 코드 "+db.sver+"단계" : "서버 코드 단계 확인 안 됨";
   $("sverTag").style.color = (db.sver||0)>=2 ? "var(--green)" : "var(--red)";
-  drawApi(); drawKiosk(); drawQueue(); drawSound(); drawDim(); drawDet(); drawLocConf(); drawMealTimes();
+  drawApi(); drawKiosk(); drawQueue(); drawSound(); drawDim(); drawStep(); drawDet(); drawLocConf(); drawMealTimes();
 }
 $("verCheck").onclick=async()=>{ await checkUpdate();
   toast($("updbar").hidden?"최신 버전입니다":"새 버전이 있습니다"); };
@@ -1537,17 +1597,42 @@ $("apiSave").onclick=async()=>{
 };
 $("apiClear").onclick=()=>{db.api=""; persist(); drawApi(); toast("연결을 끊었습니다")};
 
+/** 목록에서 위아래로 옮깁니다. 월 집계와 엑셀도 이 순서를 따릅니다. */
+function groupOf(p){
+  if(p.guest) return db.roster.filter(x=>x.guest);
+  return db.roster.filter(x=>!x.guest && !!x.sub===!!p.sub);
+}
+function movePerson(p,dir){
+  const group=groupOf(p);
+  const at=group.indexOf(p), to=at+dir;
+  if(to<0||to>=group.length) return;
+  const a=db.roster.indexOf(p), b=db.roster.indexOf(group[to]);
+  db.roster[a]=group[to]; db.roster[b]=p;
+  persist(); pushRoster(); drawRoster();
+}
 function drawRosterList(){
   const m=db.roster.filter(p=>!p.guest);
-  $("rosterList").innerHTML=m.length? m.map((p,i)=>
-    `<li><span><span class="pn">${esc(p.name)}</span>
-     <span class="pd">${esc(p.dept||"소속 없음")} · <em>${esc(p.code)}</em></span></span>
-     <button data-i="${i}" class="cancel">삭제</button></li>`).join("")
+  let n1=0,n2=0;
+  $("rosterList").innerHTML=m.length? m.map((p,i)=>{
+    const ord = p.sub ? ++n2 : ++n1;
+    const group=db.roster.filter(x=>!x.guest && !!x.sub===!!p.sub);
+    const at=group.indexOf(p);
+    return `<li><span class="ord">${ord}</span>
+     <span><span class="pn">${esc(p.name)}</span>
+     <span class="pd">${esc(p.dept||"소속 없음")} · <em>${esc(p.code)}</em>${p.sub?' <span class="stag">자회사</span>':""}</span></span>
+     <span class="movebox">
+       <button data-u="${i}" ${at===0?"disabled":""}>▲</button>
+       <button data-d="${i}" ${at===group.length-1?"disabled":""}>▼</button>
+       <button data-i="${i}" class="cancel" style="width:auto;padding:0 13px;font-size:13.5px">삭제</button>
+     </span></li>`;
+  }).join("")
     : `<li style="color:var(--dim);justify-content:center;padding:22px 0">등록된 직원이 없습니다</li>`;
+  $("rosterList").querySelectorAll("button[data-u]").forEach(b=>b.onclick=()=>movePerson(m[+b.dataset.u],-1));
+  $("rosterList").querySelectorAll("button[data-d]").forEach(b=>b.onclick=()=>movePerson(m[+b.dataset.d],1));
   $("rosterList").querySelectorAll("button[data-i]").forEach(b=>b.onclick=async()=>{
     const p=m[+b.dataset.i];
     if(!await askOk(`${p.name} 님을 명단에서 지울까요?\n지난 식수 기록은 그대로 남습니다.`,"삭제")) return;
-    db.roster=db.roster.filter(x=>x!==p); persist(); drawRoster();
+    db.roster=db.roster.filter(x=>x!==p); persist(); pushRoster(); drawRoster();
   });
 }
 
@@ -1578,13 +1663,20 @@ function drawGuests(){
   box.hidden=!g.length;
   if(!g.length) return;
   $("guestList").innerHTML=g.map((p,i)=>
-    `<li><span><span class="pn">${esc(p.name)}</span>
+    `<li><span class="ord">${i+1}</span>
+     <span><span class="pn">${esc(p.name)}</span>
      <span class="pd">${esc(p.dept||"")} · <em>${esc(p.code)}</em></span></span>
-     <button data-i="${i}" class="cancel">삭제</button></li>`).join("");
-  $("guestList").querySelectorAll("button").forEach(b=>b.onclick=async()=>{
+     <span class="movebox">
+       <button data-u="${i}" ${i===0?"disabled":""}>▲</button>
+       <button data-d="${i}" ${i===g.length-1?"disabled":""}>▼</button>
+       <button data-i="${i}" class="cancel" style="width:auto;padding:0 13px;font-size:13.5px">삭제</button>
+     </span></li>`).join("");
+  $("guestList").querySelectorAll("button[data-u]").forEach(b=>b.onclick=()=>movePerson(g[+b.dataset.u],-1));
+  $("guestList").querySelectorAll("button[data-d]").forEach(b=>b.onclick=()=>movePerson(g[+b.dataset.d],1));
+  $("guestList").querySelectorAll("button[data-i]").forEach(b=>b.onclick=async()=>{
     const p=g[+b.dataset.i];
     if(!await askOk(`${p.name} 님을 명단에서 지울까요?\n지난 식수 기록은 그대로 남습니다.`,"삭제")) return;
-    db.roster=db.roster.filter(x=>x!==p); persist(); drawRoster();
+    db.roster=db.roster.filter(x=>x!==p); persist(); pushRoster(); drawRoster();
   });
 }
 let openLog=null;   // 펼쳐 놓은 끼니 (날짜|끼니)
@@ -1713,7 +1805,7 @@ function drawLog(){
         rows=`<ul class="plist" style="margin:6px 0 14px">`+entries
           .sort((a,b)=>String(a[1].t).localeCompare(String(b[1].t)))
           .map(([c,v])=>`<li><span><span class="pn">${esc(v.name)}</span>
-            <span class="pd">${esc(v.dept||"")} · <em>${esc(c)}</em>${v.via?' <span class="gtag">위치</span>':""}</span></span>
+            <span class="pd">${esc(v.dept||"")} · <em>${esc(c)}</em>${subTag(c,v)}${v.via?' <span class="gtag">위치</span>':""}</span></span>
             <button class="cancel" data-d="${d}" data-m="${m}" data-c="${esc(c)}">삭제</button></li>`).join("")+
           `<li style="border:0;padding-top:10px"><button class="btn quiet addRow" data-d="${d}" data-m="${m}"
              style="min-height:40px;font-size:13.5px;margin-left:0">＋ 이 끼니에 인원 추가</button></li></ul>`;
@@ -1991,15 +2083,22 @@ function drawMonth(){
   drawPicker("monthPick");
   $("mYm").textContent=mCur.replace("-",". ")+" 이용내역";
   const {g,nd}=monthGrid(mCur);
-  const staff=db.roster.filter(p=>!p.guest), guests=db.roster.filter(p=>p.guest);
+  const staff=db.roster.filter(p=>!p.guest&&!p.sub),
+        subs=db.roster.filter(p=>p.sub&&!p.guest),
+        guests=db.roster.filter(p=>p.guest);
   let html=`<div class="mwrap"><table class="mtab">${headHtml(nd)}<tbody>`+
            blockRows(staff,g,nd)+subRow(staff,g,nd,"소계")+"</tbody></table></div>";
+  if(subs.length){
+    html+=`<div class="blocktitle">자회사 직원</div>`+
+          `<div class="mwrap"><table class="mtab">${headHtml(nd)}<tbody>`+
+          blockRows(subs,g,nd)+subRow(subs,g,nd,"소계")+"</tbody></table></div>";
+  }
   if(guests.length){
     html+=`<div class="blocktitle">사내강사 직원</div>`+
           `<div class="mwrap"><table class="mtab">${headHtml(nd)}<tbody>`+
           blockRows(guests,g,nd)+subRow(guests,g,nd,"소계")+"</tbody></table></div>";
   }
-  const all=staff.concat(guests);
+  const all=staff.concat(subs,guests);
   let t=0; Object.keys(g).forEach(c=>{if(all.some(p=>p.code===c)) t+=Object.keys(g[c]).length});
   html+=`<div class="blocktitle">${mCur.replace("-",". ")} 총 식수 <b style="color:var(--amber);font-family:var(--mono);font-size:17px">${t}</b> 명분</div>`;
   $("mBody").innerHTML=html;
@@ -2009,7 +2108,9 @@ function drawMonth(){
 $("mXlsx").onclick=()=>{
   if(!window.XLSX){toast("엑셀 기능을 불러오지 못했습니다. 인터넷 연결을 확인해 주세요");return}
   const {g,nd}=monthGrid(mCur);
-  const staff=db.roster.filter(p=>!p.guest), guests=db.roster.filter(p=>p.guest);
+  const staff=db.roster.filter(p=>!p.guest&&!p.sub),
+        subs=db.roster.filter(p=>p.sub&&!p.guest),
+        guests=db.roster.filter(p=>p.guest);
   const C0=3, CSUM=3+nd*3, CTOT=CSUM+3;      // 열 위치
   const aoa=[], merges=[];
 
@@ -2051,6 +2152,7 @@ $("mXlsx").onclick=()=>{
   }
 
   header(aoa.length); body(staff);
+  if(subs.length){ aoa.push([]); header(aoa.length); body(subs); }
   if(guests.length){ aoa.push([]); header(aoa.length); body(guests); }
 
   const ws=XLSX.utils.aoa_to_sheet(aoa);
@@ -2064,7 +2166,9 @@ $("mXlsx").onclick=()=>{
 
 $("mCopy").onclick=async()=>{
   const {g,nd}=monthGrid(mCur);
-  const staff=db.roster.filter(p=>!p.guest), guests=db.roster.filter(p=>p.guest);
+  const staff=db.roster.filter(p=>!p.guest&&!p.sub),
+        subs=db.roster.filter(p=>p.sub&&!p.guest),
+        guests=db.roster.filter(p=>p.guest);
   const L=[];
   const head=()=>{
     let a=["연번","성명","사번"], b=["","",""];
@@ -2088,6 +2192,7 @@ $("mCopy").onclick=async()=>{
     sr.push(s[0],s[1],s[2],s[0]+s[1]+s[2]); L.push(sr.join("\t"));
   };
   head(); body(staff);
+  if(subs.length){L.push(""); head(); body(subs)}
   if(guests.length){L.push(""); head(); body(guests)}
   try{await navigator.clipboard.writeText(L.join("\n")); toast("복사했습니다. 엑셀 A열에 붙여넣으세요")}
   catch(e){toast("복사 권한이 없어 실패했습니다")}
