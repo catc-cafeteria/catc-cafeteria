@@ -951,7 +951,7 @@ function viaTag(v){
 const SEED_VER=5;
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원"},{"code":"11374","name":"양찬호","dept":"교육지원부"},{"code":"12194","name":"남우현","dept":"교육지원부"},{"code":"12412","name":"이승범","dept":"교육지원부"},{"code":"11663","name":"박상준","dept":"교육지원부"},{"code":"12837","name":"부윤섭","dept":"교육지원부"},{"code":"12356","name":"이상건","dept":"교육지원부"},{"code":"12193","name":"신동명","dept":"교육지원부"},{"code":"13952","name":"조부경","dept":"교육지원부"},{"code":"14064","name":"이경수","dept":"교육지원부"},{"code":"14318","name":"차규민","dept":"교육지원부"},{"code":"14548","name":"이창우","dept":"교육지원부"},{"code":"14467","name":"이유진","dept":"교육지원부"},{"code":"14748","name":"채유란","dept":"교육지원부"},{"code":"83483","name":"이민경","dept":"교육지원부"},{"code":"13086","name":"박종배","dept":"교육운영부"},{"code":"13258","name":"전은영","dept":"교육운영부"},{"code":"51035","name":"장영근","dept":"교육운영부"},{"code":"12542","name":"주영미","dept":"교육운영부"},{"code":"13812","name":"백유민","dept":"교육운영부"},{"code":"14771","name":"김지은","dept":"교육운영부"},{"code":"14898","name":"박찬미","dept":"교육운영부"},{"code":"14592","name":"박현일","dept":"교육운영부"},{"code":"12848","name":"임채택","dept":"교육운영부"},{"code":"14603","name":"박호원","dept":"교육운영부"},{"code":"14685","name":"최자영","dept":"교육운영부"},{"code":"13281","name":"장두석","dept":"교육운영부"},{"code":"13509","name":"이용철","dept":"교육운영부"},{"code":"13670","name":"이승희","dept":"교육운영부"},{"code":"14265","name":"김정민","dept":"교육운영부"},{"code":"13238","name":"손우람","dept":"교육운영부"},{"code":"1057","name":"신동민","dept":"KAC공항서비스","sub":true},{"code":"1058","name":"이현훈","dept":"KAC공항서비스","sub":true},{"code":"1060","name":"박용범","dept":"KAC공항서비스","sub":true},{"code":"1061","name":"우시준","dept":"KAC공항서비스","sub":true},{"code":"1062","name":"홍제표","dept":"KAC공항서비스","sub":true},{"code":"1063","name":"김성중","dept":"KAC공항서비스","sub":true},{"code":"1064","name":"김시환","dept":"KAC공항서비스","sub":true},{"code":"1065","name":"정승영","dept":"KAC공항서비스","sub":true},{"code":"1066","name":"권우정","dept":"KAC공항서비스","sub":true},{"code":"1067","name":"강미순","dept":"KAC공항서비스","sub":true},{"code":"1071","name":"류원호","dept":"KAC공항서비스","sub":true},{"code":"1072","name":"신동원","dept":"KAC공항서비스","sub":true},{"code":"1077","name":"배용호","dept":"KAC공항서비스","sub":true},{"code":"1712","name":"박성철","dept":"KAC공항서비스","sub":true},{"code":"2164","name":"천미영","dept":"KAC공항서비스","sub":true},{"code":"2271","name":"원종복","dept":"KAC공항서비스","sub":true},{"code":"2434","name":"이윤경","dept":"KAC공항서비스","sub":true},{"code":"2436","name":"김선희","dept":"KAC공항서비스","sub":true},{"code":"2531","name":"한강섭","dept":"KAC공항서비스","sub":true},{"code":"2532","name":"이문숙","dept":"KAC공항서비스","sub":true},{"code":"2691","name":"윤희상","dept":"KAC공항서비스","sub":true},{"code":"2692","name":"박진화","dept":"KAC공항서비스","sub":true},{"code":"90494","name":"고은영","dept":"KAC공항서비스","sub":true}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="5.1";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="5.3";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -1182,18 +1182,27 @@ $("closeMeal").onclick=async()=>{
 /* ---------- 예약 서버 연결 ---------- */
 function apiBase(){return (API_URL||db.api||"").trim()}   // 파일에 박힌 주소가 우선
 /* 구글 앱스스크립트는 POST가 막히는 환경이 있어 주소로 보내는 방식을 먼저 씁니다 */
-async function apiCall(body){
-  const u=apiBase(); if(!u) return null;
-  const payload=JSON.stringify(Object.assign({key:API_KEY},body));
-  const q=u+"?p="+encodeURIComponent(payload);
-  let r;
-  if(q.length<7000){ r=await fetch(q); }
-  else { r=await fetch(u,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:payload}); }
+async function apiOnce(u,payload,post){
+  const r = post
+    ? await fetch(u,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:payload})
+    : await fetch(u+"?p="+encodeURIComponent(payload));
   const t=await r.text();
-  let j; try{ j=JSON.parse(t); }catch(e){ throw new Error("서버가 다른 화면을 보냈습니다 (HTTP "+r.status+")"); }
+  let j; try{ j=JSON.parse(t); }
+  catch(e){ throw new Error("서버가 자료 대신 다른 화면을 보냈습니다 (HTTP "+r.status+")"); }
   if(!j.ok) throw new Error(j.error||"서버 오류");
   if(j.sver!==undefined) db.sver=j.sver;
   return j;
+}
+async function apiCall(body){
+  const u=apiBase(); if(!u) return null;
+  const payload=JSON.stringify(Object.assign({key:API_KEY},body));
+  const longUrl = encodeURIComponent(payload).length > 1600;   // 주소가 길면 처음부터 POST
+  try{
+    return await apiOnce(u,payload,longUrl);
+  }catch(e){
+    try{ return await apiOnce(u,payload,!longUrl); }           // 반대 방식으로 한 번 더
+    catch(e2){ throw e; }
+  }
 }
 async function apiList(date){
   const j=await apiCall({action:"list",date});
@@ -1289,15 +1298,30 @@ async function pullResv(quiet){
 }
 
 /** 명단을 서버와 맞춥니다 (직원 폰에도 새 명단이 자동 반영됩니다) */
-async function pushRoster(){
-  if(!apiBase()) return;
+let lastRosterPush={t:"",err:"",n:0};
+async function pushRoster(loud){
+  if(!apiBase()) return 0;
   try{
     const all=db.roster.slice();
-    if(!all.length){ await apiCall({action:"rosterSet",roster:[],reset:true}); return; }
-    for(let i=0;i<all.length;i+=12){
-      await apiCall({action:"rosterSet",roster:all.slice(i,i+12),reset:i===0});
+    let sent=0;
+    if(!all.length){
+      const j=await apiCall({action:"rosterSet",roster:[],reset:true});
+      if(!j||!j.ok) throw new Error("서버가 저장을 확인해 주지 않았습니다");
+    }else{
+      for(let i=0;i<all.length;i+=4){
+        const part=all.slice(i,i+4);
+        const j=await apiCall({action:"rosterSet",roster:part,reset:i===0});
+        if(!j||!j.ok) throw new Error("서버가 저장을 확인해 주지 않았습니다");
+        sent+=part.length;
+      }
     }
-  }catch(e){}
+    lastRosterPush={t:hm(),err:"",n:sent};
+    return sent;
+  }catch(e){
+    lastRosterPush={t:hm(),err:(e&&e.message)||String(e),n:0};
+    if(loud) throw e;
+    return 0;
+  }
 }
 async function pullConf(){
   if(!apiBase()) return;
@@ -1785,21 +1809,31 @@ function countRoster(){
   return `직원 ${m}명 · 자회사 ${s}명 · 사내강사 ${g}명 (합계 ${db.roster.length}명)`;
 }
 function drawRosterSync(){
-  $("rosterSyncState").textContent = apiBase()
-    ? "이 기기 명단 · "+countRoster()
-    : "서버에 연결되어 있지 않습니다.";
+  const el=$("rosterSyncState");
+  el.style.color="var(--dim)";
+  if(!apiBase()){ el.textContent="서버에 연결되어 있지 않습니다."; return; }
+  let t="이 기기 명단 · "+countRoster();
+  if(lastRosterPush.err) t+=`\n마지막 올리기 실패 ${lastRosterPush.t} · ${lastRosterPush.err}`;
+  else if(lastRosterPush.t) t+=`\n마지막 올리기 ${lastRosterPush.t} · ${lastRosterPush.n}명`;
+  el.textContent=t;
 }
 $("rosterPush").onclick=async()=>{
   if(!apiBase()){toast("서버에 연결되어 있지 않습니다");return}
   $("rosterSyncState").textContent="올리는 중…";
   try{
-    await pushRoster();
+    const sent=await pushRoster(true);
     const j=await apiCall({action:"roster"});
     const n=(j&&j.roster||[]).length;
-    $("rosterSyncState").textContent=`서버에 올렸습니다. 서버 명단 ${n}명.\n이 기기 명단 · `+countRoster();
-    toast("명단을 서버에 올렸습니다");
+    const ok = n===db.roster.length;
+    $("rosterSyncState").textContent=
+      (ok ? "서버에 올렸습니다." : "올렸지만 서버 인원이 다릅니다. 다시 눌러 보세요.")+
+      `\n보낸 인원 ${sent}명 · 서버 명단 ${n}명\n이 기기 명단 · `+countRoster();
+    $("rosterSyncState").style.color = ok ? "var(--green)" : "var(--red)";
+    toast(ok?"명단을 서버에 올렸습니다":"서버 인원이 맞지 않습니다");
   }catch(e){
-    $("rosterSyncState").textContent="올리지 못했습니다 · "+(e.message||e);
+    $("rosterSyncState").textContent="올리지 못했습니다 · "+((e&&e.message)||e)+
+      "\n서버 코드가 최신인지 확인해 주세요.";
+    $("rosterSyncState").style.color="var(--red)";
   }
 };
 $("rosterPull").onclick=async()=>{
