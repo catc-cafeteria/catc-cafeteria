@@ -1035,7 +1035,7 @@ function seedStamp(){                       // 파일 명단의 지문
 }
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원"},{"code":"11374","name":"양찬호","dept":"교육지원부"},{"code":"12194","name":"남우현","dept":"교육지원부"},{"code":"12412","name":"이승범","dept":"교육지원부"},{"code":"11663","name":"박상준","dept":"교육지원부"},{"code":"12837","name":"부윤섭","dept":"교육지원부"},{"code":"12356","name":"이상건","dept":"교육지원부"},{"code":"12193","name":"신동명","dept":"교육지원부"},{"code":"13952","name":"조부경","dept":"교육지원부"},{"code":"14064","name":"이경수","dept":"교육지원부"},{"code":"14318","name":"차규민","dept":"교육지원부"},{"code":"14548","name":"이창우","dept":"교육지원부"},{"code":"14467","name":"이유진","dept":"교육지원부"},{"code":"14748","name":"채유란","dept":"교육지원부"},{"code":"83483","name":"이민경","dept":"교육지원부"},{"code":"13086","name":"박종배","dept":"교육운영부"},{"code":"13258","name":"전은영","dept":"교육운영부"},{"code":"51035","name":"장영근","dept":"교육운영부"},{"code":"12542","name":"주영미","dept":"교육운영부"},{"code":"13812","name":"백유민","dept":"교육운영부"},{"code":"14771","name":"김지은","dept":"교육운영부"},{"code":"14898","name":"박찬미","dept":"교육운영부"},{"code":"14592","name":"박현일","dept":"교육운영부"},{"code":"12848","name":"임채택","dept":"교육운영부"},{"code":"14603","name":"박호원","dept":"교육운영부"},{"code":"14685","name":"최자영","dept":"교육운영부"},{"code":"13281","name":"장두석","dept":"교육운영부"},{"code":"13509","name":"이용철","dept":"교육운영부"},{"code":"13670","name":"이승희","dept":"교육운영부"},{"code":"14265","name":"김정민","dept":"교육운영부"},{"code":"13238","name":"손우람","dept":"교육운영부"},{"code":"01057","name":"신동민","dept":"KAC공항서비스","sub":true},{"code":"01058","name":"이현훈","dept":"KAC공항서비스","sub":true},{"code":"01060","name":"박용범","dept":"KAC공항서비스","sub":true},{"code":"01061","name":"우시준","dept":"KAC공항서비스","sub":true},{"code":"01062","name":"홍제표","dept":"KAC공항서비스","sub":true},{"code":"01063","name":"김성중","dept":"KAC공항서비스","sub":true},{"code":"01064","name":"김시환","dept":"KAC공항서비스","sub":true},{"code":"01065","name":"정승영","dept":"KAC공항서비스","sub":true},{"code":"01066","name":"권우정","dept":"KAC공항서비스","sub":true},{"code":"01067","name":"강미순","dept":"KAC공항서비스","sub":true},{"code":"01071","name":"류원호","dept":"KAC공항서비스","sub":true},{"code":"01072","name":"신동원","dept":"KAC공항서비스","sub":true},{"code":"01077","name":"배용호","dept":"KAC공항서비스","sub":true},{"code":"01712","name":"박성철","dept":"KAC공항서비스","sub":true},{"code":"02164","name":"천미영","dept":"KAC공항서비스","sub":true},{"code":"02271","name":"원종복","dept":"KAC공항서비스","sub":true},{"code":"02434","name":"이윤경","dept":"KAC공항서비스","sub":true},{"code":"02436","name":"김선희","dept":"KAC공항서비스","sub":true},{"code":"02531","name":"한강섭","dept":"KAC공항서비스","sub":true},{"code":"02532","name":"이문숙","dept":"KAC공항서비스","sub":true},{"code":"02691","name":"윤희상","dept":"KAC공항서비스","sub":true},{"code":"02692","name":"박진화","dept":"KAC공항서비스","sub":true},{"code":"90494","name":"고은영","dept":"KAC공항서비스","sub":true}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="6.7";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="6.8";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -2848,45 +2848,61 @@ function bare(s){ return String(s||"").trim().replace(/^0+/,""); }
 function colName(n){ let s=""; while(n>0){ const m=(n-1)%26; s=String.fromCharCode(65+m)+s; n=(n-m-1)/26; } return s; }
 function colNum(s){ let n=0; for(const ch of s) n=n*26+(ch.charCodeAt(0)-64); return n; }
 
-/** 시트 XML에서 한 칸의 값을 읽습니다 (문자열 표 포함) */
-function cellText(xml, ref, shared){
-  const re=new RegExp('<c r="'+ref+'"[^>]*?(?:\\\\s t="(\\\\w+)")?[^>]*?(?:/>|>([\\\\s\\\\S]*?)</c>)');
-  const m=xml.match(re);
-  if(!m || !m[2]) return "";
-  const v=m[2].match(/<v>([\s\S]*?)<\/v>/);
-  const isS=/\st="s"/.test(m[0]);
-  if(!v) {
-    const t=m[2].match(/<t[^>]*>([\s\S]*?)<\/t>/);
-    return t? t[1] : "";
+/** 시트 XML을 칸 단위로 훑어 표로 만듭니다. 정규식을 단순하게 유지합니다. */
+function readCells(xml, shared){
+  const map={};
+  const cre=/<c\s+r="([A-Z]+)(\d+)"([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g;
+  let m;
+  while((m=cre.exec(xml))!==null){
+    const col=m[1], row=Number(m[2]), attr=m[3]||"", body=m[4]||"";
+    let txt="";
+    if(body){
+      const v=/<v>([\s\S]*?)<\/v>/.exec(body);
+      if(v){
+        txt = /t="s"/.test(attr) ? (shared[Number(v[1])]||"") : v[1];
+      }else{
+        const t=/<t[^>]*>([\s\S]*?)<\/t>/.exec(body);
+        if(t) txt=t[1];
+      }
+    }
+    map[col+row]={row, col, txt:String(txt).trim()};
   }
-  return isS ? (shared[Number(v[1])]||"") : v[1];
+  return map;
 }
 
-/** 한 칸에 숫자를 넣거나 비웁니다. 서식(s 속성)은 건드리지 않습니다. */
-function setCell(xml, ref, val){
-  const re=new RegExp('<c r="'+ref+'"([^>]*?)(/>|>([\\\\s\\\\S]*?)</c>)');
-  const m=xml.match(re);
-  const num=(val!==null && val!==undefined && val!=="");
+/** 한 칸의 값을 바꿉니다. 서식(s 속성)은 그대로 둡니다. */
+function setCell(xml, ref, val, asText){
+  const esc=ref.replace(/([.*+?^${}()|[\]\\])/g,"\\$1");
+  const re=new RegExp('<c\\s+r="'+esc+'"([^>]*?)(?:\\/>|>[\\s\\S]*?<\\/c>)');
+  const m=re.exec(xml);
+  const has=(val!==null && val!==undefined && val!=="");
   if(m){
-    let attr=m[1].replace(/\st="\w+"/,"");
-    const body = num ? ('><v>'+val+'</v></c>') : '/>';
-    return xml.replace(re, '<c r="'+ref+'"'+attr+body);
+    let attr=(m[1]||"").replace(/\s*t="[^"]*"/g,"");
+    let body;
+    if(!has) body="/>";
+    else if(asText) body=' t="inlineStr"><is><t>'+String(val).replace(/&/g,"&amp;").replace(/</g,"&lt;")+'</t></is></c>';
+    else body="><v>"+val+"</v></c>";
+    return xml.slice(0,m.index)+'<c r="'+ref+'"'+attr+body+xml.slice(m.index+m[0].length);
   }
-  if(!num) return xml;
-  // 칸이 없으면 그 줄에 순서대로 끼워 넣습니다
+  if(!has) return xml;
   const rn=ref.match(/\d+$/)[0], cn=colNum(ref.replace(/\d+$/,""));
-  const rowRe=new RegExp('(<row r="'+rn+'"[^>]*>)([\\\\s\\\\S]*?)(</row>)');
-  const rm=xml.match(rowRe);
+  const rre=new RegExp('<row\\s+r="'+rn+'"[^>]*>[\\s\\S]*?<\\/row>');
+  const rm=rre.exec(xml);
   if(!rm) return xml;
-  const cells=rm[2].match(/<c [^>]*?(?:\/>|>[\s\S]*?<\/c>)/g)||[];
+  const open=/^<row[^>]*>/.exec(rm[0])[0];
+  const inner=rm[0].slice(open.length, rm[0].length-6);
+  const cells=inner.match(/<c\s[^>]*?(?:\/>|>[\s\S]*?<\/c>)/g)||[];
+  const cellXml = asText
+    ? '<c r="'+ref+'" t="inlineStr"><is><t>'+String(val)+'</t></is></c>'
+    : '<c r="'+ref+'"><v>'+val+'</v></c>';
   let out="", done=false;
   cells.forEach(c=>{
-    const r=c.match(/r="([A-Z]+)\d+"/);
-    if(!done && r && colNum(r[1])>cn){ out+='<c r="'+ref+'"><v>'+val+'</v></c>'; done=true; }
+    const r=/r="([A-Z]+)\d+"/.exec(c);
+    if(!done && r && colNum(r[1])>cn){ out+=cellXml; done=true; }
     out+=c;
   });
-  if(!done) out+='<c r="'+ref+'"><v>'+val+'</v></c>';
-  return xml.replace(rowRe, rm[1]+out+rm[3]);
+  if(!done) out+=cellXml;
+  return xml.slice(0,rm.index)+open+out+"</row>"+xml.slice(rm.index+rm[0].length);
 }
 
 async function loadRollFile(f){
@@ -2895,40 +2911,46 @@ async function loadRollFile(f){
   S("읽는 중…");
   try{
     const zip=await JSZip.loadAsync(await f.arrayBuffer());
+    if(!zip.file("xl/workbook.xml")) throw new Error("엑셀 파일이 아닙니다");
     const wbXml=await zip.file("xl/workbook.xml").async("string");
     const relXml=await zip.file("xl/_rels/workbook.xml.rels").async("string");
-    const sm=[...wbXml.matchAll(/<sheet name="([^"]+)"[^>]*r:id="(rId\d+)"/g)]
-      .find(x=>x[1].replace(/\s/g,"")==="일일직원식사기록");
-    if(!sm) throw new Error("«일일직원식사기록» 장을 찾지 못했습니다");
+    const sheets=[...wbXml.matchAll(/<sheet[^>]*name="([^"]+)"[^>]*?r:id="(rId\d+)"[^>]*\/?>/g)];
+    let sm=sheets.find(x=>x[1].replace(/\s/g,"")==="일일직원식사기록");
+    if(!sm) sm=sheets.find(x=>/일일.*식사기록/.test(x[1].replace(/\s/g,"")));
+    if(!sm) throw new Error("«일일직원식사기록» 장을 찾지 못했습니다\n(있는 장: "+sheets.map(x=>x[1]).join(", ")+")");
     const rel=[...relXml.matchAll(/Id="(rId\d+)"[^>]*Target="([^"]+)"/g)].find(x=>x[1]===sm[2]);
     if(!rel) throw new Error("장을 여는 데 실패했습니다");
-    const path="xl/"+rel[2].replace(/^\/?xl\//,"");
+    let tgt=rel[2].replace(/^\//,"").replace(/^xl\//,"");
+    const path="xl/"+tgt;
+    if(!zip.file(path)) throw new Error("장 파일을 찾지 못했습니다 ("+path+")");
     let xml=await zip.file(path).async("string");
 
-    // 문자열 표
     let shared=[];
     if(zip.file("xl/sharedStrings.xml")){
       const ss=await zip.file("xl/sharedStrings.xml").async("string");
       shared=[...ss.matchAll(/<si>([\s\S]*?)<\/si>/g)]
         .map(x=>[...x[1].matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)].map(y=>y[1]).join(""));
     }
-    const txt=(c,r)=>cellText(xml, colName(c)+r, shared).trim();
+    const cells=readCells(xml, shared);
+    const txt=(c,r)=>{ const v=cells[colName(c)+r]; return v? v.txt : ""; };
 
-    // 1) 블록 머리글 찾기
-    const rows=[...xml.matchAll(/<row r="(\d+)"/g)].map(x=>Number(x[1]));
-    const maxRow=Math.max(...rows);
+    let maxRow=0;
+    Object.values(cells).forEach(v=>{ if(v.row>maxRow) maxRow=v.row; });
+
+    // 1) 블록 머리글
     const heads=[];
-    for(const r of rows){ if(txt(1,r)==="연번" && txt(2,r)==="성명") heads.push(r); }
+    for(let r=1;r<=maxRow;r++){
+      if(txt(1,r)==="연번" && txt(2,r)==="성명") heads.push(r);
+    }
     if(!heads.length) throw new Error("«연번·성명» 머리글을 찾지 못했습니다");
 
     // 2) 날짜 열
     const hr=heads[0], dayCol={};
-    for(let c=1;c<=115;c++){
+    for(let c=1;c<=200;c++){
       const d=Number(txt(c,hr));
       if(d>=1&&d<=31&&!dayCol[d]) dayCol[d]=c;
     }
-    const nDays=Object.keys(dayCol).length;
-    if(!nDays) throw new Error("날짜 칸(1~31)을 찾지 못했습니다");
+    if(!Object.keys(dayCol).length) throw new Error("날짜 칸(1~31)을 찾지 못했습니다");
     const off={"조식":0,"중식":1,"석식":2};
 
     // 3) 블록별 사람 줄
@@ -2944,17 +2966,18 @@ async function loadRollFile(f){
       }
       if(people.length) blocks.push({people,blank});
     });
+    if(!blocks.length) throw new Error("사람 줄을 찾지 못했습니다");
 
-    // 4) 이 달 식수로 채우기 (먼저 모든 날짜 칸을 비웁니다)
+    // 4) 지난달 값을 지우고 이번 달로 채웁니다
     const {g,nd}=monthGrid(mCur);
     const roster=db.roster;
-    const clearRows=[];
-    blocks.forEach(b=>{ b.people.forEach(p=>clearRows.push(p.r)); b.blank.forEach(r=>clearRows.push(r)); });
-    clearRows.forEach(r=>{
-      for(let d=1;d<=31;d++){
-        if(!dayCol[d]) continue;
-        for(let k=0;k<3;k++) xml=setCell(xml, colName(dayCol[d]+k)+r, null);
-      }
+    blocks.forEach(b=>{
+      [...b.people.map(p=>p.r), ...b.blank].forEach(r=>{
+        for(let d=1;d<=31;d++){
+          if(!dayCol[d]) continue;
+          for(let k=0;k<3;k++) xml=setCell(xml, colName(dayCol[d]+k)+r, null);
+        }
+      });
     });
 
     let wrote=0; const missed=[], dup=[], extra=[]; const used=new Set();
@@ -2969,7 +2992,7 @@ async function loadRollFile(f){
           if(hit.length===1) me=hit[0];
           else if(hit.length>1){ dup.push(pp.name); return; }
         }
-        if(!me){ missed.push(pp.name+(pp.code?` (${pp.code})`:"")); return; }
+        if(!me){ missed.push(pp.name+(pp.code?" ("+pp.code+")":"")); return; }
         used.add(me.code);
         for(let d=1;d<=nd;d++){
           if(!dayCol[d]) continue;
@@ -2985,17 +3008,14 @@ async function loadRollFile(f){
     // 5) 파일에 줄이 없는 사람은 빈 줄에
     Object.keys(g).forEach(code=>{
       if(used.has(code)) return;
+      if(!Object.keys(g[code]||{}).length) return;
       const me=roster.find(x=>String(x.code)===code); if(!me) return;
       let bi = me.guest ? 1 : (me.sub ? 2 : 0);
       if(bi>=blocks.length) bi=blocks.length-1;
       const slot=blocks[bi].blank.shift();
       if(slot===undefined){ extra.push(me.name+" (빈 줄 부족)"); return; }
-      xml=setCell(xml, "B"+slot, null);
-      xml=xml.replace(new RegExp('<c r="B'+slot+'"([^>]*?)(/>|>[\\s\\S]*?</c>)'),
-        '<c r="B'+slot+'"$1'.replace(/\st="\w+"/,"")+' t="inlineStr"><is><t>'+me.name+'</t></is></c>');
-      xml=setCell(xml, "C"+slot, null);
-      xml=xml.replace(new RegExp('<c r="C'+slot+'"([^>]*?)(/>|>[\\s\\S]*?</c>)'),
-        '<c r="C'+slot+'"$1'.replace(/\st="\w+"/,"")+' t="inlineStr"><is><t>'+me.code+'</t></is></c>');
+      xml=setCell(xml, "B"+slot, me.name, true);
+      xml=setCell(xml, "C"+slot, me.code, true);
       for(let d=1;d<=nd;d++){
         if(!dayCol[d]) continue;
         MEALS.forEach((m,mi)=>{
@@ -3008,17 +3028,18 @@ async function loadRollFile(f){
     zip.file(path, xml);
     const blob=await zip.generateAsync({type:"blob",
       mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
-    const [yy,mm]=mCur.split("-");
+    const ym=mCur.split("-");
     const a=document.createElement("a");
     a.href=URL.createObjectURL(blob);
-    a.download=f.name.replace(/\.xls[xm]$/i,"")+`_${yy}.${mm}_식수반영.xlsx`;
-    a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+    a.download=f.name.replace(/\.xls[xm]$/i,"")+"_"+ym[0]+"."+ym[1]+"_식수반영.xlsx";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),5000);
 
-    let t=`${mCur.replace("-",". ")} 식수를 채웠습니다.\n«일일직원식사기록» 장만 바꾸고 서식은 그대로 두었습니다.\n`+
-          `블록 ${blocks.length}개 · 채운 칸 ${wrote}개`;
-    if(missed.length) t+=`\n\n이 파일에 있지만 우리 명단에 없는 사람 ${missed.length}명 (그 줄은 비워 둡니다)\n  `+missed.slice(0,10).join(", ")+(missed.length>10?" 외":"");
-    if(extra.length) t+=`\n\n식사했지만 파일에 줄이 없어 빈 줄에 넣은 사람\n  `+extra.join(", ");
-    if(dup.length) t+=`\n\n동명이인이라 건너뛴 사람\n  `+[...new Set(dup)].join(", ");
+    let t=mCur.replace("-",". ")+" 식수를 채웠습니다.\n«일일직원식사기록» 장만 바꾸고 서식은 그대로 두었습니다.\n"+
+          "블록 "+blocks.length+"개 · 채운 칸 "+wrote+"개";
+    if(missed.length) t+="\n\n이 파일에 있지만 우리 명단에 없는 사람 "+missed.length+"명 (그 줄은 비워 둡니다)\n  "+missed.slice(0,10).join(", ")+(missed.length>10?" 외":"");
+    if(extra.length) t+="\n\n식사했지만 파일에 줄이 없어 빈 줄에 넣은 사람\n  "+extra.join(", ");
+    if(dup.length) t+="\n\n동명이인이라 건너뛴 사람\n  "+[...new Set(dup)].join(", ");
     S(t);
     $("rollState").style.color=(missed.length||dup.length||extra.length)?"var(--amber)":"var(--green)";
     toast("급식총괄표를 내려받았습니다");
