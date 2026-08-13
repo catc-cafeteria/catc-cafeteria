@@ -1035,7 +1035,7 @@ function seedStamp(){                       // 파일 명단의 지문
 }
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원"},{"code":"11374","name":"양찬호","dept":"교육지원부"},{"code":"12194","name":"남우현","dept":"교육지원부"},{"code":"12412","name":"이승범","dept":"교육지원부"},{"code":"11663","name":"박상준","dept":"교육지원부"},{"code":"12837","name":"부윤섭","dept":"교육지원부"},{"code":"12356","name":"이상건","dept":"교육지원부"},{"code":"12193","name":"신동명","dept":"교육지원부"},{"code":"13952","name":"조부경","dept":"교육지원부"},{"code":"14064","name":"이경수","dept":"교육지원부"},{"code":"14318","name":"차규민","dept":"교육지원부"},{"code":"14548","name":"이창우","dept":"교육지원부"},{"code":"14467","name":"이유진","dept":"교육지원부"},{"code":"14748","name":"채유란","dept":"교육지원부"},{"code":"83483","name":"이민경","dept":"교육지원부"},{"code":"13086","name":"박종배","dept":"교육운영부"},{"code":"13258","name":"전은영","dept":"교육운영부"},{"code":"51035","name":"장영근","dept":"교육운영부"},{"code":"12542","name":"주영미","dept":"교육운영부"},{"code":"13812","name":"백유민","dept":"교육운영부"},{"code":"14771","name":"김지은","dept":"교육운영부"},{"code":"14898","name":"박찬미","dept":"교육운영부"},{"code":"14592","name":"박현일","dept":"교육운영부"},{"code":"12848","name":"임채택","dept":"교육운영부"},{"code":"14603","name":"박호원","dept":"교육운영부"},{"code":"14685","name":"최자영","dept":"교육운영부"},{"code":"13281","name":"장두석","dept":"교육운영부"},{"code":"13509","name":"이용철","dept":"교육운영부"},{"code":"13670","name":"이승희","dept":"교육운영부"},{"code":"14265","name":"김정민","dept":"교육운영부"},{"code":"13238","name":"손우람","dept":"교육운영부"},{"code":"01057","name":"신동민","dept":"KAC공항서비스","sub":true},{"code":"01058","name":"이현훈","dept":"KAC공항서비스","sub":true},{"code":"01060","name":"박용범","dept":"KAC공항서비스","sub":true},{"code":"01061","name":"우시준","dept":"KAC공항서비스","sub":true},{"code":"01062","name":"홍제표","dept":"KAC공항서비스","sub":true},{"code":"01063","name":"김성중","dept":"KAC공항서비스","sub":true},{"code":"01064","name":"김시환","dept":"KAC공항서비스","sub":true},{"code":"01065","name":"정승영","dept":"KAC공항서비스","sub":true},{"code":"01066","name":"권우정","dept":"KAC공항서비스","sub":true},{"code":"01067","name":"강미순","dept":"KAC공항서비스","sub":true},{"code":"01071","name":"류원호","dept":"KAC공항서비스","sub":true},{"code":"01072","name":"신동원","dept":"KAC공항서비스","sub":true},{"code":"01077","name":"배용호","dept":"KAC공항서비스","sub":true},{"code":"01712","name":"박성철","dept":"KAC공항서비스","sub":true},{"code":"02164","name":"천미영","dept":"KAC공항서비스","sub":true},{"code":"02271","name":"원종복","dept":"KAC공항서비스","sub":true},{"code":"02434","name":"이윤경","dept":"KAC공항서비스","sub":true},{"code":"02436","name":"김선희","dept":"KAC공항서비스","sub":true},{"code":"02531","name":"한강섭","dept":"KAC공항서비스","sub":true},{"code":"02532","name":"이문숙","dept":"KAC공항서비스","sub":true},{"code":"02691","name":"윤희상","dept":"KAC공항서비스","sub":true},{"code":"02692","name":"박진화","dept":"KAC공항서비스","sub":true},{"code":"90494","name":"고은영","dept":"KAC공항서비스","sub":true}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="6.9";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="7.0";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -2905,6 +2905,39 @@ function setCell(xml, ref, val, asText){
   return xml.slice(0,rm.index)+open+out+"</row>"+xml.slice(rm.index+rm[0].length);
 }
 
+/** 수식이 새로 계산되도록 정리합니다.
+    엑셀은 계산 결과를 파일에 적어 두는데, 값만 바꾸면 옛 결과가 그대로 보입니다. */
+async function refreshFormulas(zip, wbXml){
+  // 1) 계산 순서 목록 제거 (남겨두면 «제거된 레코드» 경고가 납니다)
+  if(zip.file("xl/calcChain.xml")){
+    zip.remove("xl/calcChain.xml");
+    if(zip.file("[Content_Types].xml")){
+      let ct=await zip.file("[Content_Types].xml").async("string");
+      ct=ct.replace(/<Override[^>]*calcChain\.xml[^>]*\/>/g,"");
+      zip.file("[Content_Types].xml", ct);
+    }
+    const rp="xl/_rels/workbook.xml.rels";
+    if(zip.file(rp)){
+      let rx=await zip.file(rp).async("string");
+      rx=rx.replace(/<Relationship[^>]*calcChain\.xml[^>]*\/>/g,"");
+      zip.file(rp, rx);
+    }
+  }
+  // 2) 모든 장에서 수식에 붙은 옛 계산 결과를 지웁니다
+  const names=Object.keys(zip.files).filter(n=>/^xl\/worksheets\/sheet\d+\.xml$/.test(n));
+  for(const n of names){
+    let s=await zip.file(n).async("string");
+    const t=s.replace(/(<f[^>]*(?:\/>|>[\s\S]*?<\/f>))\s*<v>[\s\S]*?<\/v>/g, "$1");
+    if(t!==s) zip.file(n, t);
+  }
+  // 3) 파일을 열 때 전체를 다시 계산하도록 표시합니다
+  let wb=wbXml;
+  if(/<calcPr[^>]*\/>/.test(wb)) wb=wb.replace(/<calcPr[^>]*\/>/, '<calcPr calcId="0" fullCalcOnLoad="1"/>');
+  else if(/<calcPr[^>]*>[\s\S]*?<\/calcPr>/.test(wb)) wb=wb.replace(/<calcPr[^>]*>[\s\S]*?<\/calcPr>/, '<calcPr calcId="0" fullCalcOnLoad="1"/>');
+  else wb=wb.replace("</workbook>", '<calcPr calcId="0" fullCalcOnLoad="1"/></workbook>');
+  zip.file("xl/workbook.xml", wb);
+}
+
 /** «식단» 장에 우리가 올려둔 주간 식단표를 채웁니다. 서식은 그대로 둡니다. */
 async function fillMenuSheet(zip, wbXml, relXml){
   const weeks=weekList();
@@ -2957,12 +2990,9 @@ async function fillMenuSheet(zip, wbXml, relXml){
   if(!blocks.length) return 0;
 
   // 각 블록에 주를 순서대로 넣습니다
+  // 이 달에 걸치는 주만 씁니다. 없으면 그 블록은 비워 둡니다.
   const ymM=Number(mCur.split("-")[1]);
-  const use=weeks.filter(w=>{
-    const m=Number(w.order[0].split("/")[0]);
-    return m===ymM || m===ymM-1 || m===ymM+1;
-  });
-  const list = use.length ? use : weeks;
+  const list=weeks.filter(w=>w.order.some(md=>Number(md.split("/")[0])===ymM));
   let filled=0;
 
   blocks.forEach((bk,bi)=>{
@@ -3153,6 +3183,10 @@ async function loadRollFile(f){
     // 7) «식단» 장에 우리가 올린 주간 식단표를 채웁니다
     let menuFilled=0;
     try{ menuFilled=await fillMenuSheet(zip, wbXml, relXml); }catch(e){}
+
+    // 8) 수식이 새로 계산되도록 정리합니다
+    await refreshFormulas(zip, wbXml);
+
     const blob=await zip.generateAsync({type:"blob",
       mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
     const ym=mCur.split("-");
