@@ -977,6 +977,14 @@
 <div class="page" data-page="month">
   <div class="pane">
     <div class="ymbar" id="monthPick"></div>
+    <div class="drop" id="rollDrop" style="margin-bottom:14px;padding:18px 16px">
+      <b>급식총괄표 파일을 여기에 끌어다 놓으세요</b>
+      <span>«일일직원식사기록» 탭에 이 달 식수를 채워 내려받습니다</span>
+      <div style="margin-top:12px"><button class="btn" id="rollBtn">파일 고르기</button></div>
+      <input type="file" id="rollFile" accept=".xlsx,.xlsm" hidden>
+      <div id="rollState" style="font-size:13px;color:var(--dim);margin-top:12px;
+        white-space:pre-line;line-height:1.7;text-align:left"></div>
+    </div>
     <div class="mnav">
       <div class="ym" id="mYm">—</div>
       <button type="button" id="mXlsx" style="margin-left:auto">엑셀 파일로 받기</button>
@@ -1026,7 +1034,7 @@ function seedStamp(){                       // 파일 명단의 지문
 }
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원"},{"code":"11374","name":"양찬호","dept":"교육지원부"},{"code":"12194","name":"남우현","dept":"교육지원부"},{"code":"12412","name":"이승범","dept":"교육지원부"},{"code":"11663","name":"박상준","dept":"교육지원부"},{"code":"12837","name":"부윤섭","dept":"교육지원부"},{"code":"12356","name":"이상건","dept":"교육지원부"},{"code":"12193","name":"신동명","dept":"교육지원부"},{"code":"13952","name":"조부경","dept":"교육지원부"},{"code":"14064","name":"이경수","dept":"교육지원부"},{"code":"14318","name":"차규민","dept":"교육지원부"},{"code":"14548","name":"이창우","dept":"교육지원부"},{"code":"14467","name":"이유진","dept":"교육지원부"},{"code":"14748","name":"채유란","dept":"교육지원부"},{"code":"83483","name":"이민경","dept":"교육지원부"},{"code":"13086","name":"박종배","dept":"교육운영부"},{"code":"13258","name":"전은영","dept":"교육운영부"},{"code":"51035","name":"장영근","dept":"교육운영부"},{"code":"12542","name":"주영미","dept":"교육운영부"},{"code":"13812","name":"백유민","dept":"교육운영부"},{"code":"14771","name":"김지은","dept":"교육운영부"},{"code":"14898","name":"박찬미","dept":"교육운영부"},{"code":"14592","name":"박현일","dept":"교육운영부"},{"code":"12848","name":"임채택","dept":"교육운영부"},{"code":"14603","name":"박호원","dept":"교육운영부"},{"code":"14685","name":"최자영","dept":"교육운영부"},{"code":"13281","name":"장두석","dept":"교육운영부"},{"code":"13509","name":"이용철","dept":"교육운영부"},{"code":"13670","name":"이승희","dept":"교육운영부"},{"code":"14265","name":"김정민","dept":"교육운영부"},{"code":"13238","name":"손우람","dept":"교육운영부"},{"code":"01057","name":"신동민","dept":"KAC공항서비스","sub":true},{"code":"01058","name":"이현훈","dept":"KAC공항서비스","sub":true},{"code":"01060","name":"박용범","dept":"KAC공항서비스","sub":true},{"code":"01061","name":"우시준","dept":"KAC공항서비스","sub":true},{"code":"01062","name":"홍제표","dept":"KAC공항서비스","sub":true},{"code":"01063","name":"김성중","dept":"KAC공항서비스","sub":true},{"code":"01064","name":"김시환","dept":"KAC공항서비스","sub":true},{"code":"01065","name":"정승영","dept":"KAC공항서비스","sub":true},{"code":"01066","name":"권우정","dept":"KAC공항서비스","sub":true},{"code":"01067","name":"강미순","dept":"KAC공항서비스","sub":true},{"code":"01071","name":"류원호","dept":"KAC공항서비스","sub":true},{"code":"01072","name":"신동원","dept":"KAC공항서비스","sub":true},{"code":"01077","name":"배용호","dept":"KAC공항서비스","sub":true},{"code":"01712","name":"박성철","dept":"KAC공항서비스","sub":true},{"code":"02164","name":"천미영","dept":"KAC공항서비스","sub":true},{"code":"02271","name":"원종복","dept":"KAC공항서비스","sub":true},{"code":"02434","name":"이윤경","dept":"KAC공항서비스","sub":true},{"code":"02436","name":"김선희","dept":"KAC공항서비스","sub":true},{"code":"02531","name":"한강섭","dept":"KAC공항서비스","sub":true},{"code":"02532","name":"이문숙","dept":"KAC공항서비스","sub":true},{"code":"02691","name":"윤희상","dept":"KAC공항서비스","sub":true},{"code":"02692","name":"박진화","dept":"KAC공항서비스","sub":true},{"code":"90494","name":"고은영","dept":"KAC공항서비스","sub":true}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="6.5";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="6.6";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -2831,6 +2839,148 @@ function drawMonth(){
   html+=`<div class="blocktitle">${mCur.replace("-",". ")} 총 식수 <b style="color:var(--amber);font-family:var(--mono);font-size:17px">${t}</b> 명분</div>`;
   $("mBody").innerHTML=html;
 }
+
+/* ---------- 급식총괄표 채우기 ---------- */
+/* «일일직원식사기록» 탭의 세 블록에 이 달 식수를 1로 채웁니다.
+   수식·서식은 건드리지 않고 해당 칸만 씁니다. */
+function bare(s){ return String(s||"").trim().replace(/^0+/,""); }
+
+function fillRoll(ws, XLSXref, g, nd){
+  const A=XLSXref.utils.decode_range(ws["!ref"]);
+  const cell=(r,c)=>ws[XLSXref.utils.encode_cell({r,c})];
+  const val=(r,c)=>{ const v=cell(r,c); return v? String(v.w!==undefined?v.w:v.v).trim() : ""; };
+
+  // 1) 머리글 줄(연번/성명/사번)을 모두 찾습니다 = 블록 시작
+  const heads=[];
+  for(let r=A.s.r;r<=A.e.r;r++){
+    if(val(r,0)==="연번" && val(r,1)==="성명"){ heads.push(r); }
+  }
+  if(!heads.length) throw new Error("«연번·성명·사번» 머리글을 찾지 못했습니다");
+
+  // 2) 날짜 열 위치 (머리글 줄에 1~31, 그 아래 줄에 조식/중식/석식)
+  const dayCol={};
+  const hr=heads[0];
+  for(let c=A.s.c;c<=A.e.c;c++){
+    const d=Number(val(hr,c));
+    if(d>=1 && d<=31 && !dayCol[d]) dayCol[d]=c;
+  }
+  if(!Object.keys(dayCol).length) throw new Error("날짜 칸(1~31)을 찾지 못했습니다");
+  const mealOff={"조식":0,"중식":1,"석식":2};
+
+  // 3) 블록별로 사람 줄을 모읍니다
+  const blocks=[];
+  heads.forEach((r0,i)=>{
+    const end = (i+1<heads.length) ? heads[i+1]-1 : A.e.r;
+    const people=[], blank=[];
+    for(let r=r0+1;r<=end;r++){
+      const no=val(r,0), nm=val(r,1), cd=val(r,2);
+      if(no==="소계"||no==="합계") break;
+      if(!nm){ if(no) blank.push(r); continue; }   // 연번만 있는 빈 줄
+      people.push({r, name:nm, code:cd});
+    }
+    if(people.length) blocks.push({head:r0, people, blank});
+  });
+
+  // 4) 우리 명단과 대조
+  const filled=[], missed=[], dup=[];
+  let wrote=0;
+  const roster=db.roster;
+  blocks.forEach(bk=>{
+    bk.people.forEach(pp=>{
+      let me=null;
+      if(pp.code){
+        me=roster.find(x=>String(x.code)===pp.code) ||
+           roster.find(x=>bare(x.code)===bare(pp.code));
+      }
+      if(!me){                                  // 사번이 없으면 이름으로
+        const hit=roster.filter(x=>x.name===pp.name);
+        if(hit.length===1) me=hit[0];
+        else if(hit.length>1){ dup.push(pp.name); return; }
+      }
+      if(!me){ missed.push(pp.name+(pp.code?` (${pp.code})`:"")); return; }
+
+      let n=0;
+      for(let d=1;d<=nd;d++){
+        const key=d*3;
+        MEALS.forEach((m,mi)=>{
+          if(g[me.code] && g[me.code][key+mi]){
+            const c=dayCol[d]+mealOff[m];
+            ws[XLSXref.utils.encode_cell({r:pp.r,c})]={t:"n",v:1};
+            n++;
+          }
+        });
+      }
+      if(n) wrote+=n;
+      filled.push(pp.name);
+    });
+  });
+  // 5) 우리 시스템에서 식사했는데 파일에 줄이 없는 사람은 빈 줄에 넣습니다
+  const used=new Set();
+  blocks.forEach(bk=>bk.people.forEach(pp=>{
+    const me=roster.find(x=>String(x.code)===pp.code)||roster.find(x=>x.name===pp.name);
+    if(me) used.add(me.code);
+  }));
+  const extra=[];
+  const ate=Object.keys(g).filter(c=>Object.keys(g[c]||{}).length);
+  ate.forEach(code=>{
+    if(used.has(code)) return;
+    const me=roster.find(x=>String(x.code)===code); if(!me) return;
+    // 어느 블록에 넣을지 (사내강사→2번째, 자회사→3번째, 그 외 첫 번째)
+    let bi = me.guest ? 1 : (me.sub ? 2 : 0);
+    if(bi>=blocks.length) bi=blocks.length-1;
+    const bk=blocks[bi];
+    const slot=bk.blank.shift();
+    if(slot===undefined){ extra.push(me.name+" (빈 줄 부족)"); return; }
+    ws[XLSXref.utils.encode_cell({r:slot,c:1})]={t:"s",v:me.name};
+    ws[XLSXref.utils.encode_cell({r:slot,c:2})]={t:"s",v:String(me.code)};
+    let n=0;
+    for(let d=1;d<=nd;d++){
+      MEALS.forEach((m,mi)=>{
+        if(g[code] && g[code][d*3+mi]){
+          ws[XLSXref.utils.encode_cell({r:slot,c:dayCol[d]+mealOff[m]})]={t:"n",v:1};
+          n++;
+        }
+      });
+    }
+    wrote+=n; extra.push(me.name);
+  });
+  return {blocks:blocks.length, people:filled.length, wrote, missed, dup, extra};
+}
+
+async function loadRollFile(f){
+  const S=t=>{$("rollState").textContent=t};
+  if(!window.XLSX){S("엑셀 기능을 불러오지 못했습니다");return}
+  S("읽는 중…");
+  try{
+    const buf=await f.arrayBuffer();
+    const wb=XLSX.read(buf,{type:"array",cellStyles:true,cellFormula:true,cellNF:true});
+    const name=wb.SheetNames.find(n=>n.replace(/\s/g,"")==="일일직원식사기록");
+    if(!name) throw new Error("«일일직원식사기록» 탭을 찾지 못했습니다");
+    const {g,nd}=monthGrid(mCur);
+    const res=fillRoll(wb.Sheets[name], XLSX, g, nd);
+    const [y,m]=mCur.split("-");
+    XLSX.writeFile(wb, f.name.replace(/\.xls[xm]$/i,"")+`_${y}.${m}_식수반영.xlsx`);
+    let t=`${mCur.replace("-",". ")} 식수를 채웠습니다.\n`+
+          `블록 ${res.blocks}개 · 대조된 인원 ${res.people}명 · 채운 칸 ${res.wrote}개`;
+    if(res.missed.length) t+=`\n\n이 파일에 있지만 우리 명단에 없는 사람 ${res.missed.length}명 (그 줄은 비워 둡니다)\n  `+res.missed.slice(0,10).join(", ")+(res.missed.length>10?" 외":"");
+    if(res.extra.length) t+=`\n\n식사했지만 이 파일에 줄이 없는 사람 ${res.extra.length}명 (빈 줄에 채웠습니다)\n  `+res.extra.join(", ");
+    if(res.dup.length) t+=`\n\n동명이인이라 건너뛴 사람\n  `+[...new Set(res.dup)].join(", ");
+    S(t);
+    $("rollState").style.color = (res.missed.length||res.dup.length) ? "var(--amber)" : "var(--green)";
+    toast("급식총괄표를 내려받았습니다");
+  }catch(e){
+    S("처리하지 못했습니다 · "+((e&&e.message)||e));
+    $("rollState").style.color="var(--red)";
+  }
+}
+$("rollBtn").onclick=()=>$("rollFile").click();
+$("rollFile").onchange=e=>{const f=e.target.files[0]; e.target.value=""; if(f) loadRollFile(f);};
+["dragenter","dragover"].forEach(ev=>$("rollDrop").addEventListener(ev,e=>{
+  e.preventDefault(); $("rollDrop").classList.add("over")}));
+["dragleave","drop"].forEach(ev=>$("rollDrop").addEventListener(ev,e=>{
+  e.preventDefault(); $("rollDrop").classList.remove("over")}));
+$("rollDrop").addEventListener("drop",e=>{
+  const f=e.dataTransfer.files&&e.dataTransfer.files[0]; if(f) loadRollFile(f);});
 
 /* 7월 이용내역과 같은 모양의 엑셀 파일로 저장 */
 $("mXlsx").onclick=()=>{
