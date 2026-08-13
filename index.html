@@ -1061,7 +1061,7 @@ function seedStamp(){                       // 파일 명단의 지문
 }
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원"},{"code":"11374","name":"양찬호","dept":"교육지원부"},{"code":"12194","name":"남우현","dept":"교육지원부"},{"code":"12412","name":"이승범","dept":"교육지원부"},{"code":"11663","name":"박상준","dept":"교육지원부"},{"code":"12837","name":"부윤섭","dept":"교육지원부"},{"code":"12356","name":"이상건","dept":"교육지원부"},{"code":"12193","name":"신동명","dept":"교육지원부"},{"code":"13952","name":"조부경","dept":"교육지원부"},{"code":"14064","name":"이경수","dept":"교육지원부"},{"code":"14318","name":"차규민","dept":"교육지원부"},{"code":"14548","name":"이창우","dept":"교육지원부"},{"code":"14467","name":"이유진","dept":"교육지원부"},{"code":"14748","name":"채유란","dept":"교육지원부"},{"code":"83483","name":"이민경","dept":"교육지원부"},{"code":"13086","name":"박종배","dept":"교육운영부"},{"code":"13258","name":"전은영","dept":"교육운영부"},{"code":"51035","name":"장영근","dept":"교육운영부"},{"code":"12542","name":"주영미","dept":"교육운영부"},{"code":"13812","name":"백유민","dept":"교육운영부"},{"code":"14771","name":"김지은","dept":"교육운영부"},{"code":"14898","name":"박찬미","dept":"교육운영부"},{"code":"14592","name":"박현일","dept":"교육운영부"},{"code":"12848","name":"임채택","dept":"교육운영부"},{"code":"14603","name":"박호원","dept":"교육운영부"},{"code":"14685","name":"최자영","dept":"교육운영부"},{"code":"13281","name":"장두석","dept":"교육운영부"},{"code":"13509","name":"이용철","dept":"교육운영부"},{"code":"13670","name":"이승희","dept":"교육운영부"},{"code":"14265","name":"김정민","dept":"교육운영부"},{"code":"13238","name":"손우람","dept":"교육운영부"},{"code":"01057","name":"신동민","dept":"KAC공항서비스","sub":true},{"code":"01058","name":"이현훈","dept":"KAC공항서비스","sub":true},{"code":"01060","name":"박용범","dept":"KAC공항서비스","sub":true},{"code":"01061","name":"우시준","dept":"KAC공항서비스","sub":true},{"code":"01062","name":"홍제표","dept":"KAC공항서비스","sub":true},{"code":"01063","name":"김성중","dept":"KAC공항서비스","sub":true},{"code":"01064","name":"김시환","dept":"KAC공항서비스","sub":true},{"code":"01065","name":"정승영","dept":"KAC공항서비스","sub":true},{"code":"01066","name":"권우정","dept":"KAC공항서비스","sub":true},{"code":"01067","name":"강미순","dept":"KAC공항서비스","sub":true},{"code":"01071","name":"류원호","dept":"KAC공항서비스","sub":true},{"code":"01072","name":"신동원","dept":"KAC공항서비스","sub":true},{"code":"01077","name":"배용호","dept":"KAC공항서비스","sub":true},{"code":"01712","name":"박성철","dept":"KAC공항서비스","sub":true},{"code":"02164","name":"천미영","dept":"KAC공항서비스","sub":true},{"code":"02271","name":"원종복","dept":"KAC공항서비스","sub":true},{"code":"02434","name":"이윤경","dept":"KAC공항서비스","sub":true},{"code":"02436","name":"김선희","dept":"KAC공항서비스","sub":true},{"code":"02531","name":"한강섭","dept":"KAC공항서비스","sub":true},{"code":"02532","name":"이문숙","dept":"KAC공항서비스","sub":true},{"code":"02691","name":"윤희상","dept":"KAC공항서비스","sub":true},{"code":"02692","name":"박진화","dept":"KAC공항서비스","sub":true},{"code":"90494","name":"고은영","dept":"KAC공항서비스","sub":true}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="8.0";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="8.1";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -3557,6 +3557,12 @@ function startWatch(){
   watchId=navigator.geolocation.watchPosition(onPos,onErr,
     {enableHighAccuracy:true,maximumAge:0,timeout:25000});
 }
+// 마감 시각을 넘기면 화면을 알아서 잠급니다
+setInterval(()=>{
+  if(curMode()!=="user") return;
+  if($("myResv") && !$("myResv").hidden) paintResv(myOn,false);
+},30000);
+
 $("myLocRefresh").onclick=()=>{
   myDist=null; myAcc=null; myAge=null; updateLoc();
   stopWatch();
@@ -3769,14 +3775,16 @@ function paintResvNote(){
   const closed=pastDeadline();
   if(myOn){
     el.innerHTML = closed
-      ? `<b style="color:var(--amber)">${dl} 마감이 지났습니다.</b><br>`+
-        `${st}에 저녁 식수로 자동 처리됩니다. 못 오시게 되면 식당에 알려 주세요.`
+      ? `<b style="color:var(--amber)">${dl} 이후에는 바꾸실 수 없습니다.</b><br>`+
+        `${st}에 저녁 식수로 자동 처리됩니다.<br>`+
+        `못 오시게 되면 식당 담당자에게 연락해 주세요.`
       : `<b>${st}에 저녁 식수로 자동 처리됩니다.</b><br>`+
         `식당에서 따로 확인하지 않으셔도 됩니다.<br>`+
         `못 오시게 되면 ${dl}까지 여기서 취소해 주세요.`;
   }else{
     el.innerHTML = closed
-      ? `${dl} 마감이 지났습니다. 지금 신청하시려면 식당에 알려 주세요.`
+      ? `<b style="color:var(--amber)">${dl} 이후에는 신청하실 수 없습니다.</b><br>`+
+        `오늘 저녁 식사가 필요하시면 식당 담당자에게 연락해 주세요.`
       : `신청하시면 ${st}에 저녁 식수로 자동 처리됩니다.<br>`+
         `${dl}까지 자유롭게 바꾸실 수 있습니다.`;
   }
@@ -3786,14 +3794,28 @@ function paintResv(on,busy){
   myOn=on;
   $("myResvState").textContent = on ? "오늘 저녁 식사 신청됨" : "오늘 저녁 식사 신청 안 함";
   $("myResvState").style.color = on ? "var(--green)" : "var(--dim)";
-  $("myResvBtn").textContent = (busy?"보내는 중… ":"")+(on ? "신청 취소하기" : "저녁 식사 신청하기");
-  $("myResvBtn").disabled=!!busy;
+  const closed=pastDeadline();
+  const b=$("myResvBtn");
+  if(closed){
+    b.textContent = on ? "신청됨 · 변경 마감" : "신청 마감";
+    b.disabled=true;
+    b.style.background="#26313E"; b.style.color="#5A6A7A"; b.style.borderColor="#43566D";
+  }else{
+    b.textContent = (busy?"보내는 중… ":"")+(on ? "신청 취소하기" : "저녁 식사 신청하기");
+    b.disabled=!!busy;
+    b.style.background=""; b.style.color=""; b.style.borderColor="";
+  }
   paintResvNote();
 }
 /* 누르는 즉시 화면을 바꾸고, 서버 전송은 뒤에서 합니다. 실패하면 되돌립니다. */
 let resvSending=false;
 $("myResvBtn").onclick=()=>{
   const p=db.roster.find(x=>x.code===db.myCode); if(!p||resvSending) return;
+  if(pastDeadline()){
+    const dl=String(DEADLINE[0]).padStart(2,"0")+":"+String(DEADLINE[1]).padStart(2,"0");
+    toast(dl+" 이후에는 바꾸실 수 없습니다. 식당에 연락해 주세요");
+    paintResv(myOn,false); return;
+  }
   const want=!myOn, prev=myOn;
   resvSending=true;
   paintResv(want,true);
