@@ -1061,7 +1061,7 @@ function seedStamp(){                       // 파일 명단의 지문
 }
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원"},{"code":"11374","name":"양찬호","dept":"교육지원부"},{"code":"12194","name":"남우현","dept":"교육지원부"},{"code":"12412","name":"이승범","dept":"교육지원부"},{"code":"11663","name":"박상준","dept":"교육지원부"},{"code":"12837","name":"부윤섭","dept":"교육지원부"},{"code":"12356","name":"이상건","dept":"교육지원부"},{"code":"12193","name":"신동명","dept":"교육지원부"},{"code":"13952","name":"조부경","dept":"교육지원부"},{"code":"14064","name":"이경수","dept":"교육지원부"},{"code":"14318","name":"차규민","dept":"교육지원부"},{"code":"14548","name":"이창우","dept":"교육지원부"},{"code":"14467","name":"이유진","dept":"교육지원부"},{"code":"14748","name":"채유란","dept":"교육지원부"},{"code":"83483","name":"이민경","dept":"교육지원부"},{"code":"13086","name":"박종배","dept":"교육운영부"},{"code":"13258","name":"전은영","dept":"교육운영부"},{"code":"51035","name":"장영근","dept":"교육운영부"},{"code":"12542","name":"주영미","dept":"교육운영부"},{"code":"13812","name":"백유민","dept":"교육운영부"},{"code":"14771","name":"김지은","dept":"교육운영부"},{"code":"14898","name":"박찬미","dept":"교육운영부"},{"code":"14592","name":"박현일","dept":"교육운영부"},{"code":"12848","name":"임채택","dept":"교육운영부"},{"code":"14603","name":"박호원","dept":"교육운영부"},{"code":"14685","name":"최자영","dept":"교육운영부"},{"code":"13281","name":"장두석","dept":"교육운영부"},{"code":"13509","name":"이용철","dept":"교육운영부"},{"code":"13670","name":"이승희","dept":"교육운영부"},{"code":"14265","name":"김정민","dept":"교육운영부"},{"code":"13238","name":"손우람","dept":"교육운영부"},{"code":"01057","name":"신동민","dept":"KAC공항서비스","sub":true},{"code":"01058","name":"이현훈","dept":"KAC공항서비스","sub":true},{"code":"01060","name":"박용범","dept":"KAC공항서비스","sub":true},{"code":"01061","name":"우시준","dept":"KAC공항서비스","sub":true},{"code":"01062","name":"홍제표","dept":"KAC공항서비스","sub":true},{"code":"01063","name":"김성중","dept":"KAC공항서비스","sub":true},{"code":"01064","name":"김시환","dept":"KAC공항서비스","sub":true},{"code":"01065","name":"정승영","dept":"KAC공항서비스","sub":true},{"code":"01066","name":"권우정","dept":"KAC공항서비스","sub":true},{"code":"01067","name":"강미순","dept":"KAC공항서비스","sub":true},{"code":"01071","name":"류원호","dept":"KAC공항서비스","sub":true},{"code":"01072","name":"신동원","dept":"KAC공항서비스","sub":true},{"code":"01077","name":"배용호","dept":"KAC공항서비스","sub":true},{"code":"01712","name":"박성철","dept":"KAC공항서비스","sub":true},{"code":"02164","name":"천미영","dept":"KAC공항서비스","sub":true},{"code":"02271","name":"원종복","dept":"KAC공항서비스","sub":true},{"code":"02434","name":"이윤경","dept":"KAC공항서비스","sub":true},{"code":"02436","name":"김선희","dept":"KAC공항서비스","sub":true},{"code":"02531","name":"한강섭","dept":"KAC공항서비스","sub":true},{"code":"02532","name":"이문숙","dept":"KAC공항서비스","sub":true},{"code":"02691","name":"윤희상","dept":"KAC공항서비스","sub":true},{"code":"02692","name":"박진화","dept":"KAC공항서비스","sub":true},{"code":"90494","name":"고은영","dept":"KAC공항서비스","sub":true}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="7.7";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="7.8";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -1280,7 +1280,7 @@ function render(){
     const n=list.filter(([c,v])=>grpOf(c,v)===dp).length;
     return `<div>${esc(dp)}<b>${n}</b></div>`;
   }).join("");
-  $("recent").innerHTML=list.slice(0,60).map(([c,v])=>
+  $("recent").innerHTML=list.slice(0,30).map(([c,v])=>
     `<li><span>${esc(v.name)} <i>${esc(v.dept||"")}</i>${subTag(c,v)}${viaTag(v)}</span><em>${v.t}</em>`+
     `<button type="button" data-c="${esc(c)}">취소</button></li>`).join("")
     || `<li style="color:var(--dim)">아직 체크인이 없습니다</li>`;
@@ -1550,7 +1550,13 @@ async function pullRoster(){
 
 /* ---------- 화면 전체 갱신 ---------- */
 function visible(name){const el=document.querySelector(`[data-page="${name}"]`);return el&&el.dataset.on==="1"}
+let refreshTimer=null;
 function refreshAll(){
+  // 잇따라 들어오면 한 번만 그립니다 (버튼이 안 눌리는 것을 막습니다)
+  clearTimeout(refreshTimer);
+  refreshTimer=setTimeout(refreshNow,60);
+}
+function refreshNow(){
   render();
   if(visible("resv")) drawResv();
   if(visible("log")) drawLog();
@@ -1638,6 +1644,12 @@ async function startCam(){
         "인터넷에서 인식 모듈을 받지 못했습니다. 사번을 직접 입력해 주세요.");
     }
     video.classList.toggle("mirror",facing==="user");
+    // 카메라가 끊기면 스스로 다시 켭니다
+    stream.getVideoTracks().forEach(tr=>{
+      tr.onended=()=>{ if(scanning){ camDead("카메라 연결이 끊겼습니다"); } };
+      tr.onmute=()=>{ if(scanning){ camDead("카메라가 멈췄습니다"); } };
+    });
+    lastFrame=Date.now();
     scanning=true; $("camoff").hidden=true; $("reticle").hidden=false; $("camSwitch").hidden=false;
     $("camBtn").textContent="카메라 끄기"; $("camBtn").classList.add("on");
     $("camStat").hidden=false; scanN=0; hitAt=0; tick();
@@ -1699,10 +1711,25 @@ function grab(frac){
   }
   return true;
 }
+let lastFrame=0, reviving=false;
+/* 카메라가 멈추면 잠시 뒤 다시 켭니다 */
+async function camDead(why){
+  if(reviving || !scanning) return;
+  reviving=true;
+  try{
+    $("camStat").hidden=false;
+    $("camStat").innerHTML="<b>"+why+" · 다시 켜는 중</b>";
+    stopCam();
+    await new Promise(r=>setTimeout(r,700));
+    if(curMode()==="admin") await startCam();
+  }catch(e){}
+  reviving=false;
+}
 async function tick(){
   if(!scanning) return;
   let found=null;
   if(video.readyState>=2 && video.videoWidth>0){
+    lastFrame=Date.now();
     scanN++;
     try{
       if(detector && !db.noDetector){
@@ -1723,7 +1750,7 @@ async function tick(){
     hitAt=Date.now();
     camLog.unshift({t:hm(), by:hitBy||"—", z:(zoomCap?curZoom.toFixed(1)+"×":"–"),
       res:video.videoWidth+"×"+video.videoHeight, n:scanN});
-    if(camLog.length>30) camLog.pop();
+    while(camLog.length>20) camLog.pop();
     scanN=0;
     checkIn(found);
   }
@@ -1736,7 +1763,7 @@ async function tick(){
       ? `<b>QR 읽음</b> · ${hitBy}`
       : `${eng} · ${res} · ${z} · ${scanN}회`;
   }
-  setTimeout(()=>requestAnimationFrame(tick),110);
+  setTimeout(tick,110);   // 화면이 가려져도 멈추지 않도록 requestAnimationFrame 을 쓰지 않습니다
 }
 
 /* ---------- 명단 ---------- */
@@ -3909,6 +3936,15 @@ $("updBtn").onclick=reloadNew;
 setTimeout(checkUpdate,4000);
 setInterval(checkUpdate,1800000);
 
+/* 자정을 넘기면 날짜와 끼니를 새로 잡습니다 */
+let curDay=dkey();
+setInterval(()=>{
+  if(dkey()===curDay) return;
+  curDay=dkey(); seenLoc=null; lastRev=null;
+  meal=timeMeal();
+  if(curMode()==="admin"){ refreshAll(); pullResv(true); }
+},60000);
+
 /* ---------- 전체화면 · 화면 꺼짐 방지 ---------- */
 const fsOK = !!(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen);
 function fsOn(){return !!(document.fullscreenElement||document.webkitFullscreenElement)}
@@ -3927,17 +3963,35 @@ $("fsBtn").onclick=toggleFs;
 document.addEventListener("fullscreenchange",drawFs);
 document.addEventListener("webkitfullscreenchange",drawFs);
 
-let wakeLock=null;
+let wakeLock=null, wakeWant=false;
 async function keepAwake(on){
+  wakeWant=on;
   try{
     if(on){
-      if(!wakeLock && navigator.wakeLock) wakeLock=await navigator.wakeLock.request("screen");
+      if(!wakeLock && navigator.wakeLock){
+        wakeLock=await navigator.wakeLock.request("screen");
+        // 풀리면 다시 잡습니다 (화면 잠깐 꺼짐, 다른 앱 전환 등)
+        wakeLock.addEventListener("release",()=>{ wakeLock=null; if(wakeWant) setTimeout(()=>keepAwake(true),800); });
+      }
     }else if(wakeLock){ await wakeLock.release(); wakeLock=null; }
-  }catch(e){}
+  }catch(e){ if(on) setTimeout(()=>{ if(wakeWant) keepAwake(true); },5000); }
 }
 document.addEventListener("visibilitychange",()=>{
-  if(document.visibilityState==="visible" && curMode()==="admin") keepAwake(true);
+  if(document.visibilityState!=="visible") return;
+  if(curMode()!=="admin") return;
+  keepAwake(true);
+  if(actx && actx.state==="suspended") actx.resume().catch(()=>{});
+  // 돌아왔을 때 카메라가 죽어 있으면 되살립니다
+  if(scanning && (!stream || !stream.getVideoTracks().some(t=>t.readyState==="live"))) camDead("화면이 돌아왔습니다");
 });
+
+/* 30초마다 카메라가 살아 있는지 스스로 살핍니다 */
+setInterval(()=>{
+  if(!scanning || reviving || document.hidden) return;
+  const dead = !stream || !stream.getVideoTracks().some(t=>t.readyState==="live");
+  const stale = lastFrame && (Date.now()-lastFrame > 20000);
+  if(dead || stale) camDead(dead?"카메라가 꺼졌습니다":"화면이 멈췄습니다");
+},30000);
 
 /* ---------- 석식 예약자 자동 체크 ---------- */
 /* 석식 배식이 시작되면 예약자를 식수에 올립니다. 잘못된 건 기록에서 지우면 됩니다. */
