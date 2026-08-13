@@ -616,10 +616,10 @@
       </div>
       <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--line)">
         <p style="margin:0 0 10px"><b style="color:var(--ink)">식단표 PDF에서 바로 읽기</b><br>
-          주간 식단표 PDF를 올리면 요일별 메뉴를 뽑아 직원 화면에 그대로 보여줍니다.
-          드라이브 링크 없이도 됩니다.</p>
-        <button class="btn" id="menuPdfBtn" style="width:100%">식단표 PDF 올리기</button>
-        <input type="file" id="menuPdfFile" accept=".pdf" hidden>
+          주간 식단표 PDF나 엑셀 파일을 올리면 요일별 메뉴를 뽑아 직원 화면에 보여줍니다.
+          여러 주를 올려두면 날짜에 맞는 주가 자동으로 표시되니, 다음 주 것을 미리 올려두셔도 됩니다.</p>
+        <button class="btn" id="menuPdfBtn" style="width:100%">식단표 파일 올리기 (PDF · 엑셀)</button>
+        <input type="file" id="menuPdfFile" accept=".pdf,.xlsx,.xls" hidden>
         <div id="menuPdfState" style="font-size:13px;color:var(--dim);margin-top:10px;white-space:pre-line"></div>
       </div>
       <div id="menuState" style="font-size:13px;color:var(--dim);margin-top:12px;line-height:1.7;white-space:pre-line"></div>
@@ -1008,7 +1008,7 @@ function seedStamp(){                       // 파일 명단의 지문
 }
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원"},{"code":"11374","name":"양찬호","dept":"교육지원부"},{"code":"12194","name":"남우현","dept":"교육지원부"},{"code":"12412","name":"이승범","dept":"교육지원부"},{"code":"11663","name":"박상준","dept":"교육지원부"},{"code":"12837","name":"부윤섭","dept":"교육지원부"},{"code":"12356","name":"이상건","dept":"교육지원부"},{"code":"12193","name":"신동명","dept":"교육지원부"},{"code":"13952","name":"조부경","dept":"교육지원부"},{"code":"14064","name":"이경수","dept":"교육지원부"},{"code":"14318","name":"차규민","dept":"교육지원부"},{"code":"14548","name":"이창우","dept":"교육지원부"},{"code":"14467","name":"이유진","dept":"교육지원부"},{"code":"14748","name":"채유란","dept":"교육지원부"},{"code":"83483","name":"이민경","dept":"교육지원부"},{"code":"13086","name":"박종배","dept":"교육운영부"},{"code":"13258","name":"전은영","dept":"교육운영부"},{"code":"51035","name":"장영근","dept":"교육운영부"},{"code":"12542","name":"주영미","dept":"교육운영부"},{"code":"13812","name":"백유민","dept":"교육운영부"},{"code":"14771","name":"김지은","dept":"교육운영부"},{"code":"14898","name":"박찬미","dept":"교육운영부"},{"code":"14592","name":"박현일","dept":"교육운영부"},{"code":"12848","name":"임채택","dept":"교육운영부"},{"code":"14603","name":"박호원","dept":"교육운영부"},{"code":"14685","name":"최자영","dept":"교육운영부"},{"code":"13281","name":"장두석","dept":"교육운영부"},{"code":"13509","name":"이용철","dept":"교육운영부"},{"code":"13670","name":"이승희","dept":"교육운영부"},{"code":"14265","name":"김정민","dept":"교육운영부"},{"code":"13238","name":"손우람","dept":"교육운영부"},{"code":"01057","name":"신동민","dept":"KAC공항서비스","sub":true},{"code":"01058","name":"이현훈","dept":"KAC공항서비스","sub":true},{"code":"01060","name":"박용범","dept":"KAC공항서비스","sub":true},{"code":"01061","name":"우시준","dept":"KAC공항서비스","sub":true},{"code":"01062","name":"홍제표","dept":"KAC공항서비스","sub":true},{"code":"01063","name":"김성중","dept":"KAC공항서비스","sub":true},{"code":"01064","name":"김시환","dept":"KAC공항서비스","sub":true},{"code":"01065","name":"정승영","dept":"KAC공항서비스","sub":true},{"code":"01066","name":"권우정","dept":"KAC공항서비스","sub":true},{"code":"01067","name":"강미순","dept":"KAC공항서비스","sub":true},{"code":"01071","name":"류원호","dept":"KAC공항서비스","sub":true},{"code":"01072","name":"신동원","dept":"KAC공항서비스","sub":true},{"code":"01077","name":"배용호","dept":"KAC공항서비스","sub":true},{"code":"01712","name":"박성철","dept":"KAC공항서비스","sub":true},{"code":"02164","name":"천미영","dept":"KAC공항서비스","sub":true},{"code":"02271","name":"원종복","dept":"KAC공항서비스","sub":true},{"code":"02434","name":"이윤경","dept":"KAC공항서비스","sub":true},{"code":"02436","name":"김선희","dept":"KAC공항서비스","sub":true},{"code":"02531","name":"한강섭","dept":"KAC공항서비스","sub":true},{"code":"02532","name":"이문숙","dept":"KAC공항서비스","sub":true},{"code":"02691","name":"윤희상","dept":"KAC공항서비스","sub":true},{"code":"02692","name":"박진화","dept":"KAC공항서비스","sub":true},{"code":"90494","name":"고은영","dept":"KAC공항서비스","sub":true}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="6.3";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="6.4";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -1829,31 +1829,15 @@ function drawAutoDin(){
   $("autoDin").checked = db.autoDinner!==false;
   $("autoDin").onchange=()=>{db.autoDinner=$("autoDin").checked; persist();
     toast(db.autoDinner?"자동 체크를 켰습니다":"자동 체크를 껐습니다");};
-  $("autoDinNow").onclick=()=>{
-    autoRun=null;
-    const save=db.autoDinner, sd=dinnerStarted();
-    db.autoDinner=true;
-    const n = sd ? autoDinner() : (function(){          // 배식 전에도 직접 누르면 올립니다
-      const d=dkey(), rs=db.reserve[d]||{};
-      db.records[d]=db.records[d]||{};
-      const slot=db.records[d][MEALS[2]]=db.records[d][MEALS[2]]||{};
-      let k=0;
-      Object.keys(rs).forEach(c=>{
-        if(slot[c]) return;
-        const p=db.roster.find(x=>x.code===c)||{};
-        const nm=rs[c].name||p.name||c;
-        slot[c]={t:hm(),name:nm,dept:rs[c].dept||p.dept||"",resv:true,via:"예약"};
-        if(p.guest) slot[c].g=1;
-        if(p.sub) slot[c].s=1;
-        logEvent({date:d,meal:MEALS[2],code:c,name:nm,dept:rs[c].dept||p.dept||"",
-          guest:!!p.guest,sub:!!p.sub,t:hm(),on:true,via:"예약"});
-        k++;
-      });
-      autoRun=d; if(k){persist(); refreshAll();}
-      return k;
-    })();
-    db.autoDinner=save; persist();
-    toast(n?`예약자 ${n}명을 식수에 올렸습니다`:"올릴 예약자가 없습니다");
+  $("autoDinNow").onclick=async()=>{
+    $("autoDinNow").disabled=true;
+    try{
+      if(apiBase()){
+        try{ const items=await apiList(dkey()); if(items) db.reserve[dkey()]=items; }catch(e){}
+      }
+      const n=autoDinnerApply(true);
+      toast(n?`예약자 ${n}명을 식수에 올렸습니다`:"올릴 예약자가 없습니다");
+    } finally { $("autoDinNow").disabled=false; }
   };
 }
 function drawStep(){
@@ -1972,19 +1956,94 @@ async function parseMenuPdf(file){
   return {days:out, order:days.map(d=>d.md)};
 }
 
+/* 엑셀 식단표에서 읽기 (PDF와 같은 표 모양) */
+function parseMenuXlsx(file){
+  return new Promise((res,rej)=>{
+    if(!window.XLSX) return rej(new Error("엑셀 읽기 기능을 불러오지 못했습니다"));
+    const fr=new FileReader();
+    fr.onload=()=>{
+      try{
+        const wb=XLSX.read(new Uint8Array(fr.result),{type:"array"});
+        const ws=wb.Sheets[wb.SheetNames[0]];
+        const g=XLSX.utils.sheet_to_json(ws,{header:1,defval:"",raw:false,blankrows:true});
+        // 요일 머리글 줄 찾기
+        let hr=-1, cols=[];
+        for(let r=0;r<Math.min(g.length,20);r++){
+          const hit=[];
+          (g[r]||[]).forEach((v,c)=>{
+            const s=String(v).replace(/\s/g,"");
+            const m=s.match(/^([월화수목금토일])\((\d{1,2})\/(\d{1,2})\)$/);
+            if(m) hit.push({c,dow:m[1],md:`${Number(m[2])}/${Number(m[3])}`});
+          });
+          if(hit.length>=2){ hr=r; cols=hit; break; }
+        }
+        if(hr<0) throw new Error("요일 칸을 찾지 못했습니다");
+
+        const MR={"아침":"조식","조식":"조식","점심":"중식","중식":"중식","저녁":"석식","석식":"석식"};
+        const days={}; cols.forEach(c=>days[c.md]={dow:c.dow,meals:{조식:[],중식:[],석식:[]}});
+        let cur=null;
+        for(let r=hr+1;r<g.length;r++){
+          const row=g[r]||[];
+          // 왼쪽 칸에서 끼니 이름을 찾습니다
+          for(let c=0;c<cols[0].c;c++){
+            const s=String(row[c]||"").replace(/\s/g,"");
+            if(MR[s]) cur=MR[s];
+            if(/^교육인원$/.test(s)) cur=cur;      // 인원 줄은 건너뜁니다
+          }
+          const leftTxt=row.slice(0,cols[0].c).map(v=>String(v).replace(/\s/g,"")).join("");
+          if(/교육인원/.test(leftTxt)) continue;
+          if(!cur) continue;
+          cols.forEach(cc=>{
+            const v=String(row[cc.c]||"").trim();
+            if(!v) return;
+            if(/^\d+$/.test(v)) return;
+            if(/원산지|상기 식단/.test(v)) return;
+            v.split(/\n+/).map(x=>x.trim()).filter(Boolean).forEach(x=>{
+              if(!days[cc.md].meals[cur].includes(x)) days[cc.md].meals[cur].push(x);
+            });
+          });
+        }
+        let n=0; Object.keys(days).forEach(k=>["조식","중식","석식"].forEach(m=>n+=days[k].meals[m].length));
+        if(!n) throw new Error("메뉴를 읽지 못했습니다");
+        res({days, order:cols.map(c=>c.md)});
+      }catch(e){ rej(e); }
+    };
+    fr.onerror=()=>rej(new Error("파일을 읽지 못했습니다"));
+    fr.readAsArrayBuffer(file);
+  });
+}
+
+/* 읽은 주를 보관합니다. 같은 주는 갱신하고, 지난 주는 정리합니다. */
+function mergeWeeks(list, wk){
+  const key=wk.order[0];
+  const out=(list||[]).filter(w=>w.order[0]!==key);
+  out.push(wk);
+  const y=new Date().getFullYear();
+  const toD=md=>{ const [m,d]=md.split("/").map(Number); return new Date(y,m-1,d); };
+  const t=new Date(); t.setHours(0,0,0,0);
+  const keep=out.filter(w=>{
+    const last=toD(w.order[w.order.length-1]);
+    return (t-last)/86400000 <= 21;          // 3주 지난 것은 버립니다
+  });
+  keep.sort((a,b)=>toD(a.order[0])-toD(b.order[0]));
+  return keep.slice(-6);
+}
+
 $("menuPdfBtn").onclick=()=>$("menuPdfFile").click();
 $("menuPdfFile").onchange=async e=>{
   const f=e.target.files[0]; e.target.value="";
   if(!f) return;
   $("menuPdfState").textContent="읽는 중…";
   try{
-    const data=await parseMenuPdf(f);
-    const cnt=data.order.length;
+    const isX=/\.(xlsx|xls)$/i.test(f.name);
+    const data= isX ? await parseMenuXlsx(f) : await parseMenuPdf(f);
     let n=0; data.order.forEach(k=>MEALS.forEach(m=>n+=data.days[k].meals[m].length));
     const cur=menuConf();
-    await pushConf({menu:{url:cur.url||"", title:cur.title||"", data, at:dkey()}});
+    const weeks=mergeWeeks(cur.weeks, data);
+    await pushConf({menu:{url:cur.url||"", title:cur.title||"", data, weeks, at:dkey()}});
     drawMenuConf();
-    $("menuPdfState").textContent=`${f.name}\n${cnt}일치 · 메뉴 ${n}개를 읽었습니다. 직원 화면에 바로 보입니다.`;
+    const range=data.order[0].replace("/",".")+" ~ "+data.order[data.order.length-1].replace("/",".");
+    $("menuPdfState").textContent=`${f.name}\n${range} · 메뉴 ${n}개를 읽었습니다.\n보관 중인 주 ${weeks.length}개`;
     $("menuPdfState").style.color="var(--green)";
     toast("식단표를 읽었습니다");
   }catch(err){
@@ -1994,15 +2053,34 @@ $("menuPdfFile").onchange=async e=>{
   }
 };
 
-function menuConf(){ return Object.assign({url:"",title:"",data:null,at:""}, db.conf.menu||{}); }
+function menuConf(){ return Object.assign({url:"",title:"",data:null,at:"",weeks:[]}, db.conf.menu||{}); }
+/* 오늘 날짜에 맞는 주를 고릅니다. 없으면 가장 가까운 다음 주. */
+function pickWeek(){
+  const c=menuConf(), ws=(c.weeks||[]).slice();
+  if(!ws.length) return c.data||null;
+  const t=new Date(); t.setHours(0,0,0,0);
+  const y=t.getFullYear();
+  const toD=md=>{ const [m,d]=md.split("/").map(Number); return new Date(y,m-1,d); };
+  ws.sort((a,b)=>toD(a.order[0])-toD(b.order[0]));
+  for(const w of ws){
+    const last=toD(w.order[w.order.length-1]);
+    if(t<=last) return w;                     // 이번 주 또는 다가올 주
+  }
+  return ws[ws.length-1];
+}
 function drawMenuConf(){
   const c=menuConf();
   $("menuUrl").value=c.url||"";
   $("menuTitle").value=c.title||"";
   let t = c.url ? "링크 등록됨 · "+(c.title||"식단표") : "링크가 등록되지 않았습니다.";
-  if(c.data){
-    let n=0; (c.data.order||[]).forEach(k=>MEALS.forEach(m=>n+=(c.data.days[k].meals[m]||[]).length));
-    t += `\nPDF에서 읽은 식단 ${(c.data.order||[]).length}일치 · 메뉴 ${n}개`+(c.at?` (${c.at.replace(/-/g,".")})`:"");
+  const ws=c.weeks||[];
+  if(ws.length){
+    t += "\n보관 중인 식단표 "+ws.length+"주";
+    ws.forEach(w=>{ t += `\n  · ${w.order[0].replace("/",".")} ~ ${w.order[w.order.length-1].replace("/",".")}`; });
+    const now=pickWeek();
+    if(now) t += `\n지금 보이는 주 · ${now.order[0].replace("/",".")} ~ ${now.order[now.order.length-1].replace("/",".")}`;
+  }else if(c.data){
+    t += "\nPDF에서 읽은 식단 "+(c.data.order||[]).length+"일치";
   }
   $("menuState").textContent=t;
 }
@@ -2494,7 +2572,7 @@ let tickN=0;
 setInterval(()=>{
   tickN++;
   if(actx && actx.state==="suspended") actx.resume().catch(()=>{});
-  if(tickN%20===0) autoDinner();              // 30초마다 석식 예약자 확인
+  if(tickN%14===0) autoDinner(true);          // 21초마다 석식 예약자 확인
   if(inMealWindow()) quickCheck();            // 배식 중에는 1.5초마다
   else if(tickN%4===0) quickCheck();          // 그 외에는 6초마다
 },1500);
@@ -3169,19 +3247,20 @@ function drawMenuBtn(){
 }
 function drawMenuCard(){
   const c=menuConf(), box=$("menuCard");
-  if(!c.data || !c.data.order || !c.data.order.length){ box.hidden=true; return; }
+  const wk=pickWeek();
+  if(!wk || !wk.order || !wk.order.length){ box.hidden=true; return; }
   box.hidden=false;
   $("menuCardTitle").textContent=c.title||"주간 식단표";
-  const days=c.data.order;
+  const days=wk.order;
   if(!menuDay || days.indexOf(menuDay)<0) menuDay = days.includes(todayMd()) ? todayMd() : days[0];
   $("menuCardSub").textContent=days[0].replace("/",".")+" ~ "+days[days.length-1].replace("/",".");
   $("menuDays").innerHTML=days.map(k=>{
-    const d=c.data.days[k];
+    const d=wk.days[k];
     return `<button type="button" class="${k===menuDay?"on":""}" data-k="${k}">${d.dow}<br><span style="font-size:10px;opacity:.75">${k.replace("/",".")}</span></button>`;
   }).join("");
   $("menuDays").querySelectorAll("button").forEach(b=>b.onclick=()=>{menuDay=b.dataset.k; drawMenuCard();});
   const col={"조식":"#8FD3F4","중식":"#FFB84D","석식":"#B79CFF"};
-  const d=c.data.days[menuDay];
+  const d=wk.days[menuDay];
   $("menuBody").innerHTML=MEALS.map(m=>{
     const list=(d.meals[m]||[]);
     return `<div class="menumeal">
@@ -3254,17 +3333,33 @@ document.addEventListener("visibilitychange",()=>{
 
 /* ---------- 석식 예약자 자동 체크 ---------- */
 /* 석식 배식이 시작되면 예약자를 식수에 올립니다. 잘못된 건 기록에서 지우면 됩니다. */
-let autoRun=null;
+let autoBusy=false;
 function dinnerStarted(){
   const c=mealsConf(), s=toMin(c[MEALS[2]][0]);
   return s!==null && nowMin()>=s;
 }
-function autoDinner(quiet){
+/* 석식 배식이 시작된 뒤 예약자를 올립니다.
+   [고침1] 하루 한 번만 돌던 것을 매번 확인하도록 바꿔, 뒤늦은 예약도 반영합니다.
+   [고침2] 예약 자료를 먼저 서버에서 받아옵니다. 안 그러면 태블릿이 빈 예약을 보고 넘어갑니다.
+   [고침3] 화면 위치와 상관없이 동작합니다. */
+async function autoDinner(quiet){
   if(db.autoDinner===false) return 0;
   if(curMode()!=="admin") return 0;
   if(!dinnerStarted()) return 0;
+  if(autoBusy) return 0;
+  autoBusy=true;
+  try{
+    if(apiBase()){                       // 최신 예약을 먼저 받아옵니다
+      try{
+        const d0=dkey(), items=await apiList(d0);
+        if(items){ db.reserve[d0]=items; }
+      }catch(e){}
+    }
+    return autoDinnerApply(quiet);
+  } finally { autoBusy=false; }
+}
+function autoDinnerApply(quiet){
   const d=dkey();
-  if(autoRun===d) return 0;
   const rs=db.reserve[d]||{};
   const codes=Object.keys(rs);
   if(!codes.length) return 0;
@@ -3282,7 +3377,6 @@ function autoDinner(quiet){
       guest:!!p.guest,sub:!!p.sub,t:hm(),on:true,via:"예약"});
     n++;
   });
-  autoRun=d;
   if(n){
     persist(); refreshAll();
     if(!quiet){ beep("ok"); toast(`석식 예약자 ${n}명을 식수에 올렸습니다`); }
