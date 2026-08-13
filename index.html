@@ -311,6 +311,12 @@
   .menucard{width:min(340px,100%);border:1px solid var(--line);border-radius:14px;
     background:var(--panel);padding:16px 14px;text-align:left;box-sizing:border-box}
   .menucard h4{margin:0 0 4px;font-size:16px}
+  .wknav{width:36px;height:36px;border:1px solid var(--line);border-radius:9px;
+    color:var(--dim);background:var(--panel2);font-size:14px}
+  .wknav:active{background:#33424F;color:var(--ink)}
+  .wknav:disabled{opacity:.25}
+  .menucard .wktag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:5px;
+    margin-left:6px;vertical-align:1px}
   .menucard .sub{font-size:12.5px;color:var(--dim)}
   .menutabs{display:flex;gap:4px;margin:14px 0 12px;flex-wrap:nowrap;width:100%}
   .menutabs button{flex:1 1 0;min-width:0;padding:8px 2px;border:1px solid var(--line);border-radius:9px;
@@ -618,8 +624,12 @@
         <p style="margin:0 0 10px"><b style="color:var(--ink)">식단표 PDF에서 바로 읽기</b><br>
           주간 식단표 PDF나 엑셀 파일을 올리면 요일별 메뉴를 뽑아 직원 화면에 보여줍니다.
           여러 주를 올려두면 날짜에 맞는 주가 자동으로 표시되니, 다음 주 것을 미리 올려두셔도 됩니다.</p>
-        <button class="btn" id="menuPdfBtn" style="width:100%">식단표 파일 올리기 (PDF · 엑셀)</button>
-        <input type="file" id="menuPdfFile" accept=".pdf,.xlsx,.xls" hidden>
+        <div class="drop" id="menuDrop" style="margin-bottom:0">
+          <b>식단표 파일을 여기에 끌어다 놓으세요</b>
+          <span>또는 아래 버튼으로 고르세요 (PDF · 엑셀)</span>
+          <div style="margin-top:14px"><button class="btn" id="menuPdfBtn">파일 고르기</button></div>
+          <input type="file" id="menuPdfFile" accept=".pdf,.xlsx,.xls" hidden>
+        </div>
         <div id="menuPdfState" style="font-size:13px;color:var(--dim);margin-top:10px;white-space:pre-line"></div>
       </div>
       <div id="menuState" style="font-size:13px;color:var(--dim);margin-top:12px;line-height:1.7;white-space:pre-line"></div>
@@ -819,8 +829,16 @@
       <div id="myResvNote" style="font-size:12.5px;color:var(--dim);margin-top:10px;line-height:1.6"></div>
     </div>
     <div class="menucard" id="menuCard" hidden>
-      <h4 id="menuCardTitle">주간 식단표</h4>
-      <div class="sub" id="menuCardSub"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <div>
+          <h4 id="menuCardTitle">주간 식단표</h4>
+          <div class="sub" id="menuCardSub"></div>
+        </div>
+        <div style="display:flex;gap:4px;flex:none">
+          <button type="button" id="menuPrevWk" class="wknav">◀</button>
+          <button type="button" id="menuNextWk" class="wknav">▶</button>
+        </div>
+      </div>
       <div class="menutabs" id="menuDays"></div>
       <div id="menuBody"></div>
     </div>
@@ -1008,7 +1026,7 @@ function seedStamp(){                       // 파일 명단의 지문
 }
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원"},{"code":"11374","name":"양찬호","dept":"교육지원부"},{"code":"12194","name":"남우현","dept":"교육지원부"},{"code":"12412","name":"이승범","dept":"교육지원부"},{"code":"11663","name":"박상준","dept":"교육지원부"},{"code":"12837","name":"부윤섭","dept":"교육지원부"},{"code":"12356","name":"이상건","dept":"교육지원부"},{"code":"12193","name":"신동명","dept":"교육지원부"},{"code":"13952","name":"조부경","dept":"교육지원부"},{"code":"14064","name":"이경수","dept":"교육지원부"},{"code":"14318","name":"차규민","dept":"교육지원부"},{"code":"14548","name":"이창우","dept":"교육지원부"},{"code":"14467","name":"이유진","dept":"교육지원부"},{"code":"14748","name":"채유란","dept":"교육지원부"},{"code":"83483","name":"이민경","dept":"교육지원부"},{"code":"13086","name":"박종배","dept":"교육운영부"},{"code":"13258","name":"전은영","dept":"교육운영부"},{"code":"51035","name":"장영근","dept":"교육운영부"},{"code":"12542","name":"주영미","dept":"교육운영부"},{"code":"13812","name":"백유민","dept":"교육운영부"},{"code":"14771","name":"김지은","dept":"교육운영부"},{"code":"14898","name":"박찬미","dept":"교육운영부"},{"code":"14592","name":"박현일","dept":"교육운영부"},{"code":"12848","name":"임채택","dept":"교육운영부"},{"code":"14603","name":"박호원","dept":"교육운영부"},{"code":"14685","name":"최자영","dept":"교육운영부"},{"code":"13281","name":"장두석","dept":"교육운영부"},{"code":"13509","name":"이용철","dept":"교육운영부"},{"code":"13670","name":"이승희","dept":"교육운영부"},{"code":"14265","name":"김정민","dept":"교육운영부"},{"code":"13238","name":"손우람","dept":"교육운영부"},{"code":"01057","name":"신동민","dept":"KAC공항서비스","sub":true},{"code":"01058","name":"이현훈","dept":"KAC공항서비스","sub":true},{"code":"01060","name":"박용범","dept":"KAC공항서비스","sub":true},{"code":"01061","name":"우시준","dept":"KAC공항서비스","sub":true},{"code":"01062","name":"홍제표","dept":"KAC공항서비스","sub":true},{"code":"01063","name":"김성중","dept":"KAC공항서비스","sub":true},{"code":"01064","name":"김시환","dept":"KAC공항서비스","sub":true},{"code":"01065","name":"정승영","dept":"KAC공항서비스","sub":true},{"code":"01066","name":"권우정","dept":"KAC공항서비스","sub":true},{"code":"01067","name":"강미순","dept":"KAC공항서비스","sub":true},{"code":"01071","name":"류원호","dept":"KAC공항서비스","sub":true},{"code":"01072","name":"신동원","dept":"KAC공항서비스","sub":true},{"code":"01077","name":"배용호","dept":"KAC공항서비스","sub":true},{"code":"01712","name":"박성철","dept":"KAC공항서비스","sub":true},{"code":"02164","name":"천미영","dept":"KAC공항서비스","sub":true},{"code":"02271","name":"원종복","dept":"KAC공항서비스","sub":true},{"code":"02434","name":"이윤경","dept":"KAC공항서비스","sub":true},{"code":"02436","name":"김선희","dept":"KAC공항서비스","sub":true},{"code":"02531","name":"한강섭","dept":"KAC공항서비스","sub":true},{"code":"02532","name":"이문숙","dept":"KAC공항서비스","sub":true},{"code":"02691","name":"윤희상","dept":"KAC공항서비스","sub":true},{"code":"02692","name":"박진화","dept":"KAC공항서비스","sub":true},{"code":"90494","name":"고은영","dept":"KAC공항서비스","sub":true}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="6.4";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="6.5";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -1265,11 +1283,19 @@ async function apiOnce(u,payload,post){
 async function apiCall(body){
   const u=apiBase(); if(!u) return null;
   const payload=JSON.stringify(Object.assign({key:API_KEY},body));
-  const longUrl = encodeURIComponent(payload).length > 1600 || payload.length > 900;   // 크면 POST
-  try{
-    return await apiOnce(u,payload,longUrl);
-  }catch(e){
-    try{ return await apiOnce(u,payload,!longUrl); }           // 반대 방식으로 한 번 더
+  const enc=encodeURIComponent(payload).length;
+  const mustPost = enc > 1600 || payload.length > 900;
+  if(mustPost){
+    // 주소에 담기엔 큰 자료입니다. 주소 방식으로 되돌리면 404가 나므로 다시 시도만 합니다.
+    try{ return await apiOnce(u,payload,true); }
+    catch(e){
+      await new Promise(r=>setTimeout(r,600));
+      return await apiOnce(u,payload,true);
+    }
+  }
+  try{ return await apiOnce(u,payload,false); }
+  catch(e){
+    try{ return await apiOnce(u,payload,true); }
     catch(e2){ throw e; }
   }
 }
@@ -2030,9 +2056,17 @@ function mergeWeeks(list, wk){
 }
 
 $("menuPdfBtn").onclick=()=>$("menuPdfFile").click();
-$("menuPdfFile").onchange=async e=>{
-  const f=e.target.files[0]; e.target.value="";
-  if(!f) return;
+["dragenter","dragover"].forEach(ev=>$("menuDrop").addEventListener(ev,e=>{
+  e.preventDefault(); $("menuDrop").classList.add("over")}));
+["dragleave","drop"].forEach(ev=>$("menuDrop").addEventListener(ev,e=>{
+  e.preventDefault(); $("menuDrop").classList.remove("over")}));
+$("menuDrop").addEventListener("drop",e=>{
+  const f=e.dataTransfer.files&&e.dataTransfer.files[0];
+  if(f) loadMenuFile(f);
+});
+$("menuPdfFile").onchange=e=>{ const f=e.target.files[0]; e.target.value=""; if(f) loadMenuFile(f); };
+
+async function loadMenuFile(f){
   $("menuPdfState").textContent="읽는 중…";
   try{
     const isX=/\.(xlsx|xls)$/i.test(f.name);
@@ -2040,7 +2074,8 @@ $("menuPdfFile").onchange=async e=>{
     let n=0; data.order.forEach(k=>MEALS.forEach(m=>n+=data.days[k].meals[m].length));
     const cur=menuConf();
     const weeks=mergeWeeks(cur.weeks, data);
-    await pushConf({menu:{url:cur.url||"", title:cur.title||"", data, weeks, at:dkey()}});
+    // 자료를 가볍게 유지합니다 (설정은 한 칸에 저장되므로)
+    await pushConf({menu:{url:cur.url||"", title:cur.title||"", weeks, at:dkey()}});
     drawMenuConf();
     const range=data.order[0].replace("/",".")+" ~ "+data.order[data.order.length-1].replace("/",".");
     $("menuPdfState").textContent=`${f.name}\n${range} · 메뉴 ${n}개를 읽었습니다.\n보관 중인 주 ${weeks.length}개`;
@@ -2051,9 +2086,12 @@ $("menuPdfFile").onchange=async e=>{
       "\n표 모양이 다른 파일이면 위쪽 링크 방식을 쓰세요.";
     $("menuPdfState").style.color="var(--red)";
   }
-};
+}
 
 function menuConf(){ return Object.assign({url:"",title:"",data:null,at:"",weeks:[]}, db.conf.menu||{}); }
+function weekLabel(w){
+  return w.order[0].replace("/",".")+" ~ "+w.order[w.order.length-1].replace("/",".");
+}
 /* 오늘 날짜에 맞는 주를 고릅니다. 없으면 가장 가까운 다음 주. */
 function pickWeek(){
   const c=menuConf(), ws=(c.weeks||[]).slice();
@@ -3203,7 +3241,7 @@ function drawMy(){
   $("myCode").textContent=p.code;
   const box=$("myQr"); box.innerHTML="";
   if(window.QRCode) try{new QRCode(box,{text:p.code,width:520,height:520,correctLevel:QRCode.CorrectLevel.H})}catch(e){}
-  menuDay=null; drawMenuBtn();
+  menuDay=null; menuWkIdx=null; drawMenuBtn();
   mineYm=dkey().slice(0,7);
   $("mineBox").hidden=!apiBase();
   $("mineYm").textContent=mineYm.replace("-",". ");
@@ -3237,8 +3275,25 @@ $("qrFull").onclick=()=>{
   if(fsOn()){ (document.exitFullscreen?document.exitFullscreen():document.webkitExitFullscreen()).catch(()=>{}); }
 };
 
-let menuDay=null;
+let menuDay=null, menuWkIdx=null;
 function todayMd(){ const d=new Date(); return `${d.getMonth()+1}/${d.getDate()}`; }
+function weekList(){
+  const c=menuConf(), ws=(c.weeks||[]).slice();
+  if(!ws.length && c.data) return [c.data];
+  const y=new Date().getFullYear();
+  const toD=md=>{ const [m,d]=md.split("/").map(Number); return new Date(y,m-1,d); };
+  ws.sort((a,b)=>toD(a.order[0])-toD(b.order[0]));
+  return ws;
+}
+function defaultWkIdx(){
+  const ws=weekList();
+  if(!ws.length) return -1;
+  const y=new Date().getFullYear();
+  const toD=md=>{ const [m,d]=md.split("/").map(Number); return new Date(y,m-1,d); };
+  const t=new Date(); t.setHours(0,0,0,0);
+  for(let i=0;i<ws.length;i++){ if(t<=toD(ws[i].order[ws[i].order.length-1])) return i; }
+  return ws.length-1;
+}
 function drawMenuBtn(){
   const c=menuConf();
   $("menuBtn").hidden=!c.url;
@@ -3246,14 +3301,24 @@ function drawMenuBtn(){
   drawMenuCard();
 }
 function drawMenuCard(){
-  const c=menuConf(), box=$("menuCard");
-  const wk=pickWeek();
+  const c=menuConf(), box=$("menuCard"), ws=weekList();
+  if(!ws.length){ box.hidden=true; return; }
+  if(menuWkIdx===null || menuWkIdx<0 || menuWkIdx>=ws.length) menuWkIdx=defaultWkIdx();
+  const wk=ws[menuWkIdx];
   if(!wk || !wk.order || !wk.order.length){ box.hidden=true; return; }
   box.hidden=false;
-  $("menuCardTitle").textContent=c.title||"주간 식단표";
+  const cur=defaultWkIdx();
+  const tag = menuWkIdx>cur ? '<span class="wktag" style="background:rgba(91,215,154,.18);color:#5BD79A">다음 주</span>'
+            : menuWkIdx<cur ? '<span class="wktag" style="background:rgba(255,255,255,.08);color:var(--dim)">지난 주</span>' : "";
+  $("menuCardTitle").innerHTML=(c.title||"주간 식단표")+tag;
+  $("menuPrevWk").disabled = menuWkIdx<=0;
+  $("menuNextWk").disabled = menuWkIdx>=ws.length-1;
   const days=wk.order;
-  if(!menuDay || days.indexOf(menuDay)<0) menuDay = days.includes(todayMd()) ? todayMd() : days[0];
-  $("menuCardSub").textContent=days[0].replace("/",".")+" ~ "+days[days.length-1].replace("/",".");
+  const isCur = menuWkIdx===cur;
+  if(!menuDay || days.indexOf(menuDay)<0)
+    menuDay = (isCur && days.includes(todayMd())) ? todayMd() : days[0];
+  $("menuCardSub").textContent=days[0].replace("/",".")+" ~ "+days[days.length-1].replace("/",".")
+    + (ws.length>1 ? `  (${menuWkIdx+1}/${ws.length})` : "");
   $("menuDays").innerHTML=days.map(k=>{
     const d=wk.days[k];
     return `<button type="button" class="${k===menuDay?"on":""}" data-k="${k}">${d.dow}<br><span style="font-size:10px;opacity:.75">${k.replace("/",".")}</span></button>`;
@@ -3270,6 +3335,8 @@ function drawMenuCard(){
   }).join("");
 }
 $("menuBtn").onclick=()=>{ const c=menuConf(); if(c.url) window.open(c.url,"_blank"); };
+$("menuPrevWk").onclick=()=>{ if(menuWkIdx>0){ menuWkIdx--; menuDay=null; drawMenuCard(); } };
+$("menuNextWk").onclick=()=>{ const ws=weekList(); if(menuWkIdx<ws.length-1){ menuWkIdx++; menuDay=null; drawMenuCard(); } };
 
 $("myVer").textContent="v "+APP_VER;
 $("myUpd").onclick=async()=>{
