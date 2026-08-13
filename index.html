@@ -1061,7 +1061,7 @@ function seedStamp(){                       // 파일 명단의 지문
 }
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원"},{"code":"11374","name":"양찬호","dept":"교육지원부"},{"code":"12194","name":"남우현","dept":"교육지원부"},{"code":"12412","name":"이승범","dept":"교육지원부"},{"code":"11663","name":"박상준","dept":"교육지원부"},{"code":"12837","name":"부윤섭","dept":"교육지원부"},{"code":"12356","name":"이상건","dept":"교육지원부"},{"code":"12193","name":"신동명","dept":"교육지원부"},{"code":"13952","name":"조부경","dept":"교육지원부"},{"code":"14064","name":"이경수","dept":"교육지원부"},{"code":"14318","name":"차규민","dept":"교육지원부"},{"code":"14548","name":"이창우","dept":"교육지원부"},{"code":"14467","name":"이유진","dept":"교육지원부"},{"code":"14748","name":"채유란","dept":"교육지원부"},{"code":"83483","name":"이민경","dept":"교육지원부"},{"code":"13086","name":"박종배","dept":"교육운영부"},{"code":"13258","name":"전은영","dept":"교육운영부"},{"code":"51035","name":"장영근","dept":"교육운영부"},{"code":"12542","name":"주영미","dept":"교육운영부"},{"code":"13812","name":"백유민","dept":"교육운영부"},{"code":"14771","name":"김지은","dept":"교육운영부"},{"code":"14898","name":"박찬미","dept":"교육운영부"},{"code":"14592","name":"박현일","dept":"교육운영부"},{"code":"12848","name":"임채택","dept":"교육운영부"},{"code":"14603","name":"박호원","dept":"교육운영부"},{"code":"14685","name":"최자영","dept":"교육운영부"},{"code":"13281","name":"장두석","dept":"교육운영부"},{"code":"13509","name":"이용철","dept":"교육운영부"},{"code":"13670","name":"이승희","dept":"교육운영부"},{"code":"14265","name":"김정민","dept":"교육운영부"},{"code":"13238","name":"손우람","dept":"교육운영부"},{"code":"01057","name":"신동민","dept":"KAC공항서비스","sub":true},{"code":"01058","name":"이현훈","dept":"KAC공항서비스","sub":true},{"code":"01060","name":"박용범","dept":"KAC공항서비스","sub":true},{"code":"01061","name":"우시준","dept":"KAC공항서비스","sub":true},{"code":"01062","name":"홍제표","dept":"KAC공항서비스","sub":true},{"code":"01063","name":"김성중","dept":"KAC공항서비스","sub":true},{"code":"01064","name":"김시환","dept":"KAC공항서비스","sub":true},{"code":"01065","name":"정승영","dept":"KAC공항서비스","sub":true},{"code":"01066","name":"권우정","dept":"KAC공항서비스","sub":true},{"code":"01067","name":"강미순","dept":"KAC공항서비스","sub":true},{"code":"01071","name":"류원호","dept":"KAC공항서비스","sub":true},{"code":"01072","name":"신동원","dept":"KAC공항서비스","sub":true},{"code":"01077","name":"배용호","dept":"KAC공항서비스","sub":true},{"code":"01712","name":"박성철","dept":"KAC공항서비스","sub":true},{"code":"02164","name":"천미영","dept":"KAC공항서비스","sub":true},{"code":"02271","name":"원종복","dept":"KAC공항서비스","sub":true},{"code":"02434","name":"이윤경","dept":"KAC공항서비스","sub":true},{"code":"02436","name":"김선희","dept":"KAC공항서비스","sub":true},{"code":"02531","name":"한강섭","dept":"KAC공항서비스","sub":true},{"code":"02532","name":"이문숙","dept":"KAC공항서비스","sub":true},{"code":"02691","name":"윤희상","dept":"KAC공항서비스","sub":true},{"code":"02692","name":"박진화","dept":"KAC공항서비스","sub":true},{"code":"90494","name":"고은영","dept":"KAC공항서비스","sub":true}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="7.6";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="7.7";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -3161,10 +3161,22 @@ async function loadRollFile(f){
       for(let r=r0+1;r<=end;r++){
         const no=txt(1,r), nm=txt(2,r), cd=txt(3,r);
         if(no==="소계"||no==="합계") break;
+        // 조식·중식·석식만 적힌 줄은 사람이 아닙니다
+        if(["조식","중식","석식","아침","점심","저녁"].includes(txt(4,r)) && !nm) continue;
         if(!nm){ if(no) blank.push(r); continue; }
         people.push({r,name:nm,code:cd});
       }
-      if(people.length||blank.length) blocks.push({people,blank,kind,label});
+      // 기존에 적힌 값이 어느 칸에 있는지 보고 방식을 가려냅니다
+      let firstOnly=0, other=0;
+      people.slice(0,8).forEach(pp=>{
+        for(let d=1;d<=31;d++){
+          if(!dayCol[d]) continue;
+          if(txt(dayCol[d],pp.r)) firstOnly++;
+          if(txt(dayCol[d]+1,pp.r)||txt(dayCol[d]+2,pp.r)) other++;
+        }
+      });
+      const merge = (firstOnly>0 && other===0);
+      if(people.length||blank.length) blocks.push({people,blank,kind,label,merge});
     });
     if(!blocks.length) throw new Error("사람 줄을 찾지 못했습니다");
 
@@ -3182,6 +3194,8 @@ async function loadRollFile(f){
 
     // 5) 지난달 값을 지웁니다. 사내강사 블록은 성명·사번까지 비웁니다.
     const {g,nd}=monthGrid(mCur);
+    // 이 블록이 끼니를 나눠 적는지, 조식 칸 하나에 몰아 적는지 살핍니다
+    const mergeBlock={};
     // 사번 앞의 0이 빠진 채 저장된 기록도 찾을 수 있게 표를 하나 더 만듭니다
     const gBare={};
     Object.keys(g).forEach(c=>{
@@ -3229,11 +3243,17 @@ async function loadRollFile(f){
         const eg=eaten(me.code);
         for(let d=1;d<=nd;d++){
           if(!dayCol[d]) continue;
-          MEALS.forEach((m,mi)=>{
-            if(eg && eg[d*3+mi]){
-              xml=setCell(xml, colName(dayCol[d]+off[m])+pp.r, 1); wrote++;
-            }
-          });
+          if(bk.merge){
+            // 끼니를 나누지 않는 블록은 그날 먹은 횟수를 첫 칸에 적습니다
+            let n=0; MEALS.forEach((m,mi)=>{ if(eg && eg[d*3+mi]) n++; });
+            if(n){ xml=setCell(xml, colName(dayCol[d])+pp.r, n); wrote++; }
+          }else{
+            MEALS.forEach((m,mi)=>{
+              if(eg && eg[d*3+mi]){
+                xml=setCell(xml, colName(dayCol[d]+off[m])+pp.r, 1); wrote++;
+              }
+            });
+          }
         }
       });
     });
@@ -3252,9 +3272,14 @@ async function loadRollFile(f){
       xml=setCell(xml, "C"+slot, String(me.code), true);
       for(let d=1;d<=nd;d++){
         if(!dayCol[d]) continue;
-        MEALS.forEach((m,mi)=>{
-          if(eg2 && eg2[d*3+mi]){ xml=setCell(xml, colName(dayCol[d]+off[m])+slot, 1); wrote++; }
-        });
+        if(bk.merge){
+          let n=0; MEALS.forEach((m,mi)=>{ if(eg2 && eg2[d*3+mi]) n++; });
+          if(n){ xml=setCell(xml, colName(dayCol[d])+slot, n); wrote++; }
+        }else{
+          MEALS.forEach((m,mi)=>{
+            if(eg2 && eg2[d*3+mi]){ xml=setCell(xml, colName(dayCol[d]+off[m])+slot, 1); wrote++; }
+          });
+        }
       }
       extra.push(me.name);
     });
@@ -3296,7 +3321,8 @@ async function loadRollFile(f){
     if(issues) head+=" · 확인할 사항 "+issues+"건";
     let d="";
     blocks.forEach(b=>{ d+="· "+(b.label||"(제목 없음)").trim()+" → "+
-      (b.kind==="guest"?"사내강사 (명단 새로 채움)":b.kind==="sub"?"자회사":"직원")+"\n"; });
+      (b.kind==="guest"?"사내강사 (명단 새로 채움)":b.kind==="sub"?"자회사":"직원")+
+      (b.merge?" · 끼니를 나누지 않고 한 칸에 적음":"")+"\n"; });
     if(titleFixed) d+="· 제목 "+titleFixed+"곳을 "+ymM+"월로 바꿨습니다.\n";
     if(menuFilled) d+="· «식단» 장에 메뉴 "+menuFilled+"개를 채웠습니다.\n";
     if(fixedCode.length) d+="\n[사번을 시스템 기준으로 고침]\n  "+fixedCode.join("\n  ")+"\n";
