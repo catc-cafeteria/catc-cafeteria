@@ -471,6 +471,7 @@
         <video id="video" playsinline muted></video>
         <div class="reticle" id="reticle" hidden><b></b></div>
         <button type="button" class="camswitch" id="camSwitch" hidden>카메라 전환</button>
+        <button type="button" class="camswitch" id="camReset" hidden style="top:58px">다시 잡기</button>
         <div class="camzoom" id="camZoom" hidden>
           <button type="button" data-z="-1">−</button>
           <span id="zoomVal">1.0×</span>
@@ -723,6 +724,16 @@
       </div>
 
       <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--line)">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <span style="font-size:14px">최근 인식 기록</span>
+          <button class="btn quiet" id="camLogRefresh" style="min-height:34px;padding:0 12px;font-size:12.5px">새로 고침</button>
+        </div>
+        <p style="margin:6px 0 8px">잘 읽힐 때와 안 읽힐 때의 설정을 비교해 보실 수 있습니다.</p>
+        <div id="camLogBox" style="font-family:var(--mono);font-size:12px;color:var(--dim);
+          line-height:1.9;max-height:180px;overflow-y:auto;white-space:pre"></div>
+      </div>
+
+      <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--line)">
         <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer">
           <input type="checkbox" id="noDet" style="width:19px;height:19px;accent-color:#5BD79A">
           <span>내장 인식기 끄기</span>
@@ -817,6 +828,16 @@
     <div class="qrbox" id="myQr" style="width:min(240px,62vw);cursor:pointer"></div>
     <div style="font-size:12.5px;color:var(--dim);margin-top:-6px">QR을 누르면 크게 볼 수 있습니다</div>
     <div class="mycode" id="myCode"></div>
+    <details style="width:min(300px,100%);text-align:left;margin-top:-4px">
+      <summary style="cursor:pointer;font-size:12.5px;color:var(--dim);list-style:none">
+        ▸ 잘 안 읽힐 때</summary>
+      <div style="font-size:12.5px;color:var(--dim);line-height:1.9;padding:8px 2px 0">
+        · QR을 눌러 크게 띄우면 훨씬 잘 읽힙니다<br>
+        · 휴대폰 화면 밝기를 최대로 올려 주세요<br>
+        · 화면을 닦고, 어두운 화면 모드는 꺼 주세요<br>
+        · 그래도 안 되면 위 사번을 담당자에게 말씀해 주세요
+      </div>
+    </details>
     <p>식당 입구 태블릿 카메라에 이 화면을 비춰 주세요.<br>잘 안 읽히면 화면 밝기를 올리시면 됩니다.</p>
     <div id="myLoc" hidden style="width:min(300px,100%);border-top:1px solid var(--line);padding-top:18px">
       <div id="myLocDist" style="font-family:var(--mono);font-size:30px;font-weight:600;line-height:1"></div>
@@ -1040,7 +1061,7 @@ function seedStamp(){                       // 파일 명단의 지문
 }
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원"},{"code":"11374","name":"양찬호","dept":"교육지원부"},{"code":"12194","name":"남우현","dept":"교육지원부"},{"code":"12412","name":"이승범","dept":"교육지원부"},{"code":"11663","name":"박상준","dept":"교육지원부"},{"code":"12837","name":"부윤섭","dept":"교육지원부"},{"code":"12356","name":"이상건","dept":"교육지원부"},{"code":"12193","name":"신동명","dept":"교육지원부"},{"code":"13952","name":"조부경","dept":"교육지원부"},{"code":"14064","name":"이경수","dept":"교육지원부"},{"code":"14318","name":"차규민","dept":"교육지원부"},{"code":"14548","name":"이창우","dept":"교육지원부"},{"code":"14467","name":"이유진","dept":"교육지원부"},{"code":"14748","name":"채유란","dept":"교육지원부"},{"code":"83483","name":"이민경","dept":"교육지원부"},{"code":"13086","name":"박종배","dept":"교육운영부"},{"code":"13258","name":"전은영","dept":"교육운영부"},{"code":"51035","name":"장영근","dept":"교육운영부"},{"code":"12542","name":"주영미","dept":"교육운영부"},{"code":"13812","name":"백유민","dept":"교육운영부"},{"code":"14771","name":"김지은","dept":"교육운영부"},{"code":"14898","name":"박찬미","dept":"교육운영부"},{"code":"14592","name":"박현일","dept":"교육운영부"},{"code":"12848","name":"임채택","dept":"교육운영부"},{"code":"14603","name":"박호원","dept":"교육운영부"},{"code":"14685","name":"최자영","dept":"교육운영부"},{"code":"13281","name":"장두석","dept":"교육운영부"},{"code":"13509","name":"이용철","dept":"교육운영부"},{"code":"13670","name":"이승희","dept":"교육운영부"},{"code":"14265","name":"김정민","dept":"교육운영부"},{"code":"13238","name":"손우람","dept":"교육운영부"},{"code":"01057","name":"신동민","dept":"KAC공항서비스","sub":true},{"code":"01058","name":"이현훈","dept":"KAC공항서비스","sub":true},{"code":"01060","name":"박용범","dept":"KAC공항서비스","sub":true},{"code":"01061","name":"우시준","dept":"KAC공항서비스","sub":true},{"code":"01062","name":"홍제표","dept":"KAC공항서비스","sub":true},{"code":"01063","name":"김성중","dept":"KAC공항서비스","sub":true},{"code":"01064","name":"김시환","dept":"KAC공항서비스","sub":true},{"code":"01065","name":"정승영","dept":"KAC공항서비스","sub":true},{"code":"01066","name":"권우정","dept":"KAC공항서비스","sub":true},{"code":"01067","name":"강미순","dept":"KAC공항서비스","sub":true},{"code":"01071","name":"류원호","dept":"KAC공항서비스","sub":true},{"code":"01072","name":"신동원","dept":"KAC공항서비스","sub":true},{"code":"01077","name":"배용호","dept":"KAC공항서비스","sub":true},{"code":"01712","name":"박성철","dept":"KAC공항서비스","sub":true},{"code":"02164","name":"천미영","dept":"KAC공항서비스","sub":true},{"code":"02271","name":"원종복","dept":"KAC공항서비스","sub":true},{"code":"02434","name":"이윤경","dept":"KAC공항서비스","sub":true},{"code":"02436","name":"김선희","dept":"KAC공항서비스","sub":true},{"code":"02531","name":"한강섭","dept":"KAC공항서비스","sub":true},{"code":"02532","name":"이문숙","dept":"KAC공항서비스","sub":true},{"code":"02691","name":"윤희상","dept":"KAC공항서비스","sub":true},{"code":"02692","name":"박진화","dept":"KAC공항서비스","sub":true},{"code":"90494","name":"고은영","dept":"KAC공항서비스","sub":true}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="7.3";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="7.6";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -1601,7 +1622,7 @@ async function startCam(){
         adv.push({zoom:curZoom});
       }else{ curZoom=1; }
       if(adv.length) await tr.applyConstraints({advanced:adv});
-      $("camZoom").hidden=!zoomCap; drawZoom();
+      $("camZoom").hidden=!zoomCap; $("camReset").hidden=false; drawZoom();
     }catch(e){ $("camZoom").hidden=true; }
     detector=null;
     if("BarcodeDetector" in window){
@@ -1646,13 +1667,18 @@ $("camZoom").querySelectorAll("button").forEach(b=>b.onclick=async()=>{
   try{ await stream.getVideoTracks()[0].applyConstraints({advanced:[{zoom:curZoom}]}); }catch(e){}
 });
 
+$("camReset").onclick=async()=>{
+  lastFrac=null;
+  stopCam(); await new Promise(r=>setTimeout(r,300)); await startCam();
+  toast("카메라를 다시 잡았습니다");
+};
 $("camSwitch").onclick=async()=>{
   facing = facing==="user" ? "environment" : "user";
   db.facing=facing; persist();
   stopCam(); await startCam();
   toast(facing==="user"?"앞면 카메라로 바꿨습니다":"뒷면 카메라로 바꿨습니다");
 };
-let scanN=0, hitAt=0, zoomTurn=false, hitBy="";
+let scanN=0, hitAt=0, zoomTurn=false, hitBy="", lastFrac=null, camLog=[];
 function readCanvas(){
   if(!window.jsQR) return null;
   const img=ctx.getImageData(0,0,canvas.width,canvas.height);
@@ -1684,14 +1710,23 @@ async function tick(){
         if(codes.length){ found=codes[0].rawValue; hitBy="내장"; }
       }
       if(!found && window.jsQR){
-        for(const f of [0.6,0.42,0.3,0.2,1]){      // 네모 안쪽부터, 마지막에 전체
+        const base=[1,0.7,0.5,0.35,0.25];
+        const order = lastFrac ? [lastFrac].concat(base.filter(x=>x!==lastFrac)) : base;
+        for(const f of order){
           if(grab(f)) found=readCanvas();
-          if(found){ hitBy="보조"; break; }
+          if(found){ hitBy="보조 "+Math.round(f*100)+"%"; lastFrac=f; break; }
         }
       }
     }catch(e){}
   }
-  if(found){ hitAt=Date.now(); checkIn(found); }
+  if(found){
+    hitAt=Date.now();
+    camLog.unshift({t:hm(), by:hitBy||"—", z:(zoomCap?curZoom.toFixed(1)+"×":"–"),
+      res:video.videoWidth+"×"+video.videoHeight, n:scanN});
+    if(camLog.length>30) camLog.pop();
+    scanN=0;
+    checkIn(found);
+  }
   const st=$("camStat");
   if(!st.hidden){
     const eng = detector ? "고속 인식" : (window.jsQR ? "일반 인식" : "인식 불가");
@@ -1890,6 +1925,13 @@ function drawStep(){
   };
   $("stepRange").onchange=()=>persist();
 }
+function drawCamLog(){
+  const box=$("camLogBox"); if(!box) return;
+  const btn=$("camLogRefresh"); if(btn) btn.onclick=drawCamLog;
+  box.textContent = camLog.length
+    ? camLog.map(x=>x.t+"  "+x.by+"  "+x.z+"  "+x.res+"  "+x.n+"회만에").join("\n")
+    : "아직 인식 기록이 없습니다.";
+}
 function drawDet(){
   $("noDet").checked=!!db.noDetector;
   $("noDet").onchange=()=>{db.noDetector=$("noDet").checked; persist();
@@ -1909,7 +1951,9 @@ function drawInfo(){
   $("verBig").textContent=APP_VER;
   $("sverTag").textContent = db.sver ? "서버 코드 "+db.sver+"단계" : "서버 코드 단계 확인 안 됨";
   $("sverTag").style.color = (db.sver||0)>=2 ? "var(--green)" : "var(--red)";
-  drawApi(); drawKiosk(); drawQueue(); drawSound(); drawDim(); drawAutoDin(); drawStep(); drawDet(); drawCamLog(); drawLocConf(); drawMealTimes(); drawSyncTool(); drawRosterSync(); drawMenuConf();
+  [drawApi,drawKiosk,drawQueue,drawSound,drawDim,drawAutoDin,drawStep,drawDet,
+   drawCamLog,drawLocConf,drawMealTimes,drawSyncTool,drawRosterSync,drawMenuConf]
+    .forEach(fn=>{ try{ fn(); }catch(e){ console.warn(e); } });   // 하나가 실패해도 나머지는 그립니다
 }
 $("verCheck").onclick=async()=>{ await checkUpdate();
   toast($("updbar").hidden?"최신 버전입니다":"새 버전이 있습니다"); };
@@ -3138,6 +3182,13 @@ async function loadRollFile(f){
 
     // 5) 지난달 값을 지웁니다. 사내강사 블록은 성명·사번까지 비웁니다.
     const {g,nd}=monthGrid(mCur);
+    // 사번 앞의 0이 빠진 채 저장된 기록도 찾을 수 있게 표를 하나 더 만듭니다
+    const gBare={};
+    Object.keys(g).forEach(c=>{
+      const k=bare(c); gBare[k]=gBare[k]||{};
+      Object.keys(g[c]).forEach(x=>{ gBare[k][x]=1; });
+    });
+    const eaten=code=>g[code]||gBare[bare(code)]||null;
     const roster=db.roster;
     blocks.forEach(b=>{
       const wipeName = (b.kind==="guest");   // 공항공사직원 블록만 이름·사번을 비웁니다
@@ -3175,10 +3226,11 @@ async function loadRollFile(f){
           fixedCode.push(pp.name+" "+(pp.code||"(없음)")+" → "+me.code);
         }
         used.add(me.code);
+        const eg=eaten(me.code);
         for(let d=1;d<=nd;d++){
           if(!dayCol[d]) continue;
           MEALS.forEach((m,mi)=>{
-            if(g[me.code] && g[me.code][d*3+mi]){
+            if(eg && eg[d*3+mi]){
               xml=setCell(xml, colName(dayCol[d]+off[m])+pp.r, 1); wrote++;
             }
           });
@@ -3191,6 +3243,7 @@ async function loadRollFile(f){
       if(used.has(code)) return;
       if(!Object.keys(g[code]||{}).length) return;
       const me=roster.find(x=>String(x.code)===code); if(!me) return;
+      const eg2=eaten(code);
       const want = me.guest ? "guest" : (me.sub ? "sub" : "staff");
       let bk=blocks.find(x=>x.kind===want) || blocks.find(x=>x.kind==="staff") || blocks[0];
       const slot=bk.blank.shift();
@@ -3200,7 +3253,7 @@ async function loadRollFile(f){
       for(let d=1;d<=nd;d++){
         if(!dayCol[d]) continue;
         MEALS.forEach((m,mi)=>{
-          if(g[code][d*3+mi]){ xml=setCell(xml, colName(dayCol[d]+off[m])+slot, 1); wrote++; }
+          if(eg2 && eg2[d*3+mi]){ xml=setCell(xml, colName(dayCol[d]+off[m])+slot, 1); wrote++; }
         });
       }
       extra.push(me.name);
@@ -3435,7 +3488,7 @@ $("brandHome").onclick=async()=>{
 };
 
 /* ---------- 위치로 식수 체크 ---------- */
-let watchId=null, myDist=null, myDone=null;
+let watchId=null, myDist=null, myDone=null, myAcc=null, myAge=null;
 function stopWatch(){ if(watchId!==null){ navigator.geolocation.clearWatch(watchId); watchId=null; } }
 function startWatch(){
   const c=locConf();
@@ -3445,6 +3498,8 @@ function startWatch(){
   stopWatch();
   const onPos=pos=>{
     myDist=distM(pos.coords.latitude,pos.coords.longitude,c.lat,c.lng);
+    myAcc=Math.round(pos.coords.accuracy||0);
+    myAge=Math.round((Date.now()-pos.timestamp)/1000);
     updateLoc();
   };
   const onErr=err=>{
@@ -3452,11 +3507,23 @@ function startWatch(){
     drawLoc(err.code===1?"위치 권한이 꺼져 있습니다.\n브라우저 주소창 옆 자물쇠에서 허용해 주세요."
                         :"위치를 확인하지 못했습니다.\n실내라면 창가로 나가 다시 확인해 보세요.",false,null,null);
   };
-  navigator.geolocation.getCurrentPosition(onPos,onErr,{enableHighAccuracy:false,maximumAge:60000,timeout:10000});
+  navigator.geolocation.getCurrentPosition(onPos,onErr,{enableHighAccuracy:true,maximumAge:10000,timeout:12000});
   watchId=navigator.geolocation.watchPosition(onPos,onErr,
-    {enableHighAccuracy:true,maximumAge:15000,timeout:25000});
+    {enableHighAccuracy:true,maximumAge:0,timeout:25000});
 }
-$("myLocRefresh").onclick=()=>{ myDist=null; updateLoc(); startWatch(); };
+$("myLocRefresh").onclick=()=>{
+  myDist=null; myAcc=null; myAge=null; updateLoc();
+  stopWatch();
+  if(navigator.geolocation){
+    // 저장된 옛 위치를 쓰지 않고 새로 측정합니다
+    navigator.geolocation.getCurrentPosition(pos=>{
+      const c=locConf();
+      myDist=distM(pos.coords.latitude,pos.coords.longitude,c.lat,c.lng);
+      myAcc=Math.round(pos.coords.accuracy||0); myAge=0;
+      updateLoc(); startWatch();
+    },()=>{ startWatch(); },{enableHighAccuracy:true,maximumAge:0,timeout:20000});
+  }
+};
 function drawLoc(msg,ok,label,dist){
   const d=$("myLocDist");
   if(dist===undefined||dist===null){ d.textContent="—"; d.style.color="var(--dim)"; }
@@ -3472,6 +3539,13 @@ function drawLoc(msg,ok,label,dist){
   b.style.color = ok?"#0B1710":"#5A6A7A";
   b.style.borderColor = ok?"var(--green)":"#43566D";
 }
+function accNote(){
+  if(myAcc===null) return "";
+  let s="\n측정 오차 약 "+myAcc+"m";
+  if(myAge>60) s+=" · "+Math.round(myAge/60)+"분 전 측정";
+  if(myAcc>60) s+="\n위치가 부정확합니다. 와이파이를 켜고 «위치 다시 확인»을 눌러 주세요.";
+  return s;
+}
 function updateLoc(){
   const c=locConf(), m=timeMeal();
   if(myDone===dkey()+"|"+m){
@@ -3484,10 +3558,11 @@ function updateLoc(){
     b.style.background="#2E3B4A"; b.style.color="#fff"; b.style.borderColor="#5C7590";
     return;
   }
-  if(myDist>c.r){
-    drawLoc(`식당까지 남은 거리입니다.\n${c.r}m 안으로 들어오면 체크 버튼이 켜집니다.`,false,null,myDist);
+  const allow = c.r + Math.min(myAcc||0, 60);   // 측정 오차만큼 감안합니다
+  if(myDist>allow){
+    drawLoc(`식당까지 남은 거리입니다.\n${c.r}m 안으로 들어오면 체크 버튼이 켜집니다.`+accNote(),false,null,myDist);
   }else{
-    drawLoc(`식당 근처입니다. 아래 버튼을 누르면 ${m} 식수가 체크됩니다.`,true,`${m} 식수 체크`,myDist);
+    drawLoc(`식당 근처입니다. 아래 버튼을 누르면 ${m} 식수가 체크됩니다.`+accNote(),true,`${m} 식수 체크`,myDist);
   }
 }
 $("myLocBtn").onclick=async()=>{
@@ -3675,7 +3750,7 @@ function drawMy(){
   $("myDept").textContent=p.dept||"";
   $("myCode").textContent=p.code;
   const box=$("myQr"); box.innerHTML="";
-  if(window.QRCode) try{new QRCode(box,{text:p.code,width:520,height:520,correctLevel:QRCode.CorrectLevel.H})}catch(e){}
+  if(window.QRCode) try{new QRCode(box,{text:p.code,width:560,height:560,correctLevel:QRCode.CorrectLevel.L})}catch(e){}
   menuDay=null; menuWkIdx=null; drawMenuBtn();
   mineYm=dkey().slice(0,7);
   $("mineBox").hidden=!apiBase();
@@ -3698,15 +3773,20 @@ $("myQr").onclick=()=>{
   const box=$("qrFullBox"); box.innerHTML="";
   $("qrFullName").textContent=p.name;
   $("qrFullCode").textContent=p.code;
-  if(window.QRCode) try{new QRCode(box,{text:p.code,width:900,height:900,correctLevel:QRCode.CorrectLevel.H})}catch(e){}
+  if(window.QRCode) try{new QRCode(box,{text:p.code,width:900,height:900,correctLevel:QRCode.CorrectLevel.L})}catch(e){}
   const img=box.querySelector("canvas")||box.querySelector("img");
   if(img){ img.style.width="100%"; img.style.height="auto"; img.style.display="block"; }
   $("qrFull").hidden=false;
   if(fsOK && !fsOn()){ const el=document.documentElement;
     (el.requestFullscreen?el.requestFullscreen():el.webkitRequestFullscreen()).catch(()=>{}); }
+  // 되는 기기에서는 화면이 꺼지지 않게 하고 밝기를 올립니다
+  try{ if(navigator.wakeLock) navigator.wakeLock.request("screen").then(w=>{qrLock=w;}); }catch(e){}
+  try{ if(window.screen && screen.brightness!==undefined) screen.brightness=1; }catch(e){}
 };
+let qrLock=null;
 $("qrFull").onclick=()=>{
   $("qrFull").hidden=true;
+  try{ if(qrLock){ qrLock.release(); qrLock=null; } }catch(e){}
   if(fsOn()){ (document.exitFullscreen?document.exitFullscreen():document.webkitExitFullscreen()).catch(()=>{}); }
 };
 
