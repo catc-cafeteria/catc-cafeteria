@@ -983,8 +983,13 @@
       <span>«일일직원식사기록» 탭에 이 달 식수를 채워 내려받습니다</span>
       <div style="margin-top:12px"><button class="btn" id="rollBtn">파일 고르기</button></div>
       <input type="file" id="rollFile" accept=".xlsx,.xlsm" hidden>
-      <div id="rollState" style="font-size:13px;color:var(--dim);margin-top:12px;
-        white-space:pre-line;line-height:1.7;text-align:left"></div>
+      <div id="rollSummary" style="font-size:13.5px;margin-top:12px;text-align:left;line-height:1.7"></div>
+      <details id="rollDetails" hidden style="margin-top:8px;text-align:left">
+        <summary style="cursor:pointer;font-size:13px;color:var(--dim);list-style:none">
+          <span id="rollMore">자세히 보기</span></summary>
+        <div id="rollState" style="font-size:12.5px;color:var(--dim);margin-top:10px;
+          white-space:pre-line;line-height:1.8;max-height:260px;overflow-y:auto"></div>
+      </details>
     </div>
     <div class="mnav">
       <div class="ym" id="mYm">—</div>
@@ -1035,7 +1040,7 @@ function seedStamp(){                       // 파일 명단의 지문
 }
 const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원"},{"code":"11374","name":"양찬호","dept":"교육지원부"},{"code":"12194","name":"남우현","dept":"교육지원부"},{"code":"12412","name":"이승범","dept":"교육지원부"},{"code":"11663","name":"박상준","dept":"교육지원부"},{"code":"12837","name":"부윤섭","dept":"교육지원부"},{"code":"12356","name":"이상건","dept":"교육지원부"},{"code":"12193","name":"신동명","dept":"교육지원부"},{"code":"13952","name":"조부경","dept":"교육지원부"},{"code":"14064","name":"이경수","dept":"교육지원부"},{"code":"14318","name":"차규민","dept":"교육지원부"},{"code":"14548","name":"이창우","dept":"교육지원부"},{"code":"14467","name":"이유진","dept":"교육지원부"},{"code":"14748","name":"채유란","dept":"교육지원부"},{"code":"83483","name":"이민경","dept":"교육지원부"},{"code":"13086","name":"박종배","dept":"교육운영부"},{"code":"13258","name":"전은영","dept":"교육운영부"},{"code":"51035","name":"장영근","dept":"교육운영부"},{"code":"12542","name":"주영미","dept":"교육운영부"},{"code":"13812","name":"백유민","dept":"교육운영부"},{"code":"14771","name":"김지은","dept":"교육운영부"},{"code":"14898","name":"박찬미","dept":"교육운영부"},{"code":"14592","name":"박현일","dept":"교육운영부"},{"code":"12848","name":"임채택","dept":"교육운영부"},{"code":"14603","name":"박호원","dept":"교육운영부"},{"code":"14685","name":"최자영","dept":"교육운영부"},{"code":"13281","name":"장두석","dept":"교육운영부"},{"code":"13509","name":"이용철","dept":"교육운영부"},{"code":"13670","name":"이승희","dept":"교육운영부"},{"code":"14265","name":"김정민","dept":"교육운영부"},{"code":"13238","name":"손우람","dept":"교육운영부"},{"code":"01057","name":"신동민","dept":"KAC공항서비스","sub":true},{"code":"01058","name":"이현훈","dept":"KAC공항서비스","sub":true},{"code":"01060","name":"박용범","dept":"KAC공항서비스","sub":true},{"code":"01061","name":"우시준","dept":"KAC공항서비스","sub":true},{"code":"01062","name":"홍제표","dept":"KAC공항서비스","sub":true},{"code":"01063","name":"김성중","dept":"KAC공항서비스","sub":true},{"code":"01064","name":"김시환","dept":"KAC공항서비스","sub":true},{"code":"01065","name":"정승영","dept":"KAC공항서비스","sub":true},{"code":"01066","name":"권우정","dept":"KAC공항서비스","sub":true},{"code":"01067","name":"강미순","dept":"KAC공항서비스","sub":true},{"code":"01071","name":"류원호","dept":"KAC공항서비스","sub":true},{"code":"01072","name":"신동원","dept":"KAC공항서비스","sub":true},{"code":"01077","name":"배용호","dept":"KAC공항서비스","sub":true},{"code":"01712","name":"박성철","dept":"KAC공항서비스","sub":true},{"code":"02164","name":"천미영","dept":"KAC공항서비스","sub":true},{"code":"02271","name":"원종복","dept":"KAC공항서비스","sub":true},{"code":"02434","name":"이윤경","dept":"KAC공항서비스","sub":true},{"code":"02436","name":"김선희","dept":"KAC공항서비스","sub":true},{"code":"02531","name":"한강섭","dept":"KAC공항서비스","sub":true},{"code":"02532","name":"이문숙","dept":"KAC공항서비스","sub":true},{"code":"02691","name":"윤희상","dept":"KAC공항서비스","sub":true},{"code":"02692","name":"박진화","dept":"KAC공항서비스","sub":true},{"code":"90494","name":"고은영","dept":"KAC공항서비스","sub":true}];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="7.2";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="7.3";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -3039,7 +3044,17 @@ async function fillMenuSheet(zip, wbXml, relXml){
 }
 
 async function loadRollFile(f){
-  const S=t=>{$("rollState").textContent=t};
+  const S=(t,detail)=>{
+    $("rollSummary").textContent=t;
+    if(detail){
+      $("rollState").textContent=detail;
+      $("rollDetails").hidden=false;
+      const n=detail.split("\n").filter(x=>x.trim()).length;
+      $("rollMore").textContent="자세히 보기 ("+n+"줄)";
+    }else{
+      $("rollDetails").hidden=true;
+    }
+  };
   if(!window.JSZip){S("압축 처리 기능을 불러오지 못했습니다. 인터넷 연결을 확인해 주세요");return}
   S("읽는 중…");
   try{
@@ -3139,16 +3154,21 @@ async function loadRollFile(f){
     let wrote=0; const missed=[], dup=[], extra=[], fixedCode=[]; const used=new Set();
     blocks.forEach(bk=>{
       bk.people.forEach(pp=>{
-        let me=null, byName=false;
-        if(pp.code){
-          me=roster.find(x=>String(x.code)===pp.code)||roster.find(x=>bare(x.code)===bare(pp.code));
+        let me=null;
+        // 이름이 딱 한 명이면 그 사람으로 봅니다 (파일 사번이 틀린 경우 대비)
+        const byName=roster.filter(x=>x.name===pp.name);
+        if(byName.length===1) me=byName[0];
+        else if(byName.length>1){
+          // 동명이인이면 사번으로 가려냅니다
+          me=byName.find(x=>String(x.code)===pp.code)||byName.find(x=>bare(x.code)===bare(pp.code));
+          if(!me){ dup.push(pp.name); return; }
         }
-        if(!me){
-          const hit=roster.filter(x=>x.name===pp.name);
-          if(hit.length===1){ me=hit[0]; byName=true; }
-          else if(hit.length>1){ dup.push(pp.name); return; }
+        if(!me && pp.code){
+          me=roster.find(x=>String(x.code)===pp.code)||roster.find(x=>bare(x.code)===bare(pp.code));
+          if(me && me.name!==pp.name) me=null;      // 사번은 같은데 이름이 다르면 남의 것입니다
         }
         if(!me){ missed.push(pp.name+(pp.code?" ("+pp.code+")":"")); return; }
+        if(used.has(me.code)){ dup.push(pp.name+" (중복)"); return; }
         // 파일의 사번이 우리 명단과 다르면 우리 것으로 고칩니다
         if(String(me.code)!==pp.code){
           xml=setCell(xml,"C"+pp.r,String(me.code),true);
@@ -3218,22 +3238,24 @@ async function loadRollFile(f){
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(()=>URL.revokeObjectURL(a.href),5000);
 
-    let t=mCur.replace("-",". ")+" 식수를 채웠습니다.\n서식은 그대로 두고 값만 바꿨습니다.\n"+
-          "블록 "+blocks.length+"개 · 채운 칸 "+wrote+"개";
-    blocks.forEach(b=>{ t+="\n  · "+(b.label||"(제목 없음)")+" → "+
-      (b.kind==="guest"?"사내강사 (명단 새로 채움)":b.kind==="sub"?"자회사":"직원"); });
-    if(titleFixed) t+="\n제목 "+titleFixed+"곳을 "+ymM+"월로 바꿨습니다.";
-    if(menuFilled) t+="\n«식단» 장에 메뉴 "+menuFilled+"개를 채웠습니다.";
-    if(fixedCode.length) t+="\n\n파일과 사번이 달라 시스템 사번으로 고친 사람\n  "+fixedCode.join("\n  ");
-    if(missed.length) t+="\n\n이 파일에 있지만 우리 명단에 없는 사람 "+missed.length+"명 (그 줄은 비워 둡니다)\n  "+missed.slice(0,10).join(", ")+(missed.length>10?" 외":"");
-    if(extra.length) t+="\n\n식사했지만 파일에 줄이 없어 빈 줄에 넣은 사람\n  "+extra.join(", ");
-    if(dup.length) t+="\n\n동명이인이라 건너뛴 사람\n  "+[...new Set(dup)].join(", ");
-    S(t);
-    $("rollState").style.color=(missed.length||dup.length||extra.length)?"var(--amber)":"var(--green)";
+    const issues=fixedCode.length+missed.length+extra.length+dup.length;
+    let head=mCur.replace("-",". ")+" 식수를 채웠습니다. 채운 칸 "+wrote+"개";
+    if(issues) head+=" · 확인할 사항 "+issues+"건";
+    let d="";
+    blocks.forEach(b=>{ d+="· "+(b.label||"(제목 없음)").trim()+" → "+
+      (b.kind==="guest"?"사내강사 (명단 새로 채움)":b.kind==="sub"?"자회사":"직원")+"\n"; });
+    if(titleFixed) d+="· 제목 "+titleFixed+"곳을 "+ymM+"월로 바꿨습니다.\n";
+    if(menuFilled) d+="· «식단» 장에 메뉴 "+menuFilled+"개를 채웠습니다.\n";
+    if(fixedCode.length) d+="\n[사번을 시스템 기준으로 고침]\n  "+fixedCode.join("\n  ")+"\n";
+    if(missed.length) d+="\n[파일에 있지만 우리 명단에 없음 · 그 줄은 비워 둠] "+missed.length+"명\n  "+missed.join(", ")+"\n";
+    if(extra.length) d+="\n[식사했지만 파일에 줄이 없어 빈 줄에 넣음]\n  "+extra.join(", ")+"\n";
+    if(dup.length) d+="\n[가려내지 못해 건너뜀]\n  "+[...new Set(dup)].join(", ")+"\n";
+    S(head, d);
+    $("rollSummary").style.color=issues?"var(--amber)":"var(--green)";
     toast("급식총괄표를 내려받았습니다");
   }catch(e){
     S("처리하지 못했습니다 · "+((e&&e.message)||e));
-    $("rollState").style.color="var(--red)";
+    $("rollSummary").style.color="var(--red)";
   }
 }
 $("rollBtn").onclick=()=>$("rollFile").click();
