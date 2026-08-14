@@ -559,7 +559,7 @@
       <details class="more">
         <summary>여러 명을 한꺼번에 붙여넣기</summary>
         <p style="margin:12px 0 10px">한 줄에 한 명씩 이름, 소속, 사번 순입니다. 엑셀에서 세 열을 복사해 붙여넣어도 됩니다.</p>
-        <textarea id="rosterText" placeholder="홍길동, 교육지원부, 12451&#10;김철수, 교육운영부, 13086"></textarea>
+        <textarea id="rosterText" placeholder="홍길동, 교육지원부, 10001&#10;김철수, 교육운영부, 10002"></textarea>
         <button class="btn" id="rosterSave" style="margin-top:10px">이 내용으로 명단 저장</button>
       </details>
     </div>
@@ -688,6 +688,26 @@
         <button class="btn" id="locSave" style="flex:none">저장</button>
       </div>
       <div id="locState" style="font-size:13px;color:var(--dim);margin-top:11px;line-height:1.7;white-space:pre-line"></div>
+    </div>
+    <div class="card noprint">
+      <h3>직원 비밀번호 초기화</h3>
+      <p>비밀번호를 잊은 직원을 찾아 0000 으로 되돌립니다.
+         그 직원이 다시 들어오면 새 비밀번호를 정하게 됩니다.</p>
+      <input class="scanfield" id="pinSearch" style="width:100%;height:46px;border:1px solid var(--line)"
+        placeholder="이름 또는 사번으로 찾기" autocomplete="off">
+      <ul class="plist" id="pinList" style="max-height:280px;overflow-y:auto"></ul>
+      <div id="pinResetState" style="font-size:13px;color:var(--dim);margin-top:10px;line-height:1.7;white-space:pre-line"></div>
+    </div>
+    <div class="card noprint">
+      <h3>관리자 비밀번호</h3>
+      <p>서버에 저장되어 모든 기기에 함께 적용됩니다. 4자리 이상이면 됩니다.</p>
+      <div class="addrow" style="margin-top:12px">
+        <input id="pinOld" type="password" placeholder="지금 비밀번호" autocomplete="off">
+        <input id="pinNew" type="password" placeholder="새 비밀번호" autocomplete="off">
+        <input id="pinNew2" type="password" placeholder="새 비밀번호 확인" autocomplete="off">
+      </div>
+      <button class="btn" id="pinSave" style="margin-top:10px">비밀번호 바꾸기</button>
+      <div id="pinState" style="font-size:13px;color:var(--dim);margin-top:11px;white-space:pre-line;line-height:1.7"></div>
     </div>
     <div class="card noprint">
       <h3>이 기기 용도</h3><span id="verTag" hidden></span>
@@ -820,6 +840,27 @@
     <input class="scanfield" id="myInput" style="width:min(300px,100%);height:54px;border:1px solid var(--line);text-align:center;font-size:19px;letter-spacing:.1em" placeholder="사번" inputmode="numeric" autocomplete="off">
     <div style="margin-top:12px"><button class="btn" id="myGo" style="width:min(300px,100%)">확인</button></div>
   </div>
+  <div id="myPinBox" hidden style="width:min(300px,100%)">
+    <h2 id="myPinTitle">본인 확인</h2>
+    <p id="myPinMsg" style="margin:12px auto 16px">비밀번호를 입력해 주세요.</p>
+    <input class="scanfield" id="myPinInput" type="password" inputmode="numeric" autocomplete="off"
+      style="width:100%;height:54px;border:1px solid var(--line);text-align:center;font-size:22px;letter-spacing:.3em">
+    <input class="scanfield" id="myPinInput2" hidden type="password" inputmode="numeric" autocomplete="off"
+      style="width:100%;height:54px;border:1px solid var(--line);text-align:center;font-size:22px;letter-spacing:.3em;margin-top:10px"
+      placeholder="한 번 더">
+    <button class="btn" id="myPinGo" style="width:100%;margin-top:12px;min-height:50px">확인</button>
+    <div id="myPinState" style="font-size:13px;color:var(--dim);margin-top:12px;line-height:1.7"></div>
+    <details style="margin-top:14px;text-align:left">
+      <summary style="cursor:pointer;font-size:12.5px;color:var(--dim);list-style:none">
+        ▸ 비밀번호를 잊으셨나요?</summary>
+      <div style="font-size:12.5px;color:var(--dim);line-height:1.9;padding:8px 2px 0">
+        식당 담당자에게 말씀하시면 0000 으로 되돌려 드립니다.<br>
+        그 뒤에 다시 들어와 새 비밀번호를 정하시면 됩니다.
+      </div>
+    </details>
+    <button type="button" class="linkbtn" id="myPinBack" style="margin-top:6px">← 사번 다시 입력</button>
+  </div>
+
   <div id="myCard" hidden style="display:flex;flex-direction:column;align-items:center;gap:16px">
     <div>
       <div class="myname" id="myName"></div>
@@ -881,6 +922,7 @@
       <button class="btn quiet" id="mineDetail" style="width:100%;margin-top:12px;min-height:44px;font-size:14px">달력으로 자세히 보기</button>
     </div>
 
+    <button type="button" class="linkbtn" id="myPinChange">비밀번호 바꾸기</button>
     <button type="button" class="linkbtn" id="myReset">다른 사번으로 보기</button>
   </div>
   <button type="button" class="linkbtn" id="myMode" style="margin-top:4px">← 처음 화면으로</button>
@@ -1021,6 +1063,11 @@
   </div>
 </div>
 
+<div class="updbar" id="oldbar" hidden style="background:#FF7361;color:#fff">
+  <span id="oldmsg">앱을 새로 고쳐 주세요</span>
+  <button type="button" id="oldBtn" style="border-color:rgba(255,255,255,.6);background:rgba(0,0,0,.15);color:#fff">지금 갱신</button>
+</div>
+
 <div class="updbar" id="updbar" hidden>
   <span>새 버전이 나왔습니다</span>
   <button type="button" id="updBtn">지금 받기</button>
@@ -1059,9 +1106,11 @@ const SEED_VER=6;
 function seedStamp(){                       // 파일 명단의 지문
   return SEED.length+":"+SEED.map(p=>p.code).join(",");
 }
-const SEED=[{"code":"12451","name":"권영택","dept":"항공기술훈련원"},{"code":"11374","name":"양찬호","dept":"교육지원부"},{"code":"12194","name":"남우현","dept":"교육지원부"},{"code":"12412","name":"이승범","dept":"교육지원부"},{"code":"11663","name":"박상준","dept":"교육지원부"},{"code":"12837","name":"부윤섭","dept":"교육지원부"},{"code":"12356","name":"이상건","dept":"교육지원부"},{"code":"12193","name":"신동명","dept":"교육지원부"},{"code":"13952","name":"조부경","dept":"교육지원부"},{"code":"14064","name":"이경수","dept":"교육지원부"},{"code":"14318","name":"차규민","dept":"교육지원부"},{"code":"14548","name":"이창우","dept":"교육지원부"},{"code":"14467","name":"이유진","dept":"교육지원부"},{"code":"14748","name":"채유란","dept":"교육지원부"},{"code":"83483","name":"이민경","dept":"교육지원부"},{"code":"13086","name":"박종배","dept":"교육운영부"},{"code":"13258","name":"전은영","dept":"교육운영부"},{"code":"51035","name":"장영근","dept":"교육운영부"},{"code":"12542","name":"주영미","dept":"교육운영부"},{"code":"13812","name":"백유민","dept":"교육운영부"},{"code":"14771","name":"김지은","dept":"교육운영부"},{"code":"14898","name":"박찬미","dept":"교육운영부"},{"code":"14592","name":"박현일","dept":"교육운영부"},{"code":"12848","name":"임채택","dept":"교육운영부"},{"code":"14603","name":"박호원","dept":"교육운영부"},{"code":"14685","name":"최자영","dept":"교육운영부"},{"code":"13281","name":"장두석","dept":"교육운영부"},{"code":"13509","name":"이용철","dept":"교육운영부"},{"code":"13670","name":"이승희","dept":"교육운영부"},{"code":"14265","name":"김정민","dept":"교육운영부"},{"code":"13238","name":"손우람","dept":"교육운영부"},{"code":"01057","name":"신동민","dept":"KAC공항서비스","sub":true},{"code":"01058","name":"이현훈","dept":"KAC공항서비스","sub":true},{"code":"01060","name":"박용범","dept":"KAC공항서비스","sub":true},{"code":"01061","name":"우시준","dept":"KAC공항서비스","sub":true},{"code":"01062","name":"홍제표","dept":"KAC공항서비스","sub":true},{"code":"01063","name":"김성중","dept":"KAC공항서비스","sub":true},{"code":"01064","name":"김시환","dept":"KAC공항서비스","sub":true},{"code":"01065","name":"정승영","dept":"KAC공항서비스","sub":true},{"code":"01066","name":"권우정","dept":"KAC공항서비스","sub":true},{"code":"01067","name":"강미순","dept":"KAC공항서비스","sub":true},{"code":"01071","name":"류원호","dept":"KAC공항서비스","sub":true},{"code":"01072","name":"신동원","dept":"KAC공항서비스","sub":true},{"code":"01077","name":"배용호","dept":"KAC공항서비스","sub":true},{"code":"01712","name":"박성철","dept":"KAC공항서비스","sub":true},{"code":"02164","name":"천미영","dept":"KAC공항서비스","sub":true},{"code":"02271","name":"원종복","dept":"KAC공항서비스","sub":true},{"code":"02434","name":"이윤경","dept":"KAC공항서비스","sub":true},{"code":"02436","name":"김선희","dept":"KAC공항서비스","sub":true},{"code":"02531","name":"한강섭","dept":"KAC공항서비스","sub":true},{"code":"02532","name":"이문숙","dept":"KAC공항서비스","sub":true},{"code":"02691","name":"윤희상","dept":"KAC공항서비스","sub":true},{"code":"02692","name":"박진화","dept":"KAC공항서비스","sub":true},{"code":"90494","name":"고은영","dept":"KAC공항서비스","sub":true}];
+/* 명단은 파일에 넣지 않고 서버(스프레드시트)에서만 받아옵니다.
+   개인정보가 공개된 파일에 남지 않도록 하기 위해서입니다. */
+const SEED=[];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="8.1";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="8.5";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -1095,21 +1144,20 @@ async function load(){
   try{const v=await Store.get(KEY); if(v) db=JSON.parse(v);}catch(e){}
   if(!db.mode && location.hash.length>1){          // 주소에 사번이 있으면 개인 모드로
     const c=decodeURIComponent(location.hash.slice(1)).trim();
-    if(SEED.some(p=>p.code===c)){db.mode="user"; db.myCode=c;}
+    if(/^[A-Za-z0-9-]{2,20}$/.test(c)){ db.mode="user"; db.myCode=c; }
   }
   db.reserve=db.reserve||{}; db.lock=db.lock||{}; db.queue=db.queue||[]; db.conf=db.conf||{};
   if(db.facing) facing=db.facing;
-  if(db.seedStamp!==seedStamp()){           // 파일 명단이 바뀌었으면 그것을 따릅니다
-    const keep=(db.roster||[]).filter(p=>p.guest);        // 사내강사는 유지
+  if(SEED.length && db.seedStamp!==seedStamp()){
+    const keep=(db.roster||[]).filter(p=>p.guest);
     db.roster=SEED.map(p=>({code:p.code,name:p.name,dept:p.dept,sub:!!p.sub}))
       .concat(keep.filter(g=>!SEED.some(s=>s.code===g.code)));
-    db.seedVer=SEED_VER;
-    db.seedStamp=seedStamp();
-    db.seedFresh=true;      // 파일 명단이 더 새로우니 서버로 올려야 합니다
+    db.seedVer=SEED_VER; db.seedStamp=seedStamp(); db.seedFresh=true;
     persist();
   }
   meal=timeMeal();
   setTimeout(()=>autoDinner(true),1500);
+  loadAdminKey();
   buildMeals(); render(); drawRoster(); drawLog(); applyDim(); applyMode();
   if(apiBase() && curMode()==="admin" && db.lastSyncDay!==dkey()){
     try{ await pullMonth(dkey().slice(0,7)); db.lastSyncDay=dkey(); persist(); }
@@ -1148,7 +1196,7 @@ function findPerson(code){
   if(!c) return null;
   let p=db.roster.find(x=>String(x.code).toUpperCase()===c);
   if(p) return p;
-  // 앞자리 0을 빼고 입력한 경우도 찾아 줍니다 (01057 ↔ 1057)
+  // 앞자리 0을 빼고 입력한 경우도 찾아 줍니다
   const bare=s=>String(s).replace(/^0+/,"");
   const hits=db.roster.filter(x=>bare(x.code)===bare(c));
   return hits.length===1 ? hits[0] : null;
@@ -1306,11 +1354,36 @@ async function apiOnce(u,payload,post){
   catch(e){ throw new Error("서버가 자료 대신 다른 화면을 보냈습니다 (HTTP "+r.status+")"); }
   if(!j.ok) throw new Error(j.error||"서버 오류");
   if(j.sver!==undefined) db.sver=j.sver;
+  if(j.minApp) checkAppVer(j.minApp, j.enforceFrom);
   return j;
 }
+let adminKey=null, adminUntil=0;
+function loadAdminKey(){
+  try{
+    const s=sessionStorage.getItem("ak");
+    if(!s) return;
+    const o=JSON.parse(s);
+    if(o.k && o.until>Date.now()){ adminKey=o.k; adminUntil=o.until; }
+    else sessionStorage.removeItem("ak");
+  }catch(e){}
+}
+function saveAdminKey(k){
+  adminKey=k; adminUntil=Date.now()+12*3600*1000;   // 12시간 동안 유효합니다
+  try{ sessionStorage.setItem("ak", JSON.stringify({k, until:adminUntil})); }catch(e){}
+}
+function clearAdminKey(){
+  adminKey=null; adminUntil=0;
+  try{ sessionStorage.removeItem("ak"); }catch(e){}
+}
+function keyFor(action){
+  const adminOnly=["roster","rosterStamp","rosterSet","month","configSet","day","push","pinSet"];
+  if(adminOnly.includes(action) && adminKey && adminUntil>Date.now()) return adminKey;
+  return API_KEY;
+}
+
 async function apiCall(body){
   const u=apiBase(); if(!u) return null;
-  const payload=JSON.stringify(Object.assign({key:API_KEY},body));
+  const payload=JSON.stringify(Object.assign({key:keyFor(body&&body.action),app:APP_VER},body));
   const enc=encodeURIComponent(payload).length;
   const mustPost = enc > 1600 || payload.length > 900;
   if(mustPost){
@@ -1528,11 +1601,9 @@ async function pullRoster(){
     if(s && s.stamp!==undefined){
       const mine=db.roster.map(p=>p.code).join(",");
       if(s.stamp===mine) return;                 // 같으면 받아오지 않습니다
-      const missing=SEED.filter(x=>!String(s.stamp).split(",").includes(x.code));
-      if(missing.length){                        // 서버에 파일 명단이 빠져 있으면 올립니다
-        const sent=await pushRoster(true);
-        if(sent){ db.seedFresh=false; persist(); }
-        return;
+      if(SEED.length){
+        const missing=SEED.filter(x=>!String(s.stamp).split(",").includes(x.code));
+        if(missing.length){ const sent=await pushRoster(true); if(sent){db.seedFresh=false;persist();} return; }
       }
     }
     const j=await apiCall({action:"roster"});
@@ -1971,13 +2042,80 @@ function drawInfo(){
   $("verBig").textContent=APP_VER;
   $("sverTag").textContent = db.sver ? "서버 코드 "+db.sver+"단계" : "서버 코드 단계 확인 안 됨";
   $("sverTag").style.color = (db.sver||0)>=2 ? "var(--green)" : "var(--red)";
-  [drawApi,drawKiosk,drawQueue,drawSound,drawDim,drawAutoDin,drawStep,drawDet,
+  [drawApi,drawPinReset,drawPinTool,drawKiosk,drawQueue,drawSound,drawDim,drawAutoDin,drawStep,drawDet,
    drawCamLog,drawLocConf,drawMealTimes,drawSyncTool,drawRosterSync,drawMenuConf]
     .forEach(fn=>{ try{ fn(); }catch(e){ console.warn(e); } });   // 하나가 실패해도 나머지는 그립니다
 }
 $("verCheck").onclick=async()=>{ await checkUpdate();
   toast($("updbar").hidden?"최신 버전입니다":"새 버전이 있습니다"); };
 
+let pinSetMap=null;
+async function loadPinSet(){
+  if(!apiBase()) return;
+  try{ const j=await apiCall({action:"pinList"}); pinSetMap=(j&&j.set)||{}; }catch(e){ pinSetMap={}; }
+  drawPinList();
+}
+function drawPinList(){
+  const box=$("pinList"); if(!box) return;
+  const q=$("pinSearch").value.trim();
+  if(!apiBase()){ box.innerHTML='<li style="color:var(--dim);justify-content:center;padding:20px 0">서버에 연결되어 있지 않습니다</li>'; return; }
+  if(!q){ box.innerHTML='<li style="color:var(--dim);justify-content:center;padding:20px 0">이름이나 사번을 입력해 찾아 주세요</li>'; return; }
+  const bq=s=>String(s).replace(/^0+/,"");
+  const items=db.roster.filter(p=>p.name.includes(q)||String(p.code).includes(q)||bq(p.code).includes(bq(q))).slice(0,20);
+  if(!items.length){ box.innerHTML='<li style="color:var(--dim);justify-content:center;padding:20px 0">찾는 사람이 없습니다</li>'; return; }
+  box.innerHTML=items.map((p,i)=>{
+    const when = pinSetMap ? pinSetMap[String(p.code)] : null;
+    const tag = when ? '<span style="color:var(--green)">비밀번호 정함</span>'
+                     : '<span style="color:var(--amber)">아직 0000</span>';
+    return `<li><span><span class="pn">${esc(p.name)}</span>
+      <span class="pd">${esc(p.dept||"")} · <em>${esc(p.code)}</em> · ${tag}</span></span>
+      <button class="cancel" data-i="${i}" style="width:auto;padding:0 13px;font-size:13.5px">초기화</button></li>`;
+  }).join("");
+  box.querySelectorAll("button[data-i]").forEach(b=>b.onclick=async()=>{
+    const p=items[+b.dataset.i];
+    if(!await askOk(p.name+" 님의 비밀번호를 0000 으로 되돌릴까요?\n새로 정하기 전까지는 사번만 알면 열 수 있으니, 바로 접속하시라고 알려 주세요.","초기화")) return;
+    $("pinResetState").textContent="처리하는 중…"; $("pinResetState").style.color="var(--dim)";
+    try{
+      await apiCall({action:"pinReset",code:String(p.code)});
+      $("pinResetState").textContent=p.name+" 님을 0000 으로 되돌렸습니다.\n바로 접속해 새 비밀번호를 정하시라고 알려 주세요.";
+      $("pinResetState").style.color="var(--green)";
+      toast(p.name+" 님 비밀번호를 초기화했습니다");
+      await loadPinSet();
+    }catch(e){
+      $("pinResetState").textContent="처리하지 못했습니다 · "+((e&&e.message)||e);
+      $("pinResetState").style.color="var(--red)";
+    }
+  });
+}
+function drawPinReset(){
+  if(!$("pinSearch")) return;
+  $("pinSearch").oninput=drawPinList;
+  drawPinList();
+  if(pinSetMap===null) loadPinSet();
+}
+
+function drawPinTool(){
+  const el=$("pinState"); if(!el) return;
+  el.textContent = apiBase()
+    ? "서버에 연결되어 있습니다. 바꾸면 모든 기기에 적용됩니다."
+    : "서버에 연결되어 있지 않아 바꿀 수 없습니다.";
+  el.style.color="var(--dim)";
+  $("pinSave").onclick=async()=>{
+    const o=$("pinOld").value.trim(), a=$("pinNew").value.trim(), b=$("pinNew2").value.trim();
+    if(!apiBase()){toast("서버에 연결되어 있지 않습니다");return}
+    if(a.length<4){el.textContent="새 비밀번호는 4자리 이상이어야 합니다";el.style.color="var(--red)";return}
+    if(a!==b){el.textContent="새 비밀번호가 서로 다릅니다";el.style.color="var(--red)";return}
+    el.textContent="바꾸는 중…"; el.style.color="var(--dim)";
+    try{
+      await apiCall({action:"pinSet",old:o,pin:a});
+      $("pinOld").value="";$("pinNew").value="";$("pinNew2").value="";
+      el.textContent="바꿨습니다. 다음부터 새 비밀번호로 들어오세요."; el.style.color="var(--green)";
+      toast("비밀번호를 바꿨습니다");
+    }catch(e){
+      el.textContent="바꾸지 못했습니다 · "+((e&&e.message)||e); el.style.color="var(--red)";
+    }
+  };
+}
 function drawKiosk(){
   $("kioskNote").textContent = db.kiosk
     ? "이 기기는 식당 태블릿으로 지정되어 있어 비밀번호 없이 열립니다."
@@ -2405,6 +2543,10 @@ function movePerson(p,dir){
 }
 function drawRosterList(){
   const m=db.roster.filter(p=>!p.guest);
+  if(!db.roster.length && apiBase()){
+    $("rosterList").innerHTML=`<li style="color:var(--dim);justify-content:center;padding:22px 0">서버에서 명단을 받아오는 중입니다…</li>`;
+    return;
+  }
   let n1=0,n2=0;
   $("rosterList").innerHTML=m.length? m.map((p,i)=>{
     const ord = p.sub ? ++n2 : ++n1;
@@ -3466,7 +3608,14 @@ let pinOpen=false, pinPurpose="enter";
 let sessionMode=null;                 // 태블릿으로 지정하지 않은 기기는 창을 닫으면 풀림
 function curMode(){return sessionMode||db.mode}
 function applyMode(){
-  const m=curMode(), locked = m==="admin" && !!db.locked;
+  let m=curMode();
+  // 관리자 화면인데 열쇠가 없거나 기한이 지났으면 다시 확인받습니다
+  if(m==="admin" && apiBase() && !(adminKey && adminUntil>Date.now())){
+    sessionMode=null; db.mode=null;
+    pinOpen=true; pinPurpose="enter"; m=null;
+    setTimeout(()=>{ if($("pinInput")) $("pinInput").focus(); },100);
+  }
+  const locked = m==="admin" && !!db.locked;
   $("gate").hidden = !!m || pinOpen;
   $("pinpane").hidden = !pinOpen;
   $("mypage").hidden = m!=="user";
@@ -3493,13 +3642,25 @@ function setMode(m,keep){
   else { sessionMode=null; db.mode=m; persist(); }
   applyMode();
 }
-function leaveMode(){ sessionMode=null; db.mode=null; db.kiosk=false; pinOpen=false; persist(); applyMode(); }
+function leaveMode(){ sessionMode=null; db.mode=null; db.kiosk=false; pinOpen=false; clearAdminKey(); persist(); applyMode(); }
 $("pickUser").onclick=()=>setMode("user");
 $("pickAdmin").onclick=()=>{pinOpen=true; applyMode(); $("pinInput").value="";
   setTimeout(()=>$("pinInput").focus(),80)};
 $("pinBack").onclick=()=>{pinOpen=false; pinPurpose="enter"; applyMode()};
-$("pinGo").onclick=()=>{
-  if(fnv($("pinInput").value.trim())!==ADMIN_PIN){
+$("pinGo").onclick=async()=>{
+  const v=$("pinInput").value.trim();
+  let ok=null;
+  if(apiBase()){
+    $("pinGo").disabled=true; $("pinGo").textContent="확인 중…";
+    try{
+      const j=await apiCall({action:"pinCheck",pin:v});
+      ok = j ? j.pass : null;
+      if(j && j.adminKey && (j.pass===true || j.pass===null)) saveAdminKey(j.adminKey);
+    }catch(e){ ok=null; }
+    $("pinGo").disabled=false; $("pinGo").textContent="확인";
+  }
+  if(ok===null) ok = (fnv(v)===ADMIN_PIN);   // 서버에 없으면 앱에 든 기본값으로
+  if(!ok){
     $("pinInput").value=""; beep("bad"); toast("비밀번호가 맞지 않습니다"); return;
   }
   if(pinPurpose==="unlock"){
@@ -3830,10 +3991,86 @@ $("myResvBtn").onclick=()=>{
     });
 };
 
+/* ---------- 개인 비밀번호 ---------- */
+let pinStage=null;      // "check" 확인, "new" 새로 정하기
+function showMyPin(stage,msg,color){
+  pinStage=stage;
+  $("myAsk").hidden=true; $("myCard").hidden=true; $("myPinBox").hidden=false;
+  $("myPinTitle").textContent = stage==="new" ? "비밀번호 정하기" : "본인 확인";
+  $("myPinMsg").textContent = msg;
+  $("myPinInput").value=""; $("myPinInput2").value="";
+  $("myPinInput").placeholder = stage==="new" ? "새 비밀번호 (4자리 이상)" : "비밀번호";
+  $("myPinInput2").hidden = stage!=="new";
+  $("myPinGo").textContent = stage==="new" ? "이 비밀번호로 정하기" : "확인";
+  $("myPinState").textContent=""; if(color) $("myPinState").style.color=color;
+  setTimeout(()=>$("myPinInput").focus(),80);
+}
+async function askMyPin(){
+  if(!apiBase()){ myPinOk=true; return true; }   // 서버가 없으면 확인을 건너뜁니다
+  try{
+    const j=await apiCall({action:"myPin",code:db.myCode,pin:""});
+    if(j && j.first){
+      showMyPin("check","처음 오셨네요.\n첫 비밀번호는 0000 입니다.\n확인 후 본인 비밀번호를 정하시게 됩니다.");
+      return false;
+    }
+    // 이 폰에서 전에 확인을 마쳤고, 그 뒤로 초기화된 적이 없으면 그냥 엽니다
+    if(db.pinOkFor===db.myCode && j && j.at && db.pinOkAt===j.at){
+      myPinOk=true; drawMy(); return true;
+    }
+  }catch(e){}
+  showMyPin("check","본인 비밀번호를 입력해 주세요.");
+  return false;
+}
+/** 확인을 마치면 이 폰에 표시를 남깁니다 */
+async function markPinOk(){
+  myPinOk=true;
+  try{
+    const j=await apiCall({action:"myPin",code:db.myCode,pin:""});
+    db.pinOkFor=db.myCode; db.pinOkAt=(j&&j.at)||""; persist();
+  }catch(e){}
+}
+$("myPinBack").onclick=()=>{ db.myCode=null; persist(); $("myPinBox").hidden=true; drawMy(); };
+$("myPinGo").onclick=async()=>{
+  const v=$("myPinInput").value.trim();
+  const S=(t,c)=>{ $("myPinState").textContent=t; $("myPinState").style.color=c||"var(--red)"; };
+  if(!v){ S("비밀번호를 입력해 주세요"); return; }
+  $("myPinGo").disabled=true;
+  try{
+    if(pinStage==="new"){
+      const v2=$("myPinInput2").value.trim();
+      if(v.length<4){ S("4자리 이상이어야 합니다"); return; }
+      if(v==="0000"){ S("0000 은 쓰실 수 없습니다"); return; }
+      if(v!==v2){ S("두 번 입력한 값이 다릅니다"); return; }
+      await apiCall({action:"myPin",code:db.myCode,pin:pinOldVal,set:v});
+      await markPinOk(); $("myPinBox").hidden=true;
+      toast("비밀번호를 정했습니다. 이 휴대폰에서는 다시 묻지 않습니다"); drawMy();
+      return;
+    }
+    const j=await apiCall({action:"myPin",code:db.myCode,pin:v});
+    if(!j || !j.pass){ S("비밀번호가 맞지 않습니다"); $("myPinInput").value=""; return; }
+    if(j.first){                       // 0000 으로 들어왔으니 새로 정하게 합니다
+      pinOldVal=v;
+      showMyPin("new","이제 본인만 아는 비밀번호를 정해 주세요.\n다른 사람이 내 사번으로 들어오는 것을 막습니다.\n숫자 4자리 이상이면 됩니다.");
+      return;
+    }
+    await markPinOk(); $("myPinBox").hidden=true;
+    toast("확인했습니다. 이 휴대폰에서는 다시 묻지 않습니다");
+    drawMy();
+  }catch(e){ S("확인하지 못했습니다 · "+((e&&e.message)||e)); }
+  finally{ $("myPinGo").disabled=false; }
+};
+$("myPinInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();
+  if($("myPinInput2").hidden) $("myPinGo").click(); else $("myPinInput2").focus();}});
+$("myPinInput2").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("myPinGo").click()}});
+
+let myPinOk=false, pinOldVal="";
+
 function drawMy(){
   const p=db.myCode?db.roster.find(x=>x.code===db.myCode):null;
-  $("myAsk").hidden=!!p; $("myCard").hidden=!p;
-  if(!p){setTimeout(()=>$("myInput").focus(),80); return}
+  if(!p){ $("myPinBox").hidden=true; $("myAsk").hidden=false; $("myCard").hidden=true;
+    setTimeout(()=>$("myInput").focus(),80); return }
+  if(apiBase() && !myPinOk){ askMyPin(); return; }
+  $("myPinBox").hidden=true; $("myAsk").hidden=true; $("myCard").hidden=false;
   $("myName").textContent=p.name;
   $("myDept").textContent=p.dept||"";
   $("myCode").textContent=p.code;
@@ -3847,11 +4084,17 @@ function drawMy(){
   drawMyResv(p);          // 예약 상태와 이번 달 내역을 한 번에 받아옵니다
   startWatch();
 }
-$("myGo").onclick=()=>{
+$("myGo").onclick=async()=>{
   const c=$("myInput").value.trim();
+  if(!c){toast("사번을 입력해 주세요");return}
+  if(!db.roster.length && apiBase()){
+    $("myGo").disabled=true; $("myGo").textContent="확인 중…";
+    try{ await pullRoster(); }catch(e){}
+    $("myGo").disabled=false; $("myGo").textContent="확인";
+  }
   const p=findPerson(c);
   if(!p){toast("명단에 없는 사번입니다. 식당 담당자에게 문의해 주세요");return}
-  db.myCode=p.code; persist(); $("myInput").value="";
+  db.myCode=p.code; myPinOk=false; persist(); $("myInput").value="";
   try{location.hash=p.code}catch(e){}
   drawMy();
 };
@@ -3941,6 +4184,24 @@ $("menuBtn").onclick=()=>{ const c=menuConf(); if(c.url) window.open(c.url,"_bla
 $("menuPrevWk").onclick=()=>{ if(menuWkIdx>0){ menuWkIdx--; menuDay=null; drawMenuCard(); } };
 $("menuNextWk").onclick=()=>{ const ws=weekList(); if(menuWkIdx<ws.length-1){ menuWkIdx++; menuDay=null; drawMenuCard(); } };
 
+$("myPinChange").onclick=()=>{
+  pinOldVal=""; myPinOk=false;
+  showMyPin("check","지금 비밀번호를 입력해 주세요.");
+  const go=$("myPinGo");
+  const orig=go.onclick;
+  go.onclick=async()=>{
+    const v=$("myPinInput").value.trim();
+    if(!v) return;
+    try{
+      const j=await apiCall({action:"myPin",code:db.myCode,pin:v});
+      if(!j||!j.pass){ $("myPinState").textContent="비밀번호가 맞지 않습니다";
+        $("myPinState").style.color="var(--red)"; $("myPinInput").value=""; return; }
+      pinOldVal=v; go.onclick=orig;
+      showMyPin("new","새 비밀번호를 정해 주세요.");
+    }catch(e){ $("myPinState").textContent="확인하지 못했습니다"; }
+  };
+};
+
 $("myVer").textContent="v "+APP_VER;
 $("myUpd").onclick=async()=>{
   $("myUpd").textContent="확인 중…";
@@ -3948,7 +4209,7 @@ $("myUpd").onclick=async()=>{
   $("myUpd").textContent="새 버전 확인";
   if($("updbar").hidden) toast("최신 버전입니다");
 };
-$("myReset").onclick=()=>{db.myCode=null; persist();
+$("myReset").onclick=()=>{db.myCode=null; myPinOk=false; db.pinOkFor=null; persist();
   try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}
   drawMy()};
 $("myMode").onclick=leaveMode;
@@ -4080,6 +4341,26 @@ function autoDinnerApply(quiet){
   }
   return n;
 }
+
+/* 서버가 요구하는 버전보다 낮으면 알려 줍니다 */
+function verLess(a,b){
+  const x=String(a).split(".").map(Number), y=String(b).split(".").map(Number);
+  for(let i=0;i<Math.max(x.length,y.length);i++){
+    const p=x[i]||0, q=y[i]||0;
+    if(p!==q) return p<q;
+  }
+  return false;
+}
+function checkAppVer(minApp, from){
+  const bar=$("oldbar"); if(!bar) return;
+  if(!verLess(APP_VER, minApp)){ bar.hidden=true; return; }
+  bar.hidden=false;
+  const d=from ? from.replace(/-/g,".") : "";
+  $("oldmsg").textContent = d
+    ? `새 버전이 나왔습니다. ${d}부터는 갱신하셔야 쓰실 수 있습니다.`
+    : "새 버전이 나왔습니다. 갱신해 주세요.";
+}
+$("oldBtn").onclick=()=>reloadNew();
 
 function toast(m){const t=$("toast");t.textContent=m;t.classList.add("on");setTimeout(()=>t.classList.remove("on"),1900)}
 setInterval(()=>{if(document.querySelector('[data-page="scan"]').dataset.on==="1")$("stamp").textContent=dkey().replace(/-/g,".")+" "+meal+" "+hm()},1000);
