@@ -1110,7 +1110,7 @@ function seedStamp(){                       // 파일 명단의 지문
    개인정보가 공개된 파일에 남지 않도록 하기 위해서입니다. */
 const SEED=[];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="8.7";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="8.8";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -1163,7 +1163,10 @@ async function load(){
     try{ await pullMonth(dkey().slice(0,7)); db.lastSyncDay=dkey(); persist(); }
     catch(e){ lastSync={t:hm(),err:"자동 동기화 실패 · "+((e&&e.message)||e)}; }
   }
-  if(apiBase()){ await pullConf(); await pullRoster(); drawRoster(); if(curMode()==="user") drawMy(); flushQueue(); }
+  if(apiBase()){
+    await pullConf();
+    if(curMode()==="admin") await pullRoster();   // 명단 전체는 관리자만 받습니다
+    drawRoster(); if(curMode()==="user") drawMy(); flushQueue(); }
 }
 function queueSave(){clearTimeout(saveTimer);saveTimer=setTimeout(persist,600)}
 async function persist(){try{await Store.set(KEY,JSON.stringify(db))}catch(e){}}
@@ -1355,6 +1358,7 @@ async function apiOnce(u,payload,post){
   if(!j.ok) throw new Error(j.error||"서버 오류");
   if(j.sver!==undefined) db.sver=j.sver;
   if(j.minApp) checkAppVer(j.minApp, j.enforceFrom);
+  if(Array.isArray(j.adminOnly)) adminOnlyList=j.adminOnly;   // 서버가 알려주면 그것을 따릅니다
   return j;
 }
 let adminKey=null, adminUntil=0;
@@ -1375,8 +1379,9 @@ function clearAdminKey(){
   adminKey=null; adminUntil=0;
   try{ sessionStorage.removeItem("ak"); }catch(e){}
 }
+let adminOnlyList=["roster","rosterStamp","rosterSet","month","configSet","day","push","pinSet","pinReset","pinList"];
 function keyFor(action){
-  const adminOnly=["roster","rosterStamp","rosterSet","month","configSet","day","push","pinSet"];
+  const adminOnly=adminOnlyList;
   if(adminOnly.includes(action) && adminKey && adminUntil>Date.now()) return adminKey;
   return API_KEY;
 }
@@ -3793,8 +3798,7 @@ $("myLocBtn").onclick=async()=>{
   const d=dkey(), m=timeMeal();
   $("myLocBtn").disabled=true; $("myLocState").textContent="처리하는 중…";
   try{
-    await apiCall({action:"push",events:[{date:d,meal:m,code:p.code,name:p.name,
-      dept:p.dept||"",guest:!!p.guest,t:hm(),on:true,via:"위치"}]});
+    await apiCall({action:"myCheck",date:d,meal:m,code:p.code,t:hm(),via:"위치"});
     myDone=d+"|"+m; beep("ok"); toast(`${m} 식수가 체크되었습니다`);
     if(mineYm===d.slice(0,7)) drawMine(true);
   }catch(e){
@@ -4098,12 +4102,19 @@ function drawMy(){
 $("myGo").onclick=async()=>{
   const c=$("myInput").value.trim();
   if(!c){toast("사번을 입력해 주세요");return}
-  if(!db.roster.length && apiBase()){
+  let p=findPerson(c);
+  if(!p && apiBase()){
+    // 명단 전체가 아니라 본인 정보만 물어봅니다
     $("myGo").disabled=true; $("myGo").textContent="확인 중…";
-    try{ await pullRoster(); }catch(e){}
+    try{
+      const j=await apiCall({action:"who",code:c});
+      if(j && j.found && j.me){
+        p=j.me;
+        if(!db.roster.some(x=>String(x.code)===String(p.code))){ db.roster.push(p); persist(); }
+      }
+    }catch(e){}
     $("myGo").disabled=false; $("myGo").textContent="확인";
   }
-  const p=findPerson(c);
   if(!p){toast("명단에 없는 사번입니다. 식당 담당자에게 문의해 주세요");return}
   db.myCode=p.code; myPinOk=false; persist(); $("myInput").value="";
   try{location.hash=p.code}catch(e){}
