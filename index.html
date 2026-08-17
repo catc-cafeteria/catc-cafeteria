@@ -257,19 +257,6 @@
   .months button.has{color:var(--ink);border-color:#43566D}
   .months button.on{background:var(--amber);color:#0F141A;border-color:var(--amber);font-weight:700}
 
-  .sumwrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
-  .sumbox{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:13px 15px}
-  .sumbox .t{font-size:12.5px;color:var(--dim)}
-  .sumbox .v{font-family:var(--mono);font-size:26px;font-weight:600;margin-top:4px}
-  .sumbox .s{font-size:12px;color:var(--dim);margin-top:3px}
-  .sumtab{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:13.5px}
-  .sumtab th,.sumtab td{padding:8px 10px;border-bottom:1px solid rgba(42,54,68,.7);text-align:right}
-  .sumtab th:first-child,.sumtab td:first-child{text-align:left}
-  .sumtab th{color:var(--dim);font-weight:400;font-size:12.5px}
-  .sumtab td{font-family:var(--mono)}
-  .sumtab td:first-child{font-family:var(--sans)}
-  .sumtab tr.tot td{border-top:1px solid var(--line);font-weight:700;color:var(--amber)}
-
   .mnav{display:flex;align-items:center;gap:12px;margin-bottom:14px}
   .mnav .ym{font-family:var(--mono);font-size:20px;font-weight:600;min-width:118px;text-align:center}
   .mnav button{border:1px solid var(--line);border-radius:9px;padding:9px 14px;font-size:15px;background:var(--panel2)}
@@ -388,48 +375,6 @@
   .updbar button{border:1px solid rgba(0,0,0,.35);border-radius:8px;padding:7px 14px;
     font-size:13.5px;font-weight:700;background:rgba(0,0,0,.08)}
 
-  details.sect{border:1px solid var(--line);border-radius:14px;background:var(--panel);margin-bottom:12px}
-  details.sect>summary{cursor:pointer;list-style:none;padding:15px 18px;font-size:15px;font-weight:600;
-    display:flex;align-items:center;justify-content:space-between;gap:10px}
-  details.sect>summary::-webkit-details-marker{display:none}
-  details.sect>summary:before{content:"▸";color:var(--dim);font-weight:400;margin-right:8px}
-  details.sect[open]>summary:before{content:"▾"}
-  details.sect>summary span.hint{font-size:12.5px;color:var(--dim);font-weight:400;margin-left:auto}
-  details.sect .body{padding:0 18px 18px}
-  details.sect .body>p:first-child{margin-top:0}
-
-  .card.fold>h3{cursor:pointer;display:flex;align-items:center;gap:8px;margin-bottom:0}
-  .card.fold>h3:before{content:"▾";color:var(--dim);font-weight:400;font-size:13px}
-  .card.fold.closed>h3:before{content:"▸"}
-  .card.fold>h3 .hint{margin-left:auto;font-size:12px;color:var(--dim);font-weight:400}
-  .card.fold.closed>*:not(h3){display:none}
-  .card.fold.closed{padding-bottom:15px}
-  .foldbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-  .foldbar button{border:1px solid var(--line);border-radius:9px;padding:8px 13px;
-    font-size:13px;color:var(--dim);background:var(--panel2)}
-  .foldbar button.on{background:var(--amber);color:#0F141A;border-color:var(--amber);font-weight:600}
-
-  .helpwrap{max-width:760px}
-  .helpnav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
-  .helpnav button{border:1px solid var(--line);border-radius:9px;padding:8px 12px;
-    font-size:13px;color:var(--dim);background:var(--panel2)}
-  .helpnav button.on{background:var(--amber);color:#0F141A;border-color:var(--amber);font-weight:600}
-  .helpsec{border:1px solid var(--line);border-radius:14px;background:var(--panel);
-    padding:18px 20px;margin-bottom:12px}
-  .helpsec h3{margin:0 0 10px;font-size:16px}
-  .helpsec h4{margin:16px 0 6px;font-size:14px;color:var(--amber)}
-  .helpsec p{margin:0 0 10px;font-size:14px;color:var(--ink);line-height:1.85}
-  .helpsec ol,.helpsec ul{margin:0 0 10px;padding-left:20px}
-  .helpsec li{font-size:14px;line-height:1.9;color:var(--ink);margin-bottom:3px}
-  .helpsec .note{font-size:13.5px;color:var(--dim);line-height:1.8}
-  .helpsec code{background:var(--panel2);border:1px solid var(--line);border-radius:5px;
-    padding:1px 6px;font-family:var(--mono);font-size:12.5px}
-  .helpsec table{width:100%;border-collapse:collapse;font-size:13.5px;margin-bottom:10px}
-  .helpsec th,.helpsec td{padding:7px 9px;border-bottom:1px solid rgba(42,54,68,.7);text-align:left}
-  .helpsec th{color:var(--dim);font-weight:400;font-size:12.5px}
-  .helpsec .warn{border-left:3px solid var(--amber);padding-left:12px;margin:12px 0;
-    font-size:13.5px;color:var(--dim);line-height:1.8}
-
   .toast{position:fixed;left:50%;bottom:88px;transform:translateX(-50%) translateY(10px);
     background:var(--panel);border:1px solid var(--line);padding:11px 18px;border-radius:999px;
     font-size:14px;opacity:0;transition:.2s;pointer-events:none;z-index:30}
@@ -513,7 +458,6 @@
     <button class="tab" data-go="log" aria-selected="false">기록</button>
     <button class="tab" data-go="month" aria-selected="false">월 집계</button>
     <button class="tab" data-go="info" aria-selected="false">정보</button>
-    <button class="tab" data-go="help" aria-selected="false">안내서</button>
   </div>
   <div class="stamp" id="stamp"></div>
 </div>
@@ -638,7 +582,6 @@
 
 <div class="page" data-page="info">
   <div class="pane">
-    <div class="foldbar" id="foldBar"></div>
     <div class="card">
       <h3>식수관리시스템</h3>
       <p>한국공항공사 항공기술훈련원 · 식당 식수 집계</p>
@@ -702,13 +645,6 @@
         <button class="btn quiet" id="rosterPull">서버 명단 받아오기</button>
       </div>
       <div id="rosterSyncState" style="font-size:13px;color:var(--dim);margin-top:12px;line-height:1.7;white-space:pre-line"></div>
-    </div>
-    <div class="card noprint">
-      <h3>처리 이력</h3>
-      <p>기록을 지우거나 예약을 바꾼 일이 남습니다. 시험으로 지운 것인지 실제인지 확인하실 수 있습니다.</p>
-      <button class="btn quiet" id="logLoad" style="width:100%;min-height:42px;font-size:13.5px">최근 이력 보기</button>
-      <div id="logBox" style="font-size:12.5px;color:var(--dim);margin-top:12px;line-height:1.8;
-        max-height:300px;overflow-y:auto"></div>
     </div>
     <div class="card noprint">
       <h3>기록 정리</h3>
@@ -837,15 +773,6 @@
       </div>
     </div>
       </div>
-</div>
-
-<div class="page" data-page="help">
-  <div class="pane">
-    <div class="helpwrap">
-      <div class="helpnav" id="helpNav"></div>
-      <div id="helpBody"></div>
-    </div>
-  </div>
 </div>
 
 <!-- ================= 석식 예약 ================= -->
@@ -1127,7 +1054,6 @@
           white-space:pre-line;line-height:1.8;max-height:260px;overflow-y:auto"></div>
       </details>
     </div>
-    <div id="mSummary"></div>
     <div class="mnav">
       <div class="ym" id="mYm">—</div>
       <button type="button" id="mXlsx" style="margin-left:auto">엑셀 파일로 받기</button>
@@ -1184,7 +1110,7 @@ function seedStamp(){                       // 파일 명단의 지문
    개인정보가 공개된 파일에 남지 않도록 하기 위해서입니다. */
 const SEED=[];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="8.9";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="8.8";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -1253,7 +1179,6 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   if(t.dataset.go==="resv"){ drawResv(); pullResv(true); }
   if(t.dataset.go==="month") drawMonth();
   if(t.dataset.go==="info") drawInfo();
-  if(t.dataset.go==="help") drawHelp();
   if(t.dataset.go!=="scan") stopCam();
 });
 
@@ -1505,7 +1430,7 @@ async function flushQueue(){
   flushing=true;
   const batch=db.queue.slice(0,8);
   try{
-    const j=await apiCall({action:"push",events:batch,note:(batch.find(x=>x.note)||{}).note||""});
+    const j=await apiCall({action:"push",events:batch});
     if(!j||!j.ok) throw new Error("서버가 저장을 확인해 주지 않았습니다");
     db.queue=db.queue.slice(batch.length); persist();
     lastPush={t:hm(),err:"",n:(j.saved||batch.length)};
@@ -1601,12 +1526,8 @@ async function pushRoster(loud){
     return 0;
   }
 }
-let confAt=0;
-async function pullConf(force){
+async function pullConf(){
   if(!apiBase()) return;
-  // 설정은 자주 바뀌지 않으니 10분에 한 번만 받아옵니다
-  if(!force && Date.now()-confAt < 600000) return;
-  confAt=Date.now();
   try{ const j=await apiCall({action:"config"}); if(j&&j.conf){ db.conf=j.conf; persist();
     if(curMode()==="user"&&$("menuBtn")) drawMenuBtn(); } }catch(e){}
 }
@@ -2124,197 +2045,7 @@ function drawSound(){
   $("soundChk").onchange=()=>{db.mute=!$("soundChk").checked; persist(); if(!db.mute) beep("ok")};
   $("soundTest").onclick=()=>{ if(db.mute){toast("소리가 꺼져 있습니다");return} beep("ok"); };
 }
-/* 설정 화면을 묶음별로 접었다 펼 수 있게 합니다 */
-const SECT_GROUP={
-  "식단표":"자주", "배식 시간":"자주", "직원 비밀번호 초기화":"자주",
-  "기록 정리":"가끔", "명단 서버 동기화":"가끔",
-  "위치로 식수 체크":"설정", "석식 예약자 자동 체크":"설정",
-  "예약 서버 연결":"설정", "관리자 비밀번호":"설정", "이 기기 용도":"설정"
-};
-let foldMode="자주";
-function setupFold(){
-  const pane=document.querySelector('[data-page="info"] .pane');
-  if(!pane || pane.dataset.folded) return;
-  pane.dataset.folded="1";
-  pane.querySelectorAll(".card").forEach(card=>{
-    const h3=card.querySelector("h3"); if(!h3) return;
-    const title=h3.textContent.replace(/\s*·.*$/,"").trim();
-    const g=SECT_GROUP[title];
-    if(!g) return;                       // 맨 위 시스템 정보는 그대로 둡니다
-    card.classList.add("fold","closed");
-    card.dataset.group=g;
-    if(!h3.querySelector(".hint")){
-      const s=document.createElement("span"); s.className="hint"; s.textContent=g;
-      h3.appendChild(s);
-    }
-    h3.onclick=()=>card.classList.toggle("closed");
-  });
-  $("foldBar").innerHTML=["자주","가끔","설정","모두"].map(g=>
-    `<button type="button" data-g="${g}">${g==="자주"?"자주 쓰는 것":g==="가끔"?"가끔 쓰는 것":g==="설정"?"처음 설정":"모두 보기"}</button>`).join("");
-  $("foldBar").querySelectorAll("button").forEach(b=>b.onclick=()=>{ foldMode=b.dataset.g; applyFold(); });
-  applyFold();
-}
-function applyFold(){
-  $("foldBar").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.g===foldMode));
-  document.querySelectorAll('[data-page="info"] .card.fold').forEach(c=>{
-    const show = (foldMode==="모두") || (c.dataset.group===foldMode);
-    c.style.display = show ? "" : "none";
-    if(show) c.classList.remove("closed");
-  });
-}
-
-/* ---------- 운영 안내서 ---------- */
-const HELP=[
- {k:"매일", t:"매일 하는 일", html:`
-  <div class="helpsec"><h3>배식 준비</h3>
-   <ol>
-    <li>식당 태블릿에서 이 주소를 엽니다. 태블릿으로 지정해 두었다면 관리자 화면이 바로 뜹니다.</li>
-    <li>위쪽에서 지금 끼니가 맞는지 봅니다. 배식 시간이면 자동으로 맞춰집니다.</li>
-    <li><b>카메라 켜기</b>를 누릅니다.</li>
-    <li>필요하면 <b>전체화면</b>을 눌러 주소창을 감춥니다.</li>
-   </ol></div>
-  <div class="helpsec"><h3>배식 중</h3>
-   <ul>
-    <li>직원이 QR을 비추면 이름이 뜨고 소리가 납니다.</li>
-    <li>방금 잘못 찍혔으면 <b>직전 취소</b>, 시간이 지났으면 오른쪽 목록에서 <b>취소</b>를 누릅니다.</li>
-    <li>QR이 안 읽히면 아래 칸에 사번을 치고 Enter를 누릅니다.</li>
-    <li>명단에 없는 분은 <b>＋ 사내강사 직원</b>으로 그 자리에서 등록합니다.</li>
-   </ul></div>
-  <div class="helpsec"><h3>점심과 저녁</h3>
-   <p>점심에 QR을 찍으면 «오늘 저녁도 드시나요?»가 뜹니다. 예/아니오를 눌러 주시면 됩니다.</p>
-   <p>저녁 배식이 시작되면 <b>예약자가 자동으로 식수에 올라갑니다.</b> 따로 하실 일이 없습니다.
-      안 오신 분이 있으면 기록에서 지우시면 됩니다.</p></div>`},
-
- {k:"정산", t:"매달 정산", html:`
-  <div class="helpsec"><h3>급식총괄표 만들기</h3>
-   <ol>
-    <li><b>월 집계</b> 탭을 엽니다.</li>
-    <li>맨 위 요약에서 총 식수와 부서별 인원을 확인합니다.</li>
-    <li>급식총괄표 파일을 상자에 <b>끌어다 놓습니다.</b> 식수가 채워진 파일이 내려받아집니다.</li>
-    <li>«확인할 사항»이 뜨면 <b>자세히 보기</b>를 눌러 무엇을 고쳤는지 봅니다.</li>
-   </ol>
-   <p class="note">원본은 그대로 두고 사본이 만들어집니다. 표 서식과 수식은 건드리지 않습니다.</p>
-   <div class="warn">정산 전에 <b>정보 → 기록 정리</b>에서 그달을 골라 «서버에서 다시 받기»를 누르면
-     앱과 시트가 확실히 일치합니다.</div></div>
-  <div class="helpsec"><h3>이용내역만 따로</h3>
-   <p>월 집계 탭의 <b>엑셀 파일로 받기</b>를 누르면 이용내역 표만 받을 수 있습니다.</p></div>`},
-
- {k:"식단", t:"식단표 올리기", html:`
-  <div class="helpsec"><h3>올리는 방법</h3>
-   <ol>
-    <li><b>정보</b> 탭 → 식단표를 엽니다.</li>
-    <li>주간 식단표 PDF나 엑셀 파일을 상자에 끌어다 놓습니다.</li>
-    <li>요일별 메뉴를 읽어 직원 화면에 바로 보입니다.</li>
-   </ol>
-   <p><b>다음 주 것을 미리 올려두셔도 됩니다.</b> 여러 주를 보관하고 날짜에 맞는 주가 자동으로
-      표시됩니다. 직원들은 화살표로 다음 주도 볼 수 있습니다.</p></div>`},
-
- {k:"명단", t:"명단 관리", html:`
-  <div class="helpsec"><h3>명단·QR 탭에서</h3>
-   <ul>
-    <li><b>여러 명 한꺼번에</b> — 엑셀 파일을 끌어다 놓습니다. 성명·소속·사번 열을 알아서 찾습니다.</li>
-    <li><b>한 명만</b> — 아래 칸에 이름·소속·사번을 넣고 추가합니다. 자회사면 체크를 켜세요.</li>
-    <li><b>고치기</b> — 각 줄의 «수정» 버튼을 누릅니다.</li>
-    <li><b>순서 바꾸기</b> — ▲▼ 로 옮기면 월 집계와 급식총괄표도 그 순서를 따릅니다.</li>
-   </ul>
-   <p class="note">명단을 고치면 서버에 자동으로 올라가고 직원들 화면에도 반영됩니다.</p></div>`},
-
- {k:"문의", t:"자주 있는 문의", html:`
-  <div class="helpsec"><h3>QR이 안 읽혀요</h3>
-   <ol>
-    <li>직원분께 QR을 눌러 크게 띄우시라고 하세요.</li>
-    <li>휴대폰 화면 밝기를 최대로 올리시라고 하세요.</li>
-    <li>태블릿 화면 오른쪽 위 <b>다시 잡기</b>를 눌러 카메라를 다시 켭니다.</li>
-    <li>오른쪽 아래 <b>＋</b>로 확대를 올려봅니다.</li>
-    <li>그래도 안 되면 사번을 직접 입력하시면 됩니다.</li>
-   </ol></div>
-  <div class="helpsec"><h3>비밀번호를 잊었대요</h3>
-   <p><b>정보</b> 탭 → 직원 비밀번호 초기화에서 이름을 찾아 초기화를 누릅니다.
-      그분이 다시 들어가면 0000으로 시작해 새로 정하게 됩니다.</p>
-   <div class="warn">바로 접속해서 새로 정하시라고 꼭 알려주세요.
-     그전까지는 사번만 알면 열립니다.</div></div>
-  <div class="helpsec"><h3>16시 넘어 저녁 신청하고 싶대요</h3>
-   <p>직원 화면에서는 막혀 있습니다. <b>석식 예약</b> 탭에서 이름을 찾아 추가해 주세요.</p></div>
-  <div class="helpsec"><h3>위치가 이상하게 나온대요</h3>
-   <p>와이파이를 켜두시라고 하세요. 접속하지 않아도 켜져만 있으면 정확해집니다.
-      화면의 <b>위치 다시 확인</b>을 눌러보시라고 하세요.</p></div>`},
-
- {k:"관리", t:"계정과 시트", html:`
-  <div class="helpsec"><h3>관리자 비밀번호</h3>
-   <p><b>정보</b> 탭 → 관리자 비밀번호에서 바꿉니다.</p>
-   <p class="note">잊으셨을 때는 스프레드시트의 <code>설정</code> 시트에서 항목이
-      <code>pin</code>인 줄을 지우면 초기값으로 돌아갑니다.</p></div>
-  <div class="helpsec"><h3>스프레드시트 구조</h3>
-   <table>
-    <tr><th>시트</th><th>내용</th></tr>
-    <tr><td>명단</td><td>직원·자회사·사내강사 전체</td></tr>
-    <tr><td>식수기록 2026-08</td><td>달마다 따로 만들어집니다</td></tr>
-    <tr><td>석식예약</td><td>날짜별 예약 내역</td></tr>
-    <tr><td>개인비밀번호</td><td>변환된 값만 저장 (원문 없음)</td></tr>
-    <tr><td>처리이력</td><td>누가 언제 무엇을 지웠는지</td></tr>
-    <tr><td>설정</td><td>배식 시간, 식당 위치, 식단표 등</td></tr>
-   </table>
-   <p class="note">지난 달 기록 시트는 자동으로 숨겨집니다. 보시려면 Apps Script에서
-      <code>지난기록보기</code>를 실행하세요.</p></div>`},
-
- {k:"갱신", t:"새 버전 올리기", html:`
-  <div class="helpsec"><h3>앱 파일</h3>
-   <ol>
-    <li>깃허브 저장소를 엽니다.</li>
-    <li><b>Add file → Upload files</b>로 파일을 올립니다. 이름은 반드시 <code>index.html</code> 입니다.</li>
-    <li>10분쯤 뒤 반영됩니다.</li>
-   </ol>
-   <p class="note">직원들 휴대폰은 알아서 갱신되고, 안 되면 화면 위 안내 띠에서 «지금 갱신»을 누르면 됩니다.</p></div>
-  <div class="helpsec"><h3>서버 코드</h3>
-   <ol>
-    <li>스프레드시트 → 확장 프로그램 → Apps Script</li>
-    <li>코드를 통째로 교체하고 저장</li>
-    <li>함수 선택에서 <code>설치확인</code> 실행</li>
-    <li><b>배포 → 배포 관리 → 연필 → 버전을 새 버전으로 → 배포</b></li>
-   </ol>
-   <div class="warn">«새 배포»를 누르면 주소가 바뀌어 연결이 끊깁니다.
-     반드시 «배포 관리»에서 수정하세요.</div></div>
-  <div class="helpsec"><h3>인수인계할 때</h3>
-   <ul>
-    <li>구글 계정과 깃허브 계정 정보를 넘겨주세요.</li>
-    <li>관리자 비밀번호를 알려주세요.</li>
-    <li>식당 태블릿이 «태블릿으로 지정»되어 있는지 확인하세요.</li>
-   </ul></div>`},
-
- {k:"점검", t:"문제가 생겼을 때", html:`
-  <div class="helpsec"><h3>확인 순서</h3>
-   <ol>
-    <li><b>정보 탭 맨 위</b>에서 앱 버전과 서버 코드 단계를 봅니다.</li>
-    <li><b>예약 서버 연결</b>에서 연결 상태를 봅니다.</li>
-    <li><b>기록 정리</b> 아래에서 서버로 못 보낸 기록이 있는지 봅니다.</li>
-    <li><b>처리 이력</b>에서 최근에 누가 무엇을 했는지 봅니다.</li>
-   </ol>
-   <p>대부분의 문제는 이 네 곳에서 원인이 드러납니다.</p></div>
-  <div class="helpsec"><h3>지금 이 기기 상태</h3>
-   <div id="helpStatus" class="note"></div></div>`},
-];
-
-let helpTab=HELP[0].k;
-function drawHelp(){
-  const nav=$("helpNav"); if(!nav) return;
-  nav.innerHTML=HELP.map(s=>
-    `<button type="button" data-k="${s.k}" class="${s.k===helpTab?"on":""}">${s.t}</button>`).join("");
-  nav.querySelectorAll("button").forEach(b=>b.onclick=()=>{helpTab=b.dataset.k; drawHelp();});
-  const sec=HELP.find(s=>s.k===helpTab);
-  $("helpBody").innerHTML=sec?sec.html:"";
-  if($("helpStatus")){
-    const q=db.queue.length;
-    $("helpStatus").innerHTML=
-      `앱 버전 <b style="color:var(--ink)">${APP_VER}</b><br>`+
-      `서버 코드 <b style="color:${(db.sver||0)>=24?"var(--green)":"var(--red)"}">${db.sver||"확인 안 됨"}</b>단계<br>`+
-      `서버 연결 <b style="color:${apiBase()?"var(--green)":"var(--red)"}">${apiBase()?"연결됨":"연결 안 됨"}</b><br>`+
-      `못 보낸 기록 <b style="color:${q?"var(--amber)":"var(--green)"}">${q}건</b><br>`+
-      `명단 <b style="color:var(--ink)">${db.roster.length}명</b>`;
-  }
-}
-
 function drawInfo(){
-  setupFold();
   $("verBig").textContent=APP_VER;
   $("sverTag").textContent = db.sver ? "서버 코드 "+db.sver+"단계" : "서버 코드 단계 확인 안 됨";
   $("sverTag").style.color = (db.sver||0)>=2 ? "var(--green)" : "var(--red)";
@@ -2676,29 +2407,6 @@ $("rosterPull").onclick=async()=>{
   }catch(e){
     $("rosterSyncState").textContent="받아오지 못했습니다 · "+(e.message||e);
   }
-};
-
-$("logLoad").onclick=async()=>{
-  const box=$("logBox");
-  if(!apiBase()){ box.textContent="서버에 연결되어 있지 않습니다."; return; }
-  box.textContent="불러오는 중…";
-  try{
-    const j=await apiCall({action:"log",n:120});
-    const rows=(j&&j.rows)||[];
-    if(!rows.length){ box.textContent="아직 남은 이력이 없습니다."; return; }
-    box.innerHTML=rows.map(r=>{
-      const col = r.what.includes("취소")||r.what.includes("초기화") ? "var(--amber)" : "var(--dim)";
-      const who = r.name ? esc(r.name)+(r.code?` (${esc(r.code)})`:"") : esc(r.code||"");
-      const when = r.date ? " · "+r.date.replace(/-/g,".")+(r.meal?" "+r.meal:"") : "";
-      return `<div style="padding:7px 2px;border-bottom:1px solid rgba(42,54,68,.6)">
-        <span style="font-family:var(--mono);font-size:11.5px">${esc(r.at)}</span>
-        <span style="color:${col};margin-left:8px">${esc(r.what)}</span>
-        <span style="margin-left:6px;color:var(--ink)">${who}</span>
-        <span style="color:var(--dim)">${when}</span>
-        ${r.note?`<div style="color:var(--dim);font-size:12px;margin-top:2px">└ ${esc(r.note)}</div>`:""}
-      </div>`;
-    }).join("");
-  }catch(e){ box.textContent="불러오지 못했습니다 · "+((e&&e.message)||e); }
 };
 
 function drawSyncTool(){
@@ -3130,9 +2838,8 @@ setInterval(()=>{
   tickN++;
   if(actx && actx.state==="suspended") actx.resume().catch(()=>{});
   if(tickN%14===0) autoDinner(true);          // 21초마다 석식 예약자 확인
-  if(tickN%200===0) checkPending();           // 5분마다 밀린 전송 확인
   if(inMealWindow()) quickCheck();            // 배식 중에는 1.5초마다
-  else if(tickN%20===0) quickCheck();         // 그 외에는 30초마다
+  else if(tickN%4===0) quickCheck();          // 그 외에는 6초마다
 },1500);
 setInterval(()=>{checkMealWindow();lockCheck();
   if(document.querySelector('[data-page="resv"]').dataset.on==="1") drawResv();},20000);
@@ -3326,63 +3033,11 @@ function headHtml(nd){
 function monthGuests(g){
   return db.roster.filter(p=>p.guest && g[p.code] && Object.keys(g[p.code]).length);
 }
-function drawSummary(g,nd){
-  const box=$("mSummary"); if(!box) return;
-  const roster=db.roster;
-  const grp={}, mealCnt={};
-  MEALS.forEach(m=>mealCnt[m]=0);
-  let total=0, days=new Set();
-  for(let d=1;d<=nd;d++){
-    const key=`${mCur}-${String(d).padStart(2,"0")}`, rec=db.records[key];
-    if(!rec) continue;
-    MEALS.forEach(m=>{
-      const n=Object.keys(rec[m]||{}).length;
-      if(!n) return;
-      mealCnt[m]+=n; total+=n; days.add(d);
-      Object.entries(rec[m]).forEach(([c,v])=>{
-        const k=grpOf(c,v); grp[k]=grp[k]||{}; grp[k][m]=(grp[k][m]||0)+1;
-      });
-    });
-  }
-  // 예약 대비 실적
-  let resvSum=0, resvAte=0;
-  for(let d=1;d<=nd;d++){
-    const key=`${mCur}-${String(d).padStart(2,"0")}`;
-    const rs=db.reserve[key]||{}, slot=((db.records[key]||{})[MEALS[2]])||{};
-    const codes=Object.keys(rs);
-    resvSum+=codes.length;
-    codes.forEach(c=>{ if(slot[c]) resvAte++; });
-  }
-  const rate = resvSum ? Math.round(resvAte/resvSum*100) : null;
-
-  const names=Object.keys(grp);
-  box.innerHTML=`<div class="sumwrap">
-      <div class="sumbox"><div class="t">이 달 총 식수</div><div class="v" style="color:var(--amber)">${total}</div>
-        <div class="s">${days.size}일 이용</div></div>
-      ${MEALS.map(m=>{
-        const c={"조식":"#8FD3F4","중식":"#FFB84D","석식":"#B79CFF"}[m];
-        return `<div class="sumbox"><div class="t">${m}</div><div class="v" style="color:${c}">${mealCnt[m]}</div>
-          <div class="s">하루 평균 ${days.size?(mealCnt[m]/days.size).toFixed(1):0}명</div></div>`;
-      }).join("")}
-      <div class="sumbox"><div class="t">석식 예약 대비 실제</div>
-        <div class="v" style="color:${rate===null?"#3A4756":rate>=90?"var(--green)":"var(--amber)"}">${rate===null?"–":rate+"%"}</div>
-        <div class="s">${resvSum?`예약 ${resvSum} · 이용 ${resvAte}`:"예약 자료 없음"}</div></div>
-    </div>`+
-    (names.length ? `<table class="sumtab"><thead><tr><th>구분</th>${MEALS.map(m=>`<th>${m}</th>`).join("")}<th>합계</th></tr></thead><tbody>`+
-      names.map(k=>{
-        const r=grp[k], s=MEALS.reduce((a,m)=>a+(r[m]||0),0);
-        return `<tr><td>${esc(k)}</td>${MEALS.map(m=>`<td>${r[m]||""}</td>`).join("")}<td>${s}</td></tr>`;
-      }).join("")+
-      `<tr class="tot"><td>합계</td>${MEALS.map(m=>`<td>${mealCnt[m]}</td>`).join("")}<td>${total}</td></tr>`+
-      `</tbody></table>` : "");
-}
-
 function drawMonth(){
   pickYear=Number(mCur.slice(0,4));
   drawPicker("monthPick");
   $("mYm").textContent=mCur.replace("-",". ")+" 이용내역";
   const {g,nd}=monthGrid(mCur);
-  drawSummary(g,nd);
   const staff=db.roster.filter(p=>!p.guest&&!p.sub),
         subs=db.roster.filter(p=>p.sub&&!p.guest),
         guests=monthGuests(g);
@@ -4728,21 +4383,6 @@ function checkAppVer(minApp, from){
     : "새 버전이 나왔습니다. 갱신해 주세요.";
 }
 $("oldBtn").onclick=()=>reloadNew();
-
-/* 배식이 끝났는데 서버로 못 보낸 기록이 있으면 알려 줍니다 */
-let pendingWarnAt=0;
-function checkPending(){
-  if(curMode()!=="admin" || !apiBase()) return;
-  if(!db.queue.length) return;
-  if(inMealWindow()) return;                       // 배식 중에는 알리지 않습니다
-  if(Date.now()-pendingWarnAt < 1800000) return;   // 30분에 한 번만
-  pendingWarnAt=Date.now();
-  beep("dup");
-  toast(`서버로 못 보낸 기록이 ${db.queue.length}건 있습니다`);
-  feedback("dup","!","전송이 밀려 있습니다",
-    `${db.queue.length}건이 아직 서버에 올라가지 않았습니다. 정보 탭에서 «지금 보내기»를 눌러 주세요.`);
-  flushQueue();
-}
 
 function toast(m){const t=$("toast");t.textContent=m;t.classList.add("on");setTimeout(()=>t.classList.remove("on"),1900)}
 setInterval(()=>{if(document.querySelector('[data-page="scan"]').dataset.on==="1")$("stamp").textContent=dkey().replace(/-/g,".")+" "+meal+" "+hm()},1000);
