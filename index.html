@@ -1184,7 +1184,7 @@ function seedStamp(){                       // 파일 명단의 지문
    개인정보가 공개된 파일에 남지 않도록 하기 위해서입니다. */
 const SEED=[];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="9.5";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="9.6";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -2131,7 +2131,7 @@ const SECT_GROUP={
   "위치로 식수 체크":"설정", "석식 예약자 자동 체크":"설정",
   "예약 서버 연결":"설정", "관리자 비밀번호":"설정", "이 기기 용도":"설정"
 };
-let foldMode="자주";
+let foldMode="모두";
 function setupFold(){
   const pane=document.querySelector('[data-page="info"] .pane');
   if(!pane || pane.dataset.folded) return;
@@ -2159,7 +2159,8 @@ function applyFold(){
   document.querySelectorAll('[data-page="info"] .card.fold').forEach(c=>{
     const show = (foldMode==="모두") || (c.dataset.group===foldMode);
     c.style.display = show ? "" : "none";
-    if(show) c.classList.remove("closed");
+    // 모두 보기에서는 제목만 보이게 접어 둡니다. 제목을 누르면 펼쳐집니다.
+    if(show) c.classList.toggle("closed", foldMode==="모두");
   });
 }
 
