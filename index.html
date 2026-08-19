@@ -1183,7 +1183,7 @@ function seedStamp(){                       // 파일 명단의 지문
    개인정보가 공개된 파일에 남지 않도록 하기 위해서입니다. */
 const SEED=[];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="10.4";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="10.5";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -1573,6 +1573,7 @@ async function apiSet(date,p,on){
 /* --- 오프라인에도 멈추지 않도록: 로컬에 먼저 쓰고 대기열로 올려보냄 --- */
 let flushing=false;
 function logEvent(ev){
+  ev.code=String(ev.code||"").trim();      // 서버와 같은 기준으로 맞춥니다
   const k=ev.date+"|"+ev.meal+"|"+ev.code;
   const i=db.queue.findIndex(x=>x.date+"|"+x.meal+"|"+x.code===k);
   if(i>=0) db.queue[i]=ev;        // 같은 건은 마지막 상태만 보냅니다
@@ -1920,7 +1921,7 @@ async function cancelIn(code){
   if(!await askOk(`${v.name} 님의 ${meal} 체크를 취소할까요?`,"체크 취소",
       hasResv?"오늘 저녁 예약도 함께 취소":null, isLunch)) return;
   delete slot[code];
-  logEvent({date:d,meal,code,name:v.name,dept:v.dept||"",guest:!!v.g,t:hm(),on:false});
+  logEvent({date:d,meal,code,name:v.name,dept:v.dept||"",guest:!!v.g,sub:!!v.s,t:hm(),on:false,via:"관리자취소"});
   let msg=`${v.name} 님 ${meal} 체크를 취소했습니다`;
   if(hasResv && askChecked){ delete db.reserve[d][code]; msg+=" (저녁 예약도 취소)"; }
   if(lastIn && lastIn.code===code && lastIn.meal===meal) lastIn=null;
@@ -1933,7 +1934,7 @@ $("undoBtn").onclick=()=>{
   if(!slot[lastIn.code]){lastIn=null;toast("되돌릴 체크가 없습니다");return}
   const gv=slot[lastIn.code];
   delete slot[lastIn.code];
-  logEvent({date:lastIn.d,meal:lastIn.meal,code:lastIn.code,name:gv.name,dept:gv.dept||"",guest:!!gv.g,t:hm(),on:false});
+  logEvent({date:lastIn.d,meal:lastIn.meal,code:lastIn.code,name:gv.name,dept:gv.dept||"",guest:!!gv.g,sub:!!gv.s,t:hm(),on:false,via:"되돌리기"});
   const nm=lastIn.name; lastIn=null; lastCode="";
   beep("undo"); refreshAll(); persist();
   feedback("dup","↺",nm,"직전 체크를 취소했습니다");
@@ -3218,7 +3219,7 @@ async function removeRecord(d,m,code){
   if(!await askOk(`${v.name} 님의 ${d.replace(/-/g,".")} ${m} 기록을 지울까요?`,"기록 삭제",
       hasResv?"그날 저녁 예약도 함께 삭제":null,false)) return;
   delete slot[code];
-  logEvent({date:d,meal:m,code,name:v.name,dept:v.dept||"",guest:!!v.g,t:hm(),on:false});
+  logEvent({date:d,meal:m,code,name:v.name,dept:v.dept||"",guest:!!v.g,sub:!!v.s,t:hm(),on:false,via:"관리자삭제"});
   if(hasResv&&askChecked){
     delete db.reserve[d][code];
     const p=db.roster.find(x=>x.code===code)||{code,name:v.name,dept:v.dept};
