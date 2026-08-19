@@ -895,7 +895,8 @@
     text-align:left;font-size:13.5px;cursor:pointer;margin-top:2px">
     <input type="checkbox" id="pinKeep" style="width:19px;height:19px;flex:none;margin-top:1px;accent-color:#5BD79A">
     <span>이 기기를 식당 태블릿으로 지정<br>
-      <span style="color:var(--dim);font-size:12.5px">체크하면 다음부터 비밀번호 없이 바로 열립니다. 식당에 두는 태블릿에서만 체크하세요.</span></span>
+      <span style="color:var(--dim);font-size:12.5px">체크하면 다음부터 비밀번호 없이 바로 열리고, 서버 권한이 끊겨도 스스로 이어 받습니다.
+      비밀번호가 이 기기에 남으니 식당에 두는 태블릿에서만 체크하세요.</span></span>
   </label>
   <div style="display:flex;flex-direction:column;gap:10px;width:min(240px,100%)">
     <button class="btn" id="pinGo">확인</button>
@@ -1170,7 +1171,7 @@ function isSub(code,v){
 }
 function subTag(code,v){ return isSub(code,v)?' <span class="stag">자회사</span>':""; }
 function viaTag(v){
-  if(!v||!v.via) return "";
+  if(!v||!v.via||v.via==="QR") return "";
   return ` <span class="gtag">${esc(v.via)}</span>`;
 }
 const SEED_VER=6;
@@ -1181,7 +1182,7 @@ function seedStamp(){                       // 파일 명단의 지문
    개인정보가 공개된 파일에 남지 않도록 하기 위해서입니다. */
 const SEED=[];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="9.8";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="10.0";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -1229,6 +1230,12 @@ async function load(){
   meal=timeMeal();
   setTimeout(()=>autoDinner(true),1500);
   loadAdminKey();
+  // 태블릿은 켜질 때 열쇠부터 챙깁니다 (밤사이 만료돼도 첫 손님 전에 살아납니다)
+  setTimeout(()=>{
+    if(db.kiosk && kioskPin() && (!keyAlive() || adminUntil<Date.now()+3*24*3600*1000)){
+      renewAdminKey().then(ok=>{ if(ok && db.queue.length) flushQueue(); });
+    }
+  },1500);
   buildMeals(); render(); drawRoster(); drawLog(); applyDim(); applyMode();
   if(apiBase() && curMode()==="admin" && db.lastSyncDay!==dkey()){
     try{ await pullMonth(dkey().slice(0,7)); db.lastSyncDay=dkey(); persist(); }
@@ -1276,7 +1283,8 @@ function findPerson(code){
   const hits=db.roster.filter(x=>bare(x.code)===bare(c));
   return hits.length===1 ? hits[0] : null;
 }
-function checkIn(raw){
+function checkIn(raw,src){
+  const via=src||"QR";
   const code=String(raw||"").trim();
   if(!code) return;
   const now=Date.now();
@@ -1308,9 +1316,10 @@ function checkIn(raw){
     render(); return;
   }
   slot[p.code]={t:hm(),name:p.name,dept:p.dept,resv};
+  if(via!=="QR") slot[p.code].via=via;   // QR은 기본이라 화면에 따로 안 붙입니다
   if(p.guest) slot[p.code].g=1;
   if(p.sub) slot[p.code].s=1;
-  logEvent({date:d,meal,code:p.code,name:p.name,dept:p.dept||"",guest:!!p.guest,sub:!!p.sub,t:hm(),on:true});
+  logEvent({date:d,meal,code:p.code,name:p.name,dept:p.dept||"",guest:!!p.guest,sub:!!p.sub,t:hm(),on:true,via});
   lastIn={d,meal,code:p.code,name:p.name};
   const tail = meal===MEALS[2] ? (resv?"예약 확인 · "+hm():"예약 없이 오심 · "+hm()) : hm();
   feedback("ok","✓",p.name,`${p.dept||""} · ${tail}`,isLunch);
@@ -1415,7 +1424,7 @@ function render(){
   checkMealWindow();
 }
 $("scanfield").addEventListener("keydown",e=>{
-  if(e.key==="Enter"){e.preventDefault();checkIn(e.target.value);e.target.value=""}
+  if(e.key==="Enter"){e.preventDefault();checkIn(e.target.value,"직접입력");e.target.value=""}
 });
 /* ---------- 예약 서버 연결 ---------- */
 function apiBase(){return (API_URL||db.api||"").trim()}   // 파일에 박힌 주소가 우선
@@ -1435,6 +1444,10 @@ async function apiOnce(u,payload,post){
 }
 let adminKey=null, adminUntil=0;
 function loadAdminKey(){
+  // 식당 태블릿으로 지정한 기기는 껐다 켜도 열쇠를 이어 씁니다
+  try{
+    if(db.kiosk && db.ak && db.akUntil>Date.now()){ adminKey=db.ak; adminUntil=db.akUntil; return; }
+  }catch(e){}
   try{
     const s=sessionStorage.getItem("ak");
     if(!s) return;
@@ -1444,13 +1457,48 @@ function loadAdminKey(){
   }catch(e){}
 }
 function saveAdminKey(k){
-  adminKey=k; adminUntil=Date.now()+12*3600*1000;   // 12시간 동안 유효합니다
+  const days = db.kiosk ? 30 : 0.5;          // 태블릿은 한 달, 그 외는 12시간
+  adminKey=k; adminUntil=Date.now()+days*24*3600*1000;
   try{ sessionStorage.setItem("ak", JSON.stringify({k, until:adminUntil})); }catch(e){}
+  if(db.kiosk){ db.ak=k; db.akUntil=adminUntil; persist(); }
 }
 function clearAdminKey(){
   adminKey=null; adminUntil=0;
   try{ sessionStorage.removeItem("ak"); }catch(e){}
+  db.ak=null; db.akUntil=0; db.kpin=null; persist();
 }
+
+/* --- 식당 태블릿 전용: 비밀번호를 기기에 감춰 두고 열쇠를 스스로 이어 받습니다 --- */
+function obf(s){
+  s=String(s); let o="";
+  for(let i=0;i<s.length;i++) o+=String.fromCharCode(s.charCodeAt(i)^(0x5A+(i%7)));
+  try{ return btoa(unescape(encodeURIComponent(o))); }catch(e){ return ""; }
+}
+function deobf(b){
+  try{
+    const s=decodeURIComponent(escape(atob(b))); let o="";
+    for(let i=0;i<s.length;i++) o+=String.fromCharCode(s.charCodeAt(i)^(0x5A+(i%7)));
+    return o;
+  }catch(e){ return null; }
+}
+function saveKioskPin(v){ if(db.kiosk && v){ db.kpin=obf(v); persist(); } }
+function kioskPin(){ return (db.kiosk && db.kpin) ? deobf(db.kpin) : null; }
+
+let renewing=false, renewAt=0;
+async function renewAdminKey(){
+  if(renewing || !apiBase()) return false;
+  const pin=kioskPin();
+  if(!pin) return false;
+  if(Date.now()-renewAt<20000) return false;    // 너무 자주 두드리지 않습니다
+  renewing=true; renewAt=Date.now();
+  try{
+    const j=await apiCall({action:"pinCheck",pin});
+    if(j && j.adminKey && (j.pass===true || j.pass===null)){ saveAdminKey(j.adminKey); return true; }
+    return false;
+  }catch(e){ return false; }
+  finally{ renewing=false; }
+}
+function keyAlive(){ return !!(adminKey && adminUntil>Date.now()); }
 let adminOnlyList=["roster","rosterStamp","rosterSet","month","configSet","day","push","pinSet","pinReset","pinList"];
 function keyFor(action){
   const adminOnly=adminOnlyList;
@@ -1496,7 +1544,15 @@ function logEvent(ev){
   else db.queue.push(ev);
   queueSave(); flushQueue();
 }
-let lastPush={t:"",err:"",n:0};
+let lastPush={t:"",err:"",n:0}, keyWarnAt=0;
+function warnKey(){
+  if(Date.now()-keyWarnAt<60000) return;
+  keyWarnAt=Date.now();
+  beep("bad");
+  feedback("bad","!","서버 권한이 풀렸습니다",
+    "체크는 되지만 서버에 저장되지 않습니다. 상단 «처음으로»로 나갔다가 비밀번호를 다시 넣어 주세요.");
+  toast("서버 권한이 풀렸습니다. 비밀번호를 다시 넣어 주세요");
+}
 async function flushQueue(){
   if(flushing||!apiBase()||!db.queue.length) return;
   flushing=true;
@@ -1509,8 +1565,18 @@ async function flushQueue(){
     if(db.queue.length) setTimeout(()=>{flushing=false;flushQueue()},300);
     else flushing=false;
   }catch(e){
-    lastPush={t:hm(),err:(e&&e.message)||String(e),n:0};
+    const msg=(e&&e.message)||String(e);
+    lastPush={t:hm(),err:msg,n:0};
     flushing=false;
+    // 권한이 풀린 것이면 태블릿은 스스로 열쇠를 다시 받아 곧바로 재시도합니다
+    if(msg.indexOf("관리자만")>=0 && curMode()==="admin"){
+      if(kioskPin()){
+        renewAdminKey().then(ok=>{
+          if(ok){ toast("서버 권한을 다시 받았습니다"); flushQueue(); }
+          else warnKey();
+        });
+      } else warnKey();
+    }
   }
   if(typeof drawQueue==="function" && $("queueState")) drawQueue();
 }
@@ -1521,7 +1587,7 @@ let seenLoc=null;
 function announceLoc(d){
   const rec=db.records[d]||{};
   const now=new Set();
-  MEALS.forEach(m=>Object.keys(rec[m]||{}).forEach(c=>{ if(rec[m][c].via) now.add(m+"|"+c); }));
+  MEALS.forEach(m=>Object.keys(rec[m]||{}).forEach(c=>{ if(rec[m][c].via==="위치") now.add(m+"|"+c); }));
   if(seenLoc===null){ seenLoc=now; return; }        // 처음 불러온 것은 알리지 않음
   const fresh=[...now].filter(k=>!seenLoc.has(k));
   seenLoc=now;
@@ -1909,7 +1975,7 @@ async function tick(){
       res:video.videoWidth+"×"+video.videoHeight, n:scanN});
     while(camLog.length>20) camLog.pop();
     scanN=0;
-    checkIn(found);
+    checkIn(found,"QR");
   }
   const st=$("camStat");
   if(!st.hidden){
@@ -2398,7 +2464,9 @@ function drawPinTool(){
 }
 function drawKiosk(){
   $("kioskNote").textContent = db.kiosk
-    ? "이 기기는 식당 태블릿으로 지정되어 있어 비밀번호 없이 열립니다."
+    ? (kioskPin()
+        ? "이 기기는 식당 태블릿으로 지정되어 있어 비밀번호 없이 열리고, 서버 권한도 스스로 이어 받습니다."
+        : "이 기기는 식당 태블릿으로 지정되어 있습니다. 다만 서버 권한이 끊기면 비밀번호를 다시 넣어야 하니, «처음으로» 나갔다가 «식당 태블릿으로 지정»에 체크하고 다시 들어와 주세요.")
     : "이 기기는 창을 닫으면 관리자 화면이 풀립니다.";
 }
 function countRoster(){
@@ -3137,6 +3205,19 @@ function checkMealWindow(){
   bar.querySelector("button").onclick=()=>{meal=t;render()};
 }
 setInterval(()=>{if(!apiBase())return; flushQueue(); if(curMode()==="admin") pullResv(true);},60000);
+
+/* 관리자 열쇠가 살아 있는지 5분마다 살핍니다 */
+setInterval(async ()=>{
+  if(curMode()!=="admin" || !apiBase()) return;
+  if(adminKey && adminUntil>Date.now()+3*24*3600*1000) return;   // 사흘 넘게 남았으면 그대로
+  if(!db.kiosk) return;                                          // 태블릿만 스스로 이어 받습니다
+  if(kioskPin()){
+    const ok=await renewAdminKey();
+    if(!ok && !keyAlive()) warnKey();
+    return;
+  }
+  if(!keyAlive()) warnKey();   // 비밀번호를 안 맡겨 둔 기기는 알리기만 합니다
+},300000);
 let lastRev=null, pinging=false;
 async function quickCheck(){
   if(pinging||!apiBase()||curMode()!=="admin") return;
@@ -3259,7 +3340,7 @@ $("gOk").onclick=()=>{
       .then(()=>{ if(typeof drawRosterSync==="function" && $("rosterSyncState")) drawRosterSync(); })
       .catch(e=>toast("명단을 서버에 올리지 못했습니다 · "+((e&&e.message)||e)));
   }
-  closeGuest(); lastCode=""; checkIn(code);
+  closeGuest(); lastCode=""; checkIn(code,"직접입력");
 };
 $("gmodal").addEventListener("keydown",e=>{if(e.key==="Enter")$("gOk").click();
   if(e.key==="Escape")closeGuest()});
@@ -4060,11 +4141,16 @@ $("pinGo").onclick=async()=>{
   }
   const keep=$("pinKeep").checked;
   db.kiosk=keep; pinOpen=false;
+  if(keep){
+    saveAdminKey(adminKey||"");                  // 태블릿이면 열쇠를 길게 보관
+    saveKioskPin(v);                             // 열쇠가 끝나면 스스로 다시 받도록 비밀번호를 맡겨 둡니다
+    if(!adminKey) renewAdminKey();
+  }else{ db.kpin=null; }
   setMode("admin",keep);
   if(!keep) toast("이 기기는 창을 닫으면 관리자 화면이 풀립니다");
 };
 $("pinInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("pinGo").click()}});
-$("toUser").onclick=()=>{db.myCode=null; db.kiosk=false; setMode("user")};
+$("toUser").onclick=()=>{db.myCode=null; db.kiosk=false; db.kpin=null; clearAdminKey(); setMode("user")};
 $("toGate").onclick=leaveMode;
 $("modeBtn").onclick=leaveMode;
 $("lockBtn").onclick=async()=>{
