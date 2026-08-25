@@ -1183,7 +1183,7 @@ function seedStamp(){                       // 파일 명단의 지문
    개인정보가 공개된 파일에 남지 않도록 하기 위해서입니다. */
 const SEED=[];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="10.5";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="10.6";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -1289,7 +1289,7 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   document.querySelectorAll(".page").forEach(p=>p.dataset.on=p.dataset.page===t.dataset.go?"1":"0");
   if(t.dataset.go==="log") drawLog();
   if(t.dataset.go==="resv"){ drawResv(); pullResv(true); }
-  if(t.dataset.go==="month") drawMonth();
+  if(t.dataset.go==="month"){ drawMonth(); syncView(true); }
   if(t.dataset.go==="info") drawInfo();
   if(t.dataset.go==="help") drawHelp();
   if(t.dataset.go!=="scan") stopCam();
@@ -1884,6 +1884,10 @@ async function pullRoster(){
 
 /* ---------- 화면 전체 갱신 ---------- */
 function visible(name){const el=document.querySelector(`[data-page="${name}"]`);return el&&el.dataset.on==="1"}
+// 다른 창을 보다 돌아오면 곧바로 최신으로 맞춥니다
+document.addEventListener("visibilitychange",()=>{
+  if(!document.hidden && curMode()==="admin") setTimeout(()=>quickCheck(),200);
+});
 let refreshTimer=null;
 function refreshAll(){
   // 잇따라 들어오면 한 번만 그립니다 (버튼이 안 눌리는 것을 막습니다)
@@ -3351,16 +3355,35 @@ function markActive(){ lastActive=Date.now(); }
 function busyNow(){ return Date.now()-lastActive < 150000; }   // 2분 30초 안에 움직임이 있었으면 «붐빔»
 async function quickCheck(){
   if(pinging||!apiBase()||curMode()!=="admin") return;
-  if(document.hidden||!visible("scan")) return;
+  if(document.hidden) return;           // 창이 가려져 있을 때만 쉽니다
   pinging=true;
   try{
     const j=await apiCall({action:"ping"});
     if(j&&j.rev!==undefined){
       if(lastRev===null) lastRev=j.rev;
-      else if(j.rev!==lastRev){ lastRev=j.rev; await pullResv(true); }
-    }else{ await pullResv(true); }      // 예전 서버면 그냥 전체 확인
+      else if(j.rev!==lastRev){ lastRev=j.rev; await syncView(); }
+    }else{ await syncView(); }          // 예전 서버면 그냥 전체 확인
   }catch(e){}
   pinging=false;
+}
+
+/* 지금 보고 있는 화면에 맞춰 받아옵니다.
+   월 기록을 펼쳐 둔 담당자 PC는 그 달을, 그 밖에는 오늘치를 받습니다. */
+let viewSyncAt=0, viewSyncedAt="";
+async function syncView(force){
+  if(!apiBase()||curMode()!=="admin") return;
+  if(!force && Date.now()-viewSyncAt<8000) return;    // 너무 잦은 되받기를 막습니다
+  viewSyncAt=Date.now();
+  try{
+    if(visible("month")){ await pullMonth(mCur); seenLoc=null; drawMonth(); }
+    else await pullResv(true);
+    viewSyncedAt=hm();
+    if(visible("month")) stampMonth();
+  }catch(e){}
+}
+function stampMonth(){
+  const el=$("mYm"); if(!el||!viewSyncedAt) return;
+  el.textContent=mCur.replace("-",". ")+" 이용내역 · "+viewSyncedAt+" 기준";
 }
 let tickN=0;
 setInterval(()=>{
@@ -3372,7 +3395,11 @@ setInterval(()=>{
   const inMeal=inMealWindow();
   if(inMeal && !wasMeal) markActive();      // 배식이 막 시작되면 바로 «붐빔»으로 봅니다
   wasMeal=inMeal;
-  if(inMeal){
+  if(!visible("scan")){
+    // 담당자 PC처럼 월 기록·예약 화면을 펼쳐 둔 경우 (v10.2에서 빠져 있던 부분입니다)
+    if(tickN%14===0) quickCheck();          // 21초마다
+  }
+  else if(inMeal){
     if(busyNow()) quickCheck();             // 사람이 오가는 중 → 1.5초마다
     else if(tickN%4===0) quickCheck();      // 잠잠할 때 → 6초마다
   }
@@ -3635,7 +3662,7 @@ function drawSummary(g,nd){
 function drawMonth(){
   pickYear=Number(mCur.slice(0,4));
   drawPicker("monthPick");
-  $("mYm").textContent=mCur.replace("-",". ")+" 이용내역";
+  $("mYm").textContent=mCur.replace("-",". ")+" 이용내역"+(viewSyncedAt?" · "+viewSyncedAt+" 기준":"");
   const {g,nd}=monthGrid(mCur);
   drawSummary(g,nd);
   const staff=db.roster.filter(p=>!p.guest&&!p.sub),
