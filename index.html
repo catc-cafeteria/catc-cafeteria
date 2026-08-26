@@ -1183,7 +1183,7 @@ function seedStamp(){                       // 파일 명단의 지문
    개인정보가 공개된 파일에 남지 않도록 하기 위해서입니다. */
 const SEED=[];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="10.6";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="10.7";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -3396,14 +3396,14 @@ setInterval(()=>{
   if(inMeal && !wasMeal) markActive();      // 배식이 막 시작되면 바로 «붐빔»으로 봅니다
   wasMeal=inMeal;
   if(!visible("scan")){
-    // 담당자 PC처럼 월 기록·예약 화면을 펼쳐 둔 경우 (v10.2에서 빠져 있던 부분입니다)
-    if(tickN%14===0) quickCheck();          // 21초마다
+    // 담당자 PC처럼 월 기록·예약 화면을 펼쳐 둔 경우
+    if(tickN%20===0) quickCheck();          // 30초마다
   }
   else if(inMeal){
     if(busyNow()) quickCheck();             // 사람이 오가는 중 → 1.5초마다
     else if(tickN%4===0) quickCheck();      // 잠잠할 때 → 6초마다
   }
-  else if(tickN%80===0) quickCheck();       // 배식 시간이 아니면 → 2분마다
+  else if(tickN%400===0) quickCheck();      // 배식 시간이 아니면 → 10분마다
   if(tickN%600===0) syncGuard();                        // 15분마다 한 번은 통째로 맞춥니다
 },1500);
 setInterval(()=>{checkMealWindow();lockCheck();
