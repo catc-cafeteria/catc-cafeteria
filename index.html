@@ -1183,7 +1183,7 @@ function seedStamp(){                       // 파일 명단의 지문
    개인정보가 공개된 파일에 남지 않도록 하기 위해서입니다. */
 const SEED=[];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="11.2";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="11.3";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -1872,7 +1872,7 @@ function purgeOld(keepMonths,noSave){
 }
 function dbBytes(){ try{ return JSON.stringify(db).length; }catch(e){ return 0; } }
 
-async function pullRoster(){
+async function pullRoster(readOnly){
   if(!apiBase()) return;
   try{
     // 파일 명단이 새것이면 받아오지 않고 올립니다
@@ -1900,7 +1900,8 @@ async function pullRoster(){
     if(onlyHere.length){
       const merged=remote.concat(onlyHere);
       db.roster=merged; persist();
-      try{ await pushRoster(true); }catch(e){}
+      // 주기 확인일 때는 되올리지 않습니다. 되올리면 담당자가 지운 사람이 되살아납니다.
+      if(!readOnly){ try{ await pushRoster(true); }catch(e){} }
       return;
     }
     db.roster=remote; persist();
@@ -3400,7 +3401,17 @@ async function quickCheck(){
 
 /* 지금 보고 있는 화면에 맞춰 받아옵니다.
    월 기록을 펼쳐 둔 담당자 PC는 그 달을, 그 밖에는 오늘치를 받습니다. */
-let viewSyncAt=0, viewSyncedAt="";
+let viewSyncAt=0, viewSyncedAt="", rosterChkAt=0;
+/* 다른 태블릿이나 담당자 PC가 명단을 고쳤는지 이따금 확인합니다.
+   지문만 비교하는 가벼운 호출이라 자주 해도 부담이 없습니다. */
+async function maybePullRoster(){
+  if(!apiBase()||curMode()!=="admin") return;
+  if(Date.now()-rosterChkAt<120000) return;
+  rosterChkAt=Date.now();
+  const before=db.roster.length;
+  try{ await pullRoster(true); }catch(e){}
+  if(db.roster.length!==before){ drawRoster(); toast(`명단을 새로 받았습니다 · ${db.roster.length}명`); }
+}
 async function syncView(force){
   if(!apiBase()||curMode()!=="admin") return;
   if(!force && Date.now()-viewSyncAt<8000) return;    // 너무 잦은 되받기를 막습니다
@@ -3412,6 +3423,7 @@ async function syncView(force){
       await pullMonth(mCur); seenLoc=null; drawMonth();
     }
     else await pullResv(true);
+    maybePullRoster();          // 명단이 바뀌었는지도 함께 살핍니다
     viewSyncedAt=hm();
     if(visible("month")) stampMonth();
   }catch(e){}
