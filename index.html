@@ -1183,7 +1183,7 @@ function seedStamp(){                       // 파일 명단의 지문
    개인정보가 공개된 파일에 남지 않도록 하기 위해서입니다. */
 const SEED=[];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="10.8";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="10.9";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -1744,7 +1744,7 @@ async function kioskHandover(){
   handing=true;
   try{
     toast("이 태블릿의 자료를 서버로 옮기는 중…");
-    feedback("dup","…","서버와 맞추는 중","잠시만 기다려 주세요");
+    feedback("dup","…","서버와 맞추는 중","잠시만 기다려 주세요",true);
     await renewAdminKey();                       // 열쇠부터 챙깁니다
     lastPush={t:"",err:"",n:0};                  // 지난 오류는 지우고 새로 시작합니다
     let guard=0;
@@ -3337,8 +3337,8 @@ setInterval(()=>{if(!apiBase())return; flushQueue(); flushRoster();},60000);
 /* 혹시 «바뀐 것 확인»을 놓쳤을 때를 대비한 안전망. 15분에 한 번만 통째로 맞춥니다. */
 async function syncGuard(){
   if(!apiBase()||curMode()!=="admin") return;
-  if(document.hidden||!visible("scan")) return;
-  await pullResv(true);
+  if(document.hidden) return;
+  await syncView(true);
   try{ const j=await apiCall({action:"ping"}); if(j&&j.rev!==undefined) lastRev=j.rev; }catch(e){}
 }
 
@@ -3381,7 +3381,11 @@ async function syncView(force){
   if(!force && Date.now()-viewSyncAt<8000) return;    // 너무 잦은 되받기를 막습니다
   viewSyncAt=Date.now();
   try{
-    if(visible("month")){ await pullMonth(mCur); seenLoc=null; drawMonth(); }
+    if(visible("month")){
+      // 지난 달 자료는 더 바뀌지 않으니 이번 달을 보고 있을 때만 다시 받습니다
+      if(!force && mCur!==dkey().slice(0,7)) return;
+      await pullMonth(mCur); seenLoc=null; drawMonth();
+    }
     else await pullResv(true);
     viewSyncedAt=hm();
     if(visible("month")) stampMonth();
@@ -3389,6 +3393,7 @@ async function syncView(force){
 }
 function stampMonth(){
   const el=$("mYm"); if(!el||!viewSyncedAt) return;
+  if(mCur!==dkey().slice(0,7)) return;
   el.textContent=mCur.replace("-",". ")+" 이용내역 · "+viewSyncedAt+" 기준";
 }
 let tickN=0;
@@ -3668,7 +3673,8 @@ function drawSummary(g,nd){
 function drawMonth(){
   pickYear=Number(mCur.slice(0,4));
   drawPicker("monthPick");
-  $("mYm").textContent=mCur.replace("-",". ")+" 이용내역"+(viewSyncedAt?" · "+viewSyncedAt+" 기준":"");
+  const live=(mCur===dkey().slice(0,7));
+  $("mYm").textContent=mCur.replace("-",". ")+" 이용내역"+((live&&viewSyncedAt)?" · "+viewSyncedAt+" 기준":"");
   const {g,nd}=monthGrid(mCur);
   drawSummary(g,nd);
   const staff=db.roster.filter(p=>!p.guest&&!p.sub),
