@@ -1183,7 +1183,7 @@ function seedStamp(){                       // 파일 명단의 지문
    개인정보가 공개된 파일에 남지 않도록 하기 위해서입니다. */
 const SEED=[];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="10.7";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="10.8";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -3315,10 +3315,16 @@ function timeMeal(){
   }
   return MEALS[2];
 }
+/* 지금 화면에 잡힌 끼니의 배식이 끝났는지 봅니다. 늦게 오는 분을 위해 10분 여유를 둡니다. */
+function mealEnded(m){
+  const c=mealsConf(), e=toMin(c[m][1]);
+  return e!==null && nowMin() > e+10;
+}
 function checkMealWindow(){
   const t=timeMeal(), bar=$("alertbar");
-  if(db.autoMeal!==false && t!==meal && !Object.keys(cur()).length){
-    meal=t; seenLoc=null; render(); bar.hidden=true; return;   // 아직 체크가 없으면 조용히 따라감
+  // 배식이 끝났거나 아직 아무도 체크하지 않았으면 조용히 다음 끼니로 넘어갑니다
+  if(db.autoMeal!==false && t!==meal && (mealEnded(meal) || !Object.keys(cur()).length)){
+    meal=t; seenLoc=null; lastIn=null; render(); bar.hidden=true; return;
   }
   if(t===meal){bar.hidden=true;return}
   bar.hidden=false;
@@ -4918,7 +4924,7 @@ setInterval(checkUpdate,1800000);
 let curDay=dkey();
 setInterval(()=>{
   if(dkey()===curDay) return;
-  curDay=dkey(); seenLoc=null; lastRev=null;
+  curDay=dkey(); seenLoc=null; lastRev=null; lastIn=null;
   meal=timeMeal();
   if(curMode()==="admin"){ refreshAll(); pullResv(true); }
 },60000);
