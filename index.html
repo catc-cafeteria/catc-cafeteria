@@ -1183,7 +1183,7 @@ function seedStamp(){                       // 파일 명단의 지문
    개인정보가 공개된 파일에 남지 않도록 하기 위해서입니다. */
 const SEED=[];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="10.9";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="11.2";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -1465,10 +1465,24 @@ $("scanfield").addEventListener("keydown",e=>{
 function apiBase(){return (API_URL||db.api||"").trim()}   // 파일에 박힌 주소가 우선
 /* 구글 앱스스크립트는 POST가 막히는 환경이 있어 주소로 보내는 방식을 먼저 씁니다 */
 async function apiOnce(u,payload,post){
-  const r = post
-    ? await fetch(u,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:payload})
-    : await fetch(u+"?p="+encodeURIComponent(payload));
-  const t=await r.text();
+  // 응답이 끝내 오지 않는 경우가 있습니다. 그냥 두면 «보내는 중» 표시가 풀리지 않아
+  // 그때부터 전송도 갱신도 조용히 멈춥니다. 그래서 시간을 정해 두고 끊습니다.
+  // 서버가 다른 작업을 기다리는 데만 최대 20초를 씁니다.
+  // 그보다 짧게 끊으면 «실패»로 보이지만 실제로는 저장된 상태가 됩니다.
+  const ms = 35000;
+  const ac = (typeof AbortController!=="undefined") ? new AbortController() : null;
+  const timer = ac ? setTimeout(()=>{ try{ac.abort()}catch(e){} }, ms) : null;
+  let r,t;
+  try{
+    r = post
+      ? await fetch(u,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:payload,signal:ac?ac.signal:undefined})
+      : await fetch(u+"?p="+encodeURIComponent(payload),{signal:ac?ac.signal:undefined});
+    t = await r.text();
+  }catch(e){
+    if(e && (e.name==="AbortError"||String(e).indexOf("abort")>=0))
+      throw new Error("서버가 35초 안에 답하지 않아 끊었습니다");
+    throw e;
+  }finally{ if(timer) clearTimeout(timer); }
   let j; try{ j=JSON.parse(t); }
   catch(e){ throw new Error("서버가 자료 대신 다른 화면을 보냈습니다 (HTTP "+r.status+")"); }
   if(!j.ok) throw new Error(j.error||"서버 오류");
@@ -1524,7 +1538,7 @@ async function renewAdminKey(){
   if(renewing || !apiBase()) return false;
   const pin=kioskPin();
   if(!pin) return false;
-  if(Date.now()-renewAt<20000) return false;    // 너무 자주 두드리지 않습니다
+  if(Date.now()-renewAt<20000) return keyAlive();   // 방금 받았으면 살아 있다고 답합니다
   renewing=true; renewAt=Date.now();
   try{
     const j=await apiCall({action:"pinCheck",pin});
@@ -1571,7 +1585,15 @@ async function apiSet(date,p,on){
   return j? (j.items||{}) : null;
 }
 /* --- 오프라인에도 멈추지 않도록: 로컬에 먼저 쓰고 대기열로 올려보냄 --- */
-let flushing=false;
+let flushing=false, flushAt=0, pullAt=0, pingAt=0;
+/* 어떤 이유로든 «처리 중» 표시가 풀리지 않으면 태블릿이 조용히 멈춥니다.
+   2분 넘게 걸려 있으면 강제로 풀어 다시 돌게 합니다. */
+setInterval(()=>{
+  const t=Date.now();
+  if(flushing && flushAt && t-flushAt>120000) flushing=false;
+  if(pulling  && pullAt  && t-pullAt >120000) pulling =false;
+  if(pinging  && pingAt  && t-pingAt >120000) pinging =false;
+},30000);
 function logEvent(ev){
   ev.code=String(ev.code||"").trim();      // 서버와 같은 기준으로 맞춥니다
   const k=ev.date+"|"+ev.meal+"|"+ev.code;
@@ -1591,12 +1613,14 @@ function warnKey(){
 }
 async function flushQueue(){
   if(flushing||!apiBase()||!db.queue.length) return;
-  flushing=true;
+  flushing=true; flushAt=Date.now();
   const batch=db.queue.slice(0,8);
   try{
     const j=await apiCall({action:"push",events:batch,note:(batch.find(x=>x.note)||{}).note||""});
     if(!j||!j.ok) throw new Error("서버가 저장을 확인해 주지 않았습니다");
-    db.queue=db.queue.slice(batch.length); persist();
+    // 자리수로 자르면, 전송이 겹치거나 보내는 사이에 새 체크가 끼어들 때
+    // 아직 못 보낸 기록까지 잘려 나갑니다. 보낸 그 항목만 골라 뺍니다.
+    db.queue=db.queue.filter(e=>batch.indexOf(e)<0); persist();
     lastPush={t:hm(),err:"",n:(j.saved||batch.length)};
     if(db.queue.length) setTimeout(()=>{flushing=false;flushQueue()},300);
     else flushing=false;
@@ -1627,7 +1651,7 @@ function announceLoc(d){
   if(seenLoc===null){ seenLoc=now; return; }        // 처음 불러온 것은 알리지 않음
   const fresh=[...now].filter(k=>!seenLoc.has(k));
   seenLoc=now;
-  if(!fresh.length || curMode()!=="admin") return;
+  if(!fresh.length || curMode()!=="admin" || !visible("scan")) return;   // 담당자 PC에서는 소리를 내지 않습니다
   markActive();                 // 휴대폰으로 체크한 사람이 있으니 계속 바짝 확인합니다
   fresh.forEach((k,i)=>setTimeout(()=>{
     const [m,c]=k.split("|"), v=(rec[m]||{})[c]; if(!v) return;
@@ -1643,7 +1667,7 @@ let pulling=false;
 async function pullResv(quiet){
   if(!apiBase()){ lastSync={t:"",err:"서버 주소가 설정되어 있지 않습니다"}; return false; }
   if(pulling) return false;
-  pulling=true;
+  pulling=true; pullAt=Date.now();
   try{
     const d=dkey(), j=await apiCall({action:"day",date:d});
     db.reserve[d]=j.items||{};
@@ -1707,8 +1731,9 @@ async function safeRosterPush(loud){
     const j=await apiCall({action:"roster"});
     const remote=(j&&j.roster)||[];
     if(remote.length){
-      const mine=new Set(db.roster.map(x=>String(x.code)));
-      const add=remote.filter(x=>!mine.has(String(x.code)));
+      const key=x=>String(x.code||"").trim();
+      const mine=new Set(db.roster.map(key));
+      const add=remote.filter(x=>!mine.has(key(x)));
       if(add.length){ db.roster=db.roster.concat(add); persist(); }
     }
   }catch(e){}          // 못 받아도 올리기는 시도합니다
@@ -3338,7 +3363,7 @@ setInterval(()=>{if(!apiBase())return; flushQueue(); flushRoster();},60000);
 async function syncGuard(){
   if(!apiBase()||curMode()!=="admin") return;
   if(document.hidden) return;
-  await syncView(true);
+  await syncView();          // 지난 달을 펼쳐 둔 화면은 건너뜁니다
   try{ const j=await apiCall({action:"ping"}); if(j&&j.rev!==undefined) lastRev=j.rev; }catch(e){}
 }
 
@@ -3362,7 +3387,7 @@ function busyNow(){ return Date.now()-lastActive < 150000; }   // 2분 30초 안
 async function quickCheck(){
   if(pinging||!apiBase()||curMode()!=="admin") return;
   if(document.hidden) return;           // 창이 가려져 있을 때만 쉽니다
-  pinging=true;
+  pinging=true; pingAt=Date.now();
   try{
     const j=await apiCall({action:"ping"});
     if(j&&j.rev!==undefined){
@@ -4912,8 +4937,14 @@ $("myMode").onclick=leaveMode;
 function baseUrl(){return location.href.split("#")[0].split("?")[0]}
 async function checkUpdate(){
   try{
-    const r=await fetch(baseUrl()+"?_="+Date.now(),{cache:"no-store"});
-    const t=await r.text();
+    // 여기도 시간제한을 둡니다. 끊기지 않은 연결이 쌓이면 브라우저가 새 요청을 막습니다.
+    const ac=(typeof AbortController!=="undefined")?new AbortController():null;
+    const tm=ac?setTimeout(()=>{try{ac.abort()}catch(e){}},15000):null;
+    let r,t;
+    try{
+      r=await fetch(baseUrl()+"?_="+Date.now(),{cache:"no-store",signal:ac?ac.signal:undefined});
+      t=await r.text();
+    }finally{ if(tm) clearTimeout(tm); }
     const m=t.match(/const APP_VER="([^"]+)"/);
     if(m && m[1] !== APP_VER){
       $("updbar").hidden=false;
