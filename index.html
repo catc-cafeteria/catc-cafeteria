@@ -1183,7 +1183,7 @@ function seedStamp(){                       // 파일 명단의 지문
    개인정보가 공개된 파일에 남지 않도록 하기 위해서입니다. */
 const SEED=[];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="11.3";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="11.4";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -1342,11 +1342,11 @@ function checkIn(raw,src){
   db.records[d]=db.records[d]||{};
   db.records[d][meal]=db.records[d][meal]||{};
   const slot=db.records[d][meal];
-  const isLunch = meal!==MEALS[2], resv = !!(db.reserve[d]||{})[p.code];   // 석식이 아니면 저녁 예약을 묻는다
+  const resv = !!(db.reserve[d]||{})[p.code];
+  hideAsk();   // 체크 뒤 저녁 예약을 묻지 않습니다 (석식 예약은 개인 화면에서 합니다)
   if(slot[p.code]){
-    feedback("dup","!",p.name,`이미 ${slot[p.code].t}에 체크되었습니다`,isLunch);
+    feedback("dup","!",p.name,`이미 ${slot[p.code].t}에 체크되었습니다`,false);
     beep("dup");
-    if(isLunch) askDinner(p);
     render(); return;
   }
   slot[p.code]={t:hm(),name:p.name,dept:p.dept,resv};
@@ -1356,9 +1356,8 @@ function checkIn(raw,src){
   logEvent({date:d,meal,code:p.code,name:p.name,dept:p.dept||"",guest:!!p.guest,sub:!!p.sub,t:hm(),on:true,via});
   lastIn={d,meal,code:p.code,name:p.name};
   const tail = meal===MEALS[2] ? (resv?"예약 확인 · "+hm():"예약 없이 오심 · "+hm()) : hm();
-  feedback("ok","✓",p.name,`${p.dept||""} · ${tail}`,isLunch);
+  feedback("ok","✓",p.name,`${p.dept||""} · ${tail}`,false);
   beep("ok");
-  if(isLunch) askDinner(p);
   markActive();                 // 방금 사람이 왔으니 한동안 바짝 확인합니다
   refreshAll(); persist();
 }
