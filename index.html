@@ -962,6 +962,9 @@
       <div id="myResvState" style="font-size:16px;font-weight:600;margin-bottom:12px"></div>
       <button class="btn" id="myResvBtn" style="width:100%"></button>
       <div id="myResvNote" style="font-size:12.5px;color:var(--dim);margin-top:10px;line-height:1.6"></div>
+      <button class="btn quiet" id="resvPeekBtn" style="width:100%;margin-top:10px;font-size:13px">예약자 자세히 보기</button>
+      <div id="resvPeek" hidden style="margin-top:10px;border:1px solid var(--line);border-radius:12px;
+           padding:12px 14px;max-height:240px;overflow-y:auto;font-size:13px;line-height:1.7"></div>
     </div>
     <div class="menucard" id="menuCard" hidden>
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
@@ -1183,7 +1186,7 @@ function seedStamp(){                       // 파일 명단의 지문
    개인정보가 공개된 파일에 남지 않도록 하기 위해서입니다. */
 const SEED=[];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="11.4";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="11.5";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -4416,6 +4419,7 @@ function startWatch(){
 setInterval(()=>{
   if(curMode()!=="user") return;
   if($("myResv") && !$("myResv").hidden) paintResv(myOn,false);
+  if(peekOpen) drawResvPeek();      // 열려 있으면 이따금 새로 고칩니다 (아래 시간제한 적용)
 },30000);
 
 $("myLocRefresh").onclick=()=>{
@@ -4644,6 +4648,40 @@ function paintResvNote(){
   }
   el.style.color="var(--dim)";
 }
+/* 오늘 저녁 예약자를 접었다 폈다 합니다. 펼 때만 서버에서 받아옵니다. */
+let peekOpen=false, peekAt=0;
+async function drawResvPeek(force){
+  const box=$("resvPeek"), btn=$("resvPeekBtn");
+  if(!box||!btn) return;
+  if(!peekOpen){ box.hidden=true; btn.textContent="예약자 자세히 보기"; return; }
+  box.hidden=false; btn.textContent="예약자 닫기";
+  if(!force && Date.now()-peekAt<60000 && box.dataset.filled==="1") return;
+  if(box.dataset.filled!=="1") box.innerHTML=`<span style="color:var(--dim)">불러오는 중…</span>`;
+  try{
+    const items=await apiList(dkey());
+    peekAt=Date.now(); box.dataset.filled="1";
+    const list=Object.entries(items||{});
+    if(!list.length){
+      box.innerHTML=`<span style="color:var(--dim)">오늘 저녁 식사를 신청한 사람이 아직 없습니다.</span>`;
+      return;
+    }
+    const by={};
+    list.forEach(([c,v])=>{ const d=v.dept||"기타"; (by[d]=by[d]||[]).push({c,name:v.name||c}); });
+    const mine=db.myCode?String(db.myCode).trim():"";
+    box.innerHTML =
+      `<div style="color:var(--dim);margin-bottom:8px">오늘 저녁 신청 <b style="color:var(--green)">${list.length}명</b></div>`+
+      Object.keys(by).sort().map(d=>
+        `<div style="margin-bottom:6px"><span style="color:var(--dim);font-size:12px">${esc(d)}</span><br>`+
+        by[d].sort((a,b)=>a.name.localeCompare(b.name,"ko")).map(x=>
+          String(x.c).trim()===mine
+            ? `<b style="color:var(--green)">${esc(x.name)}</b>`
+            : esc(x.name)).join(", ")+`</div>`).join("");
+  }catch(e){
+    box.innerHTML=`<span style="color:var(--red)">불러오지 못했습니다 · ${esc((e&&e.message)||e)}</span>`;
+  }
+}
+if($("resvPeekBtn")) $("resvPeekBtn").onclick=()=>{ peekOpen=!peekOpen; drawResvPeek(true); };
+
 function paintResv(on,busy){
   myOn=on;
   $("myResvState").textContent = on ? "오늘 저녁 식사 신청됨" : "오늘 저녁 식사 신청 안 함";
