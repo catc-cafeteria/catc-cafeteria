@@ -1186,7 +1186,7 @@ function seedStamp(){                       // 파일 명단의 지문
    개인정보가 공개된 파일에 남지 않도록 하기 위해서입니다. */
 const SEED=[];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="11.5";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="11.6";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -4334,24 +4334,36 @@ $("pickAdmin").onclick=()=>{pinOpen=true; applyMode(); $("pinInput").value="";
 $("pinBack").onclick=()=>{pinOpen=false; pinPurpose="enter"; applyMode()};
 $("pinGo").onclick=async()=>{
   const v=$("pinInput").value.trim();
-  let ok=null;
+  let ok=null, reached=false;
   if(apiBase()){
     $("pinGo").disabled=true; $("pinGo").textContent="확인 중…";
     try{
-      // 6초 안에 답이 없으면 기다리지 않고 앱에 든 비밀번호로 판단합니다
+      // 점심처럼 붐빌 때 서버가 늦습니다. 넉넉히 기다립니다.
       const j=await Promise.race([
         apiCall({action:"pinCheck",pin:v}),
-        new Promise((_,rej)=>setTimeout(()=>rej(new Error("시간 초과")),6000))
+        new Promise((_,rej)=>setTimeout(()=>rej(new Error("시간 초과")),15000))
       ]);
-      ok = j ? j.pass : null;
+      if(j){ reached=true; ok=j.pass; }
       if(j && j.adminKey && (j.pass===true || j.pass===null)) saveAdminKey(j.adminKey);
-    }catch(e){
-      ok=null;
-      if(String(e&&e.message).indexOf("시간")>=0) toast("서버 응답이 늦어 기기 비밀번호로 확인합니다");
-    }
+    }catch(e){ reached=false; ok=null; }
     $("pinGo").disabled=false; $("pinGo").textContent="확인";
   }
-  if(ok===null) ok = (fnv(v)===ADMIN_PIN);   // 서버에 없으면 앱에 든 기본값으로
+  if(ok===null){
+    if(reached || !apiBase()){
+      // 서버가 «비밀번호를 정한 적 없다»고 답한 경우입니다. 앱 기본값으로 봅니다.
+      ok = (fnv(v)===ADMIN_PIN);
+    }else{
+      // 서버에 닿지 못했습니다. 여기서 «틀렸다»고 하면 맞는 번호도 틀렸다고 나옵니다.
+      const kp=kioskPin();
+      if(kp && v===kp) ok=true;                 // 이 기기에서 전에 통과한 번호
+      else if(fnv(v)===ADMIN_PIN) ok=true;      // 앱 기본값
+      else{
+        beep("bad");
+        toast("서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요");
+        return;                                  // 입력은 지우지 않습니다
+      }
+    }
+  }
   if(!ok){
     $("pinInput").value=""; beep("bad"); toast("비밀번호가 맞지 않습니다"); return;
   }
