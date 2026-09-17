@@ -850,7 +850,9 @@
   <div class="pane">
     <div class="card">
       <div class="rvhead">
-        <div><span style="font-size:13px;color:var(--dim)">오늘 석식 예약</span><br><b id="rvTotal">0</b><span style="color:var(--dim);font-size:14px"> 명</span></div>
+        <div><span style="font-size:13px;color:var(--dim)" id="rvDayLbl">오늘 석식 예약</span><br><b id="rvTotal">0</b><span style="color:var(--dim);font-size:14px"> 명</span></div>
+        <input type="date" id="rvDate" style="height:40px;border:1px solid var(--line);border-radius:10px;
+          background:transparent;color:var(--ink);font-family:var(--mono);font-size:13px;padding:0 8px">
         <span class="rvdl" id="rvDl">—</span>
         <button type="button" class="btn quiet" id="rvSync" style="min-height:40px;padding:0 14px;font-size:13px">서버에서 가져오기</button>
       </div>
@@ -1189,7 +1191,7 @@ function seedStamp(){                       // 파일 명단의 지문
    개인정보가 공개된 파일에 남지 않도록 하기 위해서입니다. */
 const SEED=[];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="11.8";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="11.9";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -3500,7 +3502,9 @@ $("rvSync").onclick=async()=>{
 };
 function drawResv(){
   lockCheck(); drawSync();
-  const d=dkey(), rs=db.reserve[d]||{}, q=$("rvSearch").value.trim();
+  const d=rvD(), rs=db.reserve[d]||{}, q=$("rvSearch").value.trim();
+  if($("rvDate") && !$("rvDate").value) $("rvDate").value=d;
+  if($("rvDayLbl")) $("rvDayLbl").textContent = (d===dkey()?"오늘":d.replace(/-/g,".")) + " 석식 예약";
   $("rvTotal").textContent=Object.keys(rs).length;
   const dl=$("rvDl"); dl.textContent=dlText(); dl.classList.toggle("closed",pastDeadline());
   // 예약자 가운데 아직 식수에 올라가지 않은 사람을 찾습니다
@@ -3552,10 +3556,29 @@ function drawResv(){
   }).join("");
   $("rvList").querySelectorAll("button").forEach(b=>b.onclick=()=>toggleResv(items[+b.dataset.i]));
 }
+function rvD(){ const v=$("rvDate")&&$("rvDate").value; return v||dkey(); }
+async function loadResvDay(){
+  const d=rvD();
+  const st=$("rvCheckState"); if(st) st.innerHTML=`<span style="color:var(--dim)">불러오는 중…</span>`;
+  try{
+    const items=await apiList(d);
+    if(items) db.reserve[d]=items;
+    if(!db.records[d]) await pullMonth(d.slice(0,7));   // 그 달 식수 기록도 함께
+    persist();
+  }catch(e){ toast("불러오지 못했습니다 · "+((e&&e.message)||e)); }
+  drawResv();
+}
+if($("rvDate")) $("rvDate").onchange=loadResvDay;
 $("rvSearch").addEventListener("input",drawResv);
 $("rvApply").onclick=async()=>{
   const b=$("rvApply"); b.disabled=true; b.textContent="올리는 중…";
-  try{ const n=await autoDinner(false); if(!n) toast("올릴 예약자가 없습니다"); }
+  try{
+    const d=rvD();
+    const items=await apiList(d); if(items) db.reserve[d]=items;
+    const n=autoDinnerApply(false,d);
+    if(n){ await flushQueue(); toast(`${d===dkey()?"오늘":d.replace(/-/g,".")} 예약자 ${n}명을 식수에 올렸습니다`); }
+    else toast("올릴 예약자가 없습니다");
+  }
   catch(e){ toast("올리지 못했습니다 · "+((e&&e.message)||e)); }
   b.disabled=false; b.textContent="아직 안 올라간 예약자를 식수에 올리기";
   drawResv();
@@ -5130,8 +5153,8 @@ async function autoDinner(quiet){
     return autoDinnerApply(quiet);
   } finally { autoBusy=false; }
 }
-function autoDinnerApply(quiet){
-  const d=dkey();
+function autoDinnerApply(quiet,date){
+  const d=date||dkey();
   const rs=db.reserve[d]||{};
   const codes=Object.keys(rs);
   if(!codes.length) return 0;
@@ -5145,11 +5168,12 @@ function autoDinnerApply(quiet){
     if(slot[c]||pend.has(String(c))) return;
     const p=db.roster.find(x=>x.code===c)||{};
     const nm=rs[c].name||p.name||c;
-    slot[c]={t:hm(),name:nm,dept:rs[c].dept||p.dept||"",resv:true,via:"예약"};
+    const tt = (d===dkey()) ? hm() : "18:00";   // 지난 날짜는 석식 시각으로 적습니다
+    slot[c]={t:tt,name:nm,dept:rs[c].dept||p.dept||"",resv:true,via:"예약"};
     if(p.guest) slot[c].g=1;
     if(p.sub) slot[c].s=1;
     logEvent({date:d,meal:MEALS[2],code:c,name:nm,dept:rs[c].dept||p.dept||"",
-      guest:!!p.guest,sub:!!p.sub,t:hm(),on:true,via:"예약"});
+      guest:!!p.guest,sub:!!p.sub,t:tt,on:true,via:"예약"});
     n++;
   });
   if(n){
