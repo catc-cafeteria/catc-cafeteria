@@ -856,7 +856,10 @@
       </div>
       <div id="syncState" style="font-size:13px;color:var(--dim);margin-top:12px;white-space:pre-line"></div>
       <p style="margin-top:14px">전화나 메신저로 취소·추가 요청이 오면 여기서 바로 처리하시면 됩니다. 검색창을 비우면 예약자만 보입니다.</p>
-      <input class="scanfield" id="rvSearch" style="width:100%;height:48px;border:1px solid var(--line)" placeholder="이름 또는 사번으로 찾기" autocomplete="off">
+      <div id="rvCheckState" style="font-size:13.5px;margin:12px 0 0;line-height:1.7"></div>
+      <button type="button" class="btn quiet" id="rvApply" hidden
+        style="width:100%;margin-top:10px;font-size:13px">아직 안 올라간 예약자를 식수에 올리기</button>
+      <input class="scanfield" id="rvSearch" style="width:100%;height:48px;border:1px solid var(--line);margin-top:12px" placeholder="이름 또는 사번으로 찾기" autocomplete="off">
       <ul class="plist" id="rvList"></ul>
     </div>
   </div>
@@ -1186,7 +1189,7 @@ function seedStamp(){                       // 파일 명단의 지문
    개인정보가 공개된 파일에 남지 않도록 하기 위해서입니다. */
 const SEED=[];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="11.7";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="11.8";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -3500,6 +3503,21 @@ function drawResv(){
   const d=dkey(), rs=db.reserve[d]||{}, q=$("rvSearch").value.trim();
   $("rvTotal").textContent=Object.keys(rs).length;
   const dl=$("rvDl"); dl.textContent=dlText(); dl.classList.toggle("closed",pastDeadline());
+  // 예약자 가운데 아직 식수에 올라가지 않은 사람을 찾습니다
+  const din=((db.records[d]||{})[MEALS[2]])||{};
+  const codes=Object.keys(rs);
+  const notYet=codes.filter(c=>!din[c]);
+  const st=$("rvCheckState");
+  if(st){
+    st.innerHTML = !codes.length
+      ? `<span style="color:var(--dim)">오늘 석식 예약이 없습니다.</span>`
+      : `예약 <b>${codes.length}명</b> · 식수 올라감 <b style="color:var(--green)">${codes.length-notYet.length}명</b>`+
+        (notYet.length
+          ? ` · <b style="color:var(--amber)">아직 ${notYet.length}명</b><br>`+
+            `<span style="color:var(--amber)">${notYet.map(c=>esc((rs[c].name)||c)).join(", ")}</span>`
+          : ` · <span style="color:var(--green)">모두 올라갔습니다</span>`);
+  }
+  if($("rvApply")) $("rvApply").hidden = !notYet.length;
   // 서버에 있는 예약은 명단에 없더라도 모두 보여줍니다
   const resvPeople = Object.keys(rs).map(code=>{
     const p=db.roster.find(x=>x.code===code);
@@ -3523,15 +3541,25 @@ function drawResv(){
     return;
   }
   $("rvList").innerHTML=items.map((p,i)=>{
-    const on=!!rs[p.code];
+    const on=!!rs[p.code], done=din[p.code];
+    const mark = !on ? ""
+      : done ? ` <span class="gtag" style="color:var(--green);border-color:rgba(91,215,154,.45)">식수 ${esc(done.t||"")}</span>`
+             : ` <span class="gtag">식수 아직</span>`;
     return `<li><span class="dot ${on?"":"off"}"></span>
-      <span><span class="pn">${esc(p.name)}</span>
+      <span><span class="pn">${esc(p.name)}</span>${mark}
       <span class="pd">${esc(p.dept||"")} · <em>${esc(p.code)}</em>${p.missing?' <span class="gtag">명단에 없음</span>':""}</span></span>
       <button data-i="${i}" class="${on?"cancel":"add"}">${on?"예약 취소":"예약 추가"}</button></li>`;
   }).join("");
   $("rvList").querySelectorAll("button").forEach(b=>b.onclick=()=>toggleResv(items[+b.dataset.i]));
 }
 $("rvSearch").addEventListener("input",drawResv);
+$("rvApply").onclick=async()=>{
+  const b=$("rvApply"); b.disabled=true; b.textContent="올리는 중…";
+  try{ const n=await autoDinner(false); if(!n) toast("올릴 예약자가 없습니다"); }
+  catch(e){ toast("올리지 못했습니다 · "+((e&&e.message)||e)); }
+  b.disabled=false; b.textContent="아직 안 올라간 예약자를 식수에 올리기";
+  drawResv();
+};
 
 /* ---------- 사내강사 직원 ---------- */
 function openGuest(code){
