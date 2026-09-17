@@ -1186,7 +1186,7 @@ function seedStamp(){                       // 파일 명단의 지문
    개인정보가 공개된 파일에 남지 않도록 하기 위해서입니다. */
 const SEED=[];
 const ADMIN_PIN="29bdd7c6";   // 관리자 비밀번호 해시
-const APP_VER="11.6";   // 파일을 고칠 때마다 이 값을 바꿉니다
+const APP_VER="11.7";   // 파일을 고칠 때마다 이 값을 바꿉니다
 const API_URL="https://script.google.com/macros/s/AKfycbxkABLLzLjUGReLibNLNguZ72Paw7imBmMxNS6slvcyrZhZRZp9nQdABLtk84OLhmUHzQ/exec";                       // 구글 스프레드시트 웹앱 주소 (배포 후 여기에 넣습니다)
 const API_KEY="kac-hangi-meal-2340";    // 서버 코드의 KEY 와 같아야 합니다
 const DEADLINE=[16,0];   // 석식 예약 마감 시각 (16:00)
@@ -5110,8 +5110,11 @@ function autoDinnerApply(quiet){
   db.records[d]=db.records[d]||{};
   const slot=db.records[d][MEALS[2]]=db.records[d][MEALS[2]]||{};
   let n=0;
+  // 아직 서버로 못 보낸 체크가 있으면 그것도 이미 체크된 것으로 봅니다.
+  // 안 그러면 QR 로 찍은 기록을 «예약» 으로 덮어씁니다.
+  const pend=new Set((db.queue||[]).filter(e=>e.date===d&&e.meal===MEALS[2]&&e.on).map(e=>String(e.code)));
   codes.forEach(c=>{
-    if(slot[c]) return;
+    if(slot[c]||pend.has(String(c))) return;
     const p=db.roster.find(x=>x.code===c)||{};
     const nm=rs[c].name||p.name||c;
     slot[c]={t:hm(),name:nm,dept:rs[c].dept||p.dept||"",resv:true,via:"예약"};
